@@ -1,10 +1,11 @@
 /*
- * Firmware catalog: the single source of truth for the site.
+ * The Quitanda catalog: the single source of truth for the site.
+ * Firmware, library apps, hardware mods and the watch list all live here.
  *
  * ADDING A FIRMWARE
  *   Copy an object in `firmwares`, give it a unique `id` (lowercase letters,
- *   digits and hyphens; it becomes the link, e.g. /#rockpod) and fill it in.
- *   Then add a line to `latest` so visitors see what changed.
+ *   digits and hyphens; it becomes the page address, e.g. /firmware/rockpod/)
+ *   and fill it in. Then add a line to `latest` so visitors see what changed.
  *
  * FIELDS
  *   maker        person or group who makes it
@@ -13,8 +14,10 @@
  *   status       "stable" | "beta" | "experimental" | "archived"
  *   version      latest version label, or null
  *   updated      ISO date (YYYY-MM-DD or YYYY-MM) of the latest release, or null
- *   github       "owner/repo" if the code is on GitHub (used for stars)
- *   stars        GitHub stars; refresh with `node scripts/refresh-github.mjs`
+ *   github       "owner/repo" if the code is on GitHub. The nightly job then
+ *                keeps stars, version and date fresh (src/data/github-stats.json
+ *                overrides the values written here).
+ *   stars        GitHub stars, used until the nightly job has run
  *   blurb        one or two sentences, shown on the card
  *   more         extra paragraphs, shown under MORE
  *   features     short list shown under MORE
@@ -28,7 +31,7 @@
  * The starter entries were compiled from each project's public pages in
  * November 2026. Check versions and dates before you launch.
  */
-window.IPOD_FIRMWARE_DATA = {
+export default {
   updatedOn: "2026-11-18",
 
   latest: {
@@ -786,6 +789,132 @@ window.IPOD_FIRMWARE_DATA = {
     }
   ],
 
+  /*
+   * HARDWARE MODS: parts you fit inside the iPod.
+   *   kind      "Storage" | "Battery" | "Wireless" | "Port" | "Feel"
+   *   skill     short text on how hard it is
+   *   devices   iPods it fits
+   *   firmware  notes on how the mod interacts with firmware
+   */
+  mods: [
+    {
+      id: "flash-storage",
+      name: "Flash storage with iFlash",
+      maker: "iFlash",
+      kind: "Storage",
+      skill: "No soldering",
+      devices: ["ipod-video", "ipod-classic"],
+      partial: ["ipod-4g", "ipod-photo"],
+      blurb: "Swap the spinning hard drive for SD cards or an mSATA SSD. The iPod gets lighter, quieter, tougher and longer-lived, and there\u2019s room left for a bigger battery.",
+      more: [
+        "iFlash makes adapter boards that plug in where the hard drive was: Solo takes one SD card, Dual takes two, Quad takes four microSD cards, and SATA takes an mSATA SSD. The 4th gen and Photo need a separate converter.",
+        "The Classic 6th gen (80 GB, 120 GB and the thick 160 GB) only sees 128 GB on Apple\u2019s firmware, whatever you fit. The Video and the Classic 7th gen (the late 2009 160 GB) have no such limit."
+      ],
+      firmware: [
+        "Rockpod and SKVM PodBox detect flash storage and use a lighter sleep strategy for it.",
+        "On Rockbox-family firmware, check Settings \u203a System \u203a Disk after the swap."
+      ],
+      links: [
+        { label: "iFlash compatibility", url: "https://www.iflash.xyz/store/iflash-compatibility/", icon: "docs" },
+        { label: "iFlash store", url: "https://www.iflash.xyz/", icon: "info" }
+      ]
+    },
+    {
+      id: "mini-compactflash",
+      name: "CompactFlash for the iPod mini",
+      maker: "Any CF card",
+      kind: "Storage",
+      skill: "No soldering",
+      devices: ["ipod-mini"],
+      partial: [],
+      blurb: "The mini\u2019s tiny hard drive is a CompactFlash device, so a CF card, or a CF adapter holding an SD card, drops straight into its place.",
+      more: [
+        "It\u2019s the oldest iPod mod there is, and still one of the easiest. Restore the iPod after the swap so it formats the new card."
+      ],
+      firmware: [
+        "Rockbox runs on both mini generations and works with flash cards."
+      ],
+      links: [
+        { label: "iFixit: iPod mini", url: "https://www.ifixit.com/Device/iPod_Mini", icon: "docs" }
+      ]
+    },
+    {
+      id: "bigger-battery",
+      name: "Bigger battery",
+      maker: "Various",
+      kind: "Battery",
+      skill: "No soldering",
+      devices: ["ipod-video", "ipod-classic"],
+      partial: [],
+      blurb: "Once the hard drive is gone there\u2019s room for a larger cell. The battery plugs in, so the hard part is opening the Classic\u2019s metal case without bending it.",
+      more: [
+        "Be wary of capacity claims. One mod seller measured cells sold as 3000 mAh at closer to 1950 mAh. Buy from a seller who states tested capacity, and check that the cell fits your back plate: thin and thick backs take different sizes."
+      ],
+      firmware: [
+        "On Rockbox-family firmware, set the new capacity in Settings \u203a System \u203a Battery so the gauge and the time remaining read correctly."
+      ],
+      links: [
+        { label: "iFixit: iPod Classic", url: "https://www.ifixit.com/Device/iPod_Classic", icon: "docs" }
+      ]
+    },
+    {
+      id: "bluetooth",
+      name: "Internal Bluetooth",
+      maker: "EOE Works, Boxy Pixel, Moonlit Market",
+      kind: "Wireless",
+      skill: "Kits with and without soldering",
+      devices: ["ipod-video", "ipod-classic"],
+      partial: [],
+      blurb: "A small transmitter board inside the case sends the iPod\u2019s audio to wireless headphones and speakers.",
+      more: [
+        "EOE Works sells a solder-free Bluetooth 5.0 kit for the Video and Classic. Boxy Pixel\u2019s board pairs Bluetooth 5.0 with a USB-C charging port, and Moonlit Market\u2019s kit adds both while keeping the headphone jack and the 30-pin port.",
+        "The iPod doesn\u2019t know the transmitter is there: it takes the analog audio, so pairing is done with a button on the board, not from a menu."
+      ],
+      firmware: [
+        "Rockpod 5.5 includes fixes for Bluetooth transmitters and car head units."
+      ],
+      links: [
+        { label: "EOE Works kit", url: "https://eoe.works/products/solder-less-internal-bluetooth-5-0-kit-for-apple-ipod-video-5th-5-5-classic-6th-7th", icon: "info" },
+        { label: "Boxy Pixel board", url: "https://www.boxypixel.com/products/ipod-mkii-electronics-pcb", icon: "info" }
+      ]
+    },
+    {
+      id: "usb-c",
+      name: "USB-C port",
+      maker: "Boxy Pixel, Moonlit Market",
+      kind: "Port",
+      skill: "Soldering or case work on most kits",
+      devices: ["ipod-video", "ipod-classic"],
+      partial: [],
+      blurb: "Adds a USB-C socket so the iPod charges from the same cable as everything else you own.",
+      more: [
+        "Check what the port does before you buy. Boxy Pixel\u2019s board is charge-only, so you still sync through the 30-pin port. Moonlit Market\u2019s kit keeps the 30-pin port and the headphone jack alongside USB-C.",
+        "Space is tight. One builder found that a USB-C and Bluetooth board won\u2019t fit beside an iFlash SATA board without a custom case."
+      ],
+      firmware: [
+        "A charge-only port changes nothing for firmware. Installing and updating still happen over the 30-pin port."
+      ],
+      links: [
+        { label: "Boxy Pixel board", url: "https://www.boxypixel.com/products/ipod-mkii-electronics-pcb", icon: "info" }
+      ]
+    },
+    {
+      id: "haptic-click",
+      name: "Haptic click",
+      maker: "Various",
+      kind: "Feel",
+      skill: "Soldering",
+      devices: ["ipod-video", "ipod-classic"],
+      partial: [],
+      blurb: "Replaces the little speaker that makes the click-wheel tick with a haptic motor, so you feel each click instead of hearing it.",
+      more: [
+        "It\u2019s sold in kits and in pre-modded iPods, often under the name Taptic mod. We haven\u2019t found independent testing of these kits, so treat sellers\u2019 claims with care."
+      ],
+      firmware: [],
+      links: []
+    }
+  ],
+
   /* Projects that cannot be installed yet. Move one into `firmwares` when it ships. */
   watchlist: [
     {
@@ -798,6 +927,7 @@ window.IPOD_FIRMWARE_DATA = {
     },
     {
       id: "sprout-pi",
+      kind: "mod",
       name: "Sprout Pi",
       maker: "Sprout Pi",
       url: "https://www.techspot.com/news/114210-new-mod-brings-apple-classic-ipods-2026-bluetooth.html",

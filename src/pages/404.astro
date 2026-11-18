@@ -1,0 +1,13 @@
+---
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/catalog.js";
+---
+<Base title="Page not found">
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1>That shelf is empty.</h1>
+      <p>The page you asked for isn’t here. It may have moved when a listing was renamed.</p>
+      <p><a class="btn" href={href("/")}>Back to the shop</a></p>
+    </header>
+  </main>
+</Base>

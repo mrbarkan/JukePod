@@ -1,0 +1,122 @@
+---
+import Base from "../layouts/Base.astro";
+import Icon from "./Icon.astro";
+import ShareRow from "./ShareRow.astro";
+import Gallery from "./Gallery.astro";
+import { STATUS, byId, builtOn, deviceById, categoryById, fmt, plain, fmtDate, isNumbered, href } from "../lib/catalog.js";
+
+const { item } = Astro.props;
+const isApp = item.type === "app";
+const status = STATUS[item.status] || { ripeness: item.status, plain: item.status };
+const runs = item.devices.map((d) => deviceById[d]).filter(Boolean);
+const partial = (item.partial || []).map((d) => deviceById[d]).filter(Boolean);
+const parent = item.basedOn ? byId[item.basedOn] : null;
+const forks = builtOn(item.id);
+const links = item.links || [];
+const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
+const kinds = isApp ? item.platforms || [] : (item.categories || []).map((c) => categoryById[c]?.name).filter(Boolean);
+const social = item.screenshots.find((s) => !s.pixel);
+const repoUrl = item.github ? `https://github.com/${item.github}` : null;
+---
+<Base
+  title={`${item.name}${isApp ? "" : " firmware"} for iPod`}
+  description={plain(item.blurb)}
+  image={social ? "/" + social.src : "/og.png"}
+  type="article"
+  section={isApp ? "apps" : "firmware"}
+>
+  <main class="wrap page item">
+    <a class="back" href={href(isApp ? "/#library-apps" : "/")}><Icon name="back" />{isApp ? "All library apps" : "All firmware"}</a>
+
+    <header class="item-head">
+      <p class="kicker">{item.maker}</p>
+      <h1>{item.name}</h1>
+      <div class="kinds">{kinds.map((k) => <span class:list={["kind", { platform: isApp }]}>{k}</span>)}</div>
+      <p class="status-line">
+        <span class={`pill pill-${item.status}`}>{status.ripeness} · {status.plain}</span>
+        {isApp && item.price && <span class="meta price">{item.price}</span>}
+        {item.version && <span class="meta ver">{isNumbered(item.version) ? "Latest " : ""}{item.version}</span>}
+        {item.updated && (
+          <span class="meta"><Icon name="clock" />Updated <time datetime={item.updated}>{fmtDate(item.updated)}</time></span>
+        )}
+        {item.stars != null && (
+          <span class="meta" title={`${item.stars} stars on GitHub`}><Icon name="star" /><span class="n">{item.stars}</span></span>
+        )}
+      </p>
+      <p class="item-blurb" set:html={fmt(item.blurb)} />
+      {links.length > 0 && (
+        <div class="item-actions">
+          <a class="btn" href={links[0].url} target="_blank" rel="noopener"><Icon name={links[0].icon} />{links[0].label}<Icon name="ext" /></a>
+          {links.slice(1).map((l) => (
+            <a class="btn btn-quiet" href={l.url} target="_blank" rel="noopener"><Icon name={l.icon} />{l.label}</a>
+          ))}
+        </div>
+      )}
+      <ShareRow url={pageUrl} title={`${item.name}: ${plain(item.blurb)}`} />
+    </header>
+
+    <Gallery shots={item.screenshots} credit={`the ${item.name} project`} creditUrl={repoUrl || links[0]?.url} />
+
+    <div class="item-body">
+      <div class="item-col">
+        {(item.more || []).length > 0 && (
+          <section>
+            <h2>About {item.name}</h2>
+            {item.more.map((p) => <p set:html={fmt(p)} />)}
+          </section>
+        )}
+        {(item.features || []).length > 0 && (
+          <section>
+            <h2>{isApp ? "What it does" : "What it adds"}</h2>
+            <ul>{item.features.map((f) => <li set:html={fmt(f)} />)}</ul>
+          </section>
+        )}
+        {(item.install || []).length > 0 && (
+          <section>
+            <h2>{isApp ? "Get started" : "Install"}</h2>
+            <ol>{item.install.map((s) => <li set:html={fmt(s)} />)}</ol>
+          </section>
+        )}
+      </div>
+
+      <aside class="item-col item-facts">
+        <section>
+          <h2>At a glance</h2>
+          <dl class="facts">
+            {isApp && (item.platforms || []).length > 0 && (<><dt>Platforms</dt><dd>{item.platforms.join(", ")}</dd></>)}
+            {isApp && item.price && (<><dt>Price</dt><dd>{item.price}</dd></>)}
+            <dt>{isApp ? "Syncs" : "Runs on"}</dt>
+            <dd>
+              {runs.length > 0 ? (
+                <span class="chips">{runs.map((d) => <span class="chip" title={d.years}>{d.name}</span>)}</span>
+              ) : (
+                <span set:html={fmt(item.devicesNote || "Not listed by the developer")} />
+              )}
+            </dd>
+            {partial.length > 0 && (<><dt>Partial</dt><dd><span class="chips">{partial.map((d) => <span class="chip partial">{d.name}</span>)}</span></dd></>)}
+            {runs.length > 0 && item.devicesNote && (<><dt>Note</dt><dd set:html={fmt(item.devicesNote)} /></>)}
+            {item.requires && (<><dt>Needs</dt><dd set:html={fmt(item.requires)} /></>)}
+            {parent && (<><dt>Based on</dt><dd><a href={href(parent.path)}>{parent.name}</a></dd></>)}
+            {item.license && (<><dt>License</dt><dd>{item.license}</dd></>)}
+          </dl>
+        </section>
+        {(item.files || []).length > 0 && (
+          <section>
+            <h2>Files</h2>
+            <div class="files">
+              {item.files.map((f) => (<div><span>{f.label}</span><code>{f.file}</code></div>))}
+            </div>
+          </section>
+        )}
+        {forks.length > 0 && (
+          <section>
+            <h2>Built on {item.name}</h2>
+            <ul class="link-list">
+              {forks.map((f) => (<li><a href={href(f.path)}>{f.name}</a><span>{plain(f.blurb)}</span></li>))}
+            </ul>
+          </section>
+        )}
+      </aside>
+    </div>
+  </main>
+</Base>

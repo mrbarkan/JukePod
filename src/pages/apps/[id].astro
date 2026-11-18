@@ -1,0 +1,9 @@
+---
+import ItemPage from "../../components/ItemPage.astro";
+import { apps } from "../../lib/catalog.js";
+export function getStaticPaths() {
+  return apps.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+const { item } = Astro.props;
+---
+<ItemPage item={item} />

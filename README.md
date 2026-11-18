@@ -1,69 +1,93 @@
-# JukePod
+# Quitanda
 
-Live site: https://mrbarkan.github.io/JukePod/
+Fresh firmware, mods and apps for your iPod. A catalog of custom firmware, library apps and hardware mods for click-wheel iPods: what each one does, which iPods it fits, how to install it and where to get it.
 
-A one-page catalog of custom firmware for click-wheel iPods: what each one adds, which iPods it runs on, how to install it, and where to download it.
+A quitanda is the small neighborhood shop that sells fruit. The iPod came with one flavor; here you pick your own.
 
-It's a plain static site with no build step and no framework, so it runs on any static host.
+The site is static. [Astro](https://astro.build) turns the catalog into one page per listing, and GitHub Pages serves the result.
 
 ```
-index.html               page structure
-assets/style.css         all styling (light and dark themes)
-assets/app.js            filtering, sorting, cards, click-wheel, compatibility table
-data/firmwares.js        THE CATALOG: every firmware, device and watch-list entry
-data/github-stats.js     generated star counts (see below)
-scripts/refresh-github.mjs
+src/data/catalog.js         THE CATALOG: firmware, apps, mods and the watch list
+src/data/github-stats.json  versions, dates and stars, refreshed nightly (generated)
+src/data/screenshots.json   which pictures belong to which listing
+src/content/blog/           blog posts, one Markdown file each
+src/pages/                  home, listing pages, mods, blog, about, RSS, sitemap
+src/components/             listing page, gallery, share row, icons, the mark
+src/styles/site.css         all styling (light and dark)
+public/assets/app.js        home page filters, cards and the click wheel
+public/screenshots/         the pictures
+scripts/refresh-github.mjs  the nightly release tracker
+.github/workflows/deploy.yml
 ```
 
 ## Run it locally
 
-Open `index.html` in a browser, or serve the folder:
-
 ```bash
-python3 -m http.server 8000
+npm install
 ```
 
-## Add or update a firmware
+```bash
+npm run dev
+```
 
-Everything lives in `data/firmwares.js`. The comment at the top of that file lists every field.
+## Add or update a listing
 
-1. Copy an existing entry in `firmwares` and give it a unique `id`. The id becomes its link, for example `/#rockpod`.
+Everything lives in `src/data/catalog.js`. The comments in that file describe every field.
+
+1. Copy an existing entry in `firmwares`, `apps` or `mods` and give it a unique `id`. The id becomes its address, for example `/firmware/rockpod/`.
 2. Fill in `devices` (and `partial`) using ids from the `devices` list.
-3. The first item in `links` becomes the big button. The rest go in its dropdown menu.
-4. Add the id to `latest.lines` so the "Latest" panel shows what changed, and update `latest.date` and `updatedOn`.
+3. The first item in `links` becomes the main button.
+4. Add the id to `latest.lines` so the "Fresh in" panel shows it, and update `latest.date` and `updatedOn`.
 
-Projects with no release yet go in `watchlist`. Move one into `firmwares` once it ships.
+Projects with no release yet go in `watchlist`. Move one into `firmwares` once it ships. Set `draft: true` to keep an entry off the site while you fill it in.
 
-## Add a library app
+Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it.
 
-Apps that put music on an iPod (from a computer or phone) go in `apps` in the same file. They take the same fields as firmware, plus `platforms`, `price` and, when the developer publishes no device list, `devicesNote`. An app with an empty `devices` list still shows up when someone filters by iPod, since it may support their model.
+## Add screenshots
 
-Set `draft: true` to keep an entry off the page while you fill it in.
+Put the pictures in `public/screenshots/<listing id>/` and list them in `src/data/screenshots.json` with their size and a short caption. Set `"pixel": true` for an iPod screen capture (320×240) so it's shown sharp at its real pixels. The first picture becomes the card thumbnail.
 
-## Refresh GitHub stars
+## Write a blog post
 
-```bash
-GITHUB_TOKEN=your_token node scripts/refresh-github.mjs
+Add a file to `src/content/blog/` named `YYYY-MM-DD-your-title.md`:
+
+```md
+---
+title: Your title
+date: 2026-11-18
+summary: One sentence for the blog index, RSS and link previews.
+---
+
+The post, in Markdown. Link to pages as /firmware/rockbox/.
 ```
 
-This writes `data/github-stats.js`, which overrides the `stars` values in the catalog. The token is optional, but without one GitHub limits you to 60 requests an hour.
+## Release tracking
+
+Every night the deploy workflow runs `scripts/refresh-github.mjs`. For each listing with a `github` field it reads the stars, the latest release and the last push, and saves them to `src/data/github-stats.json`. Those values override the ones in the catalog, and a version change appears in the "Fresh in" panel for two weeks.
+
+To run it yourself:
+
+```bash
+GITHUB_TOKEN=your_token npm run refresh
+```
+
+The tests for it run with `npm test`.
 
 ## Deploy
 
-Any static host works:
+`.github/workflows/deploy.yml` builds and publishes the site on every push to `main`, every night, and on demand from the Actions tab.
 
-- **GitHub Pages**: push the folder to a repo, then go to Settings › Pages and deploy from the branch.
-- **Netlify / Cloudflare Pages**: point them at the repo. There's no build command, and the output directory is the repo root.
+It needs one setting: **Settings › Pages › Source: GitHub Actions**. The workflow reads the site address from the Pages settings, so adding a custom domain there needs no change in the code.
 
 ## Check before launch
 
-The starter entries were compiled from each project's public pages in November 2026. Check these against the sources:
+The listings were compiled from each project's public pages in November 2026. These need a second look:
 
 - Rockbox 4.0: the release date (listed as April 2025) and the exact device list.
-- Star counts: run the refresh script. Rockpod's count isn't filled in yet.
 - iPodLinux: the device list is from memory of the old project, so treat it as approximate.
-- Checksums: none are listed, because none of the projects checked publish them. Add a `sha256` to a `files` entry if a developer provides one.
-- Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources, because their own sites couldn't be reached while building this. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
-- Stonepod: details come from its TestFlight page and search results; the Reddit post couldn't be opened.
-- PodBox and CrateDigger: CrateDigger's PodBox features are in its 2.3.4 betas, not in 2.3.2. Update the card when 2.3.4 ships.
-- Helikon OS is on the watch list. Move it to `firmwares` when its first release appears.
+- Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
+- Stonepod: details come from its TestFlight page and search results.
+- CrateDigger: its PodBox features are in the 2.3.4 betas, not in 2.3.2. Update the listing when 2.3.4 ships.
+- Hardware mods: written from vendor pages and press coverage, not hands-on testing. Check kit names, what each port does, and the haptic click entry in particular.
+- Screenshots come from each project's own repository and are credited on the page. Remove any a maker objects to.
+- The nightly tracker is tested against sample data but has not yet run against GitHub.

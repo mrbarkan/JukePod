@@ -1,0 +1,22 @@
+---
+import Base from "../../layouts/Base.astro";
+import { posts } from "../../lib/blog.js";
+import { fmtDate, href } from "../../lib/catalog.js";
+---
+<Base title="Blog" description="News, release notes and guides from Quitanda, the corner shop for click-wheel iPods." section="blog">
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1>Blog</h1>
+      <p>News from the shop, new arrivals, and guides for getting more out of your iPod. <a href={href("/rss.xml")}>Subscribe by RSS</a>.</p>
+    </header>
+    <ul class="post-list">
+      {posts.map((p) => (
+        <li>
+          <time datetime={p.date}>{fmtDate(p.date, true)}</time>
+          <h2><a href={href(`/blog/${p.slug}/`)}>{p.title}</a></h2>
+          <p>{p.summary}</p>
+        </li>
+      ))}
+    </ul>
+  </main>
+</Base>

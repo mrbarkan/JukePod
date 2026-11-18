@@ -1,0 +1,175 @@
+{
+  "rockpod": [
+    {
+      "src": "screenshots/rockpod/1.jpg",
+      "alt": "Rockpod on an iPod Classic",
+      "w": 1400,
+      "h": 764,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/rockpod/2.png",
+      "alt": "Main menu",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockpod/3.png",
+      "alt": "Cover Flow",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockpod/4.png",
+      "alt": "Cover Flow track list",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockpod/5.png",
+      "alt": "Themify 2 theme",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockpod/6.png",
+      "alt": "Storage mode setting",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    }
+  ],
+  "podbox": [
+    {
+      "src": "screenshots/podbox/1.jpg",
+      "alt": "Now Playing, colored by the track",
+      "w": 660,
+      "h": 498,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/podbox/2.jpg",
+      "alt": "Art beside every list",
+      "w": 660,
+      "h": 240,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/podbox/3.jpg",
+      "alt": "Artist Portraits carousel",
+      "w": 660,
+      "h": 239,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/podbox/4.jpg",
+      "alt": "Playback Report",
+      "w": 660,
+      "h": 240,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/podbox/5.jpg",
+      "alt": "Audiobooks",
+      "w": 660,
+      "h": 240,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/podbox/6.jpg",
+      "alt": "Apps and Arcade",
+      "w": 660,
+      "h": 240,
+      "pixel": false
+    }
+  ],
+  "iopenpod": [
+    {
+      "src": "screenshots/iopenpod/1.jpg",
+      "alt": "Album library",
+      "w": 1400,
+      "h": 933,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/iopenpod/2.jpg",
+      "alt": "Editing a track",
+      "w": 980,
+      "h": 740,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/iopenpod/3.jpg",
+      "alt": "Smart playlist editor",
+      "w": 900,
+      "h": 620,
+      "pixel": false
+    }
+  ],
+  "rockpod-apple2026": [
+    {
+      "src": "screenshots/rockpod-apple2026/1.jpg",
+      "alt": "Apple2026 UI on an iPod Classic",
+      "w": 1400,
+      "h": 984,
+      "pixel": false
+    }
+  ],
+  "rpod": [
+    {
+      "src": "screenshots/rpod/1.jpg",
+      "alt": "RPod on an iPod Classic",
+      "w": 1280,
+      "h": 640,
+      "pixel": false
+    }
+  ],
+  "cratedigger": [
+    {
+      "src": "screenshots/cratedigger/1.jpg",
+      "alt": "The console, dark",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/cratedigger/2.jpg",
+      "alt": "The console, light",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/cratedigger/3.jpg",
+      "alt": "Themes",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/cratedigger/4.jpg",
+      "alt": "Theme editor",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/cratedigger/5.jpg",
+      "alt": "Crates",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    },
+    {
+      "src": "screenshots/cratedigger/6.jpg",
+      "alt": "Conversion",
+      "w": 1400,
+      "h": 920,
+      "pixel": false
+    }
+  ]
+}

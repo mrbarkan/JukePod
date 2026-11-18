@@ -1,0 +1,26 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import ShareRow from "../../components/ShareRow.astro";
+import { posts, renderPost } from "../../lib/blog.js";
+import { fmtDate, href } from "../../lib/catalog.js";
+export function getStaticPaths() {
+  return posts.map((post) => ({ params: { slug: post.slug }, props: { post } }));
+}
+const { post } = Astro.props;
+const html = await renderPost(post);
+const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
+---
+<Base title={post.title} description={post.summary} type="article" section="blog">
+  <main class="wrap page narrow">
+    <a class="back" href={href("/blog/")}><Icon name="back" />All posts</a>
+    <article class="prose">
+      <header>
+        <time datetime={post.date}>{fmtDate(post.date, true)}</time>
+        <h1>{post.title}</h1>
+      </header>
+      <Fragment set:html={html} />
+    </article>
+    <ShareRow url={pageUrl} title={post.title} />
+  </main>
+</Base>

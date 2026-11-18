@@ -1,0 +1,38 @@
+---
+import { href } from "../lib/catalog.js";
+const { shots = [], credit, creditUrl } = Astro.props;
+const pixel = shots.filter((s) => s.pixel);
+const wide = shots.filter((s) => !s.pixel);
+---
+{shots.length > 0 && (
+  <section class="gallery" aria-label="Screenshots">
+    <h2>Screenshots</h2>
+    {wide.length > 0 && (
+      <div class="gallery-wide">
+        {wide.map((s) => (
+          <figure>
+            <a href={href("/" + s.src)} target="_blank" rel="noopener">
+              <img src={href("/" + s.src)} alt={s.alt} width={s.w} height={s.h} loading="lazy" />
+            </a>
+            <figcaption>{s.alt}</figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+    {pixel.length > 0 && (
+      <div class="gallery-pixel">
+        {pixel.map((s) => (
+          <figure>
+            <span class="lcd-frame"><img src={href("/" + s.src)} alt={s.alt} width={s.w} height={s.h} loading="lazy" /></span>
+            <figcaption>{s.alt}</figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+    {credit && (
+      <p class="gallery-credit">
+        Pictures from {creditUrl ? <a href={creditUrl} target="_blank" rel="noopener">{credit}</a> : credit}.
+      </p>
+    )}
+  </section>
+)}

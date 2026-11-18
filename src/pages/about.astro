@@ -1,0 +1,42 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE, STATUS, href } from "../lib/catalog.js";
+---
+<Base title="About" description="What Quitanda is, how listings are chosen and checked, and who runs it." section="about">
+  <main class="wrap page narrow">
+    <article class="prose">
+      <header><h1>About Quitanda</h1></header>
+
+      <p>Quitanda is a catalog of everything that gives a click-wheel iPod a second life: custom firmware, the apps that manage its music, and the parts that replace what wears out. Each listing says what it does, which iPods it fits, how to install it and where to get it.</p>
+
+      <h2>The name</h2>
+      <p>In Portuguese, a quitanda is the small neighborhood shop that sells fruit. You look over what’s fresh and pick what you like. The iPod came with one flavor. Here you choose your own.</p>
+
+      <h2>How listings work</h2>
+      <p>Listings are compiled from each project’s own public pages: its repository, release notes and website. Quitanda links to the project’s downloads and doesn’t host firmware files. Versions, dates and GitHub stars are refreshed automatically every night.</p>
+      <p>Status follows the fruit, with the plain word beside it:</p>
+      <ul>
+        <li><span class="pill pill-stable">{STATUS.stable.ripeness} · {STATUS.stable.plain}</span> Its maker calls it stable and publishes releases.</li>
+        <li><span class="pill pill-beta">{STATUS.beta.ripeness} · {STATUS.beta.plain}</span> Usable, still changing, or not yet released as stable.</li>
+        <li><span class="pill pill-experimental">{STATUS.experimental.ripeness} · {STATUS.experimental.plain}</span> For the curious. Expect rough edges, and sometimes real risk to the iPod.</li>
+        <li><span class="pill pill-archived">{STATUS.archived.ripeness} · {STATUS.archived.plain}</span> No longer developed. Kept for the record.</li>
+      </ul>
+      <p>A listing here isn’t a guarantee. Read the project’s own notes, and back up your music first.</p>
+
+      <h2>Add or correct a listing</h2>
+      <p>The whole catalog is one file in a public repository. <a href={`${SITE.repo}/issues/new`}>Open an issue</a> with the details, or <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>edit the file</a> and send a pull request. If you make one of the projects listed and something is wrong, the same route works, and corrections go in quickly.</p>
+
+      <h2>Pictures</h2>
+      <p>Screenshots come from each project’s own pages and are credited on the listing. If one is yours and you’d like it removed, open an issue and it will come down.</p>
+
+      <h2>Who runs it</h2>
+      <p>Quitanda is run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who also makes <a href={href("/apps/cratedigger/")}>CrateDigger</a>, one of the library apps listed here. It’s listed on the same terms as everything else.</p>
+
+      <h2>Privacy</h2>
+      <p>The site sets no cookies and runs no tracking or ads. It remembers your iPod choice in your own browser and nowhere else. Fonts load from Google Fonts.</p>
+
+      <h2>The small print</h2>
+      <p>Quitanda isn’t affiliated with Apple Inc. iPod is a trademark of Apple Inc. Everything listed is made by independent developers and makers. Installing firmware or opening an iPod is done at your own risk.</p>
+    </article>
+  </main>
+</Base>

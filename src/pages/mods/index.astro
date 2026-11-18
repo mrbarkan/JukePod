@@ -1,0 +1,83 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import { mods, watchlist, deviceById, fmt, href } from "../../lib/catalog.js";
+
+const kinds = [...new Set(mods.map((m) => m.kind))];
+const coming = watchlist.filter((w) => w.kind === "mod");
+---
+<Base
+  title="Hardware mods for iPod"
+  description="Flash storage, bigger batteries, Bluetooth, USB-C and more for click-wheel iPods, with what each mod fits, how hard it is, and how it gets along with custom firmware."
+  section="mods"
+>
+  <main class="wrap page">
+    <header class="intro">
+      <h1>Hardware mods</h1>
+      <p>Parts you fit inside the iPod. Each listing says which iPods it fits, how hard the job is, and what changes for the firmware you run.</p>
+      <nav class="jump" aria-label="Kinds of mod">
+        {kinds.map((k) => <a href={`#kind-${k.toLowerCase()}`}>{k}</a>)}
+      </nav>
+    </header>
+
+    {kinds.map((kind) => (
+      <section class="section" id={`kind-${kind.toLowerCase()}`}>
+        <div class="section-head"><h2>{kind}</h2></div>
+        <div class="mod-list">
+          {mods.filter((m) => m.kind === kind).map((m) => (
+            <article class="card mod" id={m.id}>
+              <div class="mod-main">
+                <p class="kicker">{m.maker}</p>
+                <h3 class="card-title"><a href={`#${m.id}`}>{m.name}</a></h3>
+                <p class="blurb" set:html={fmt(m.blurb)} />
+                {(m.more || []).map((p) => <p set:html={fmt(p)} />)}
+                {(m.links || []).length > 0 && (
+                  <div class="item-actions">
+                    {m.links.map((l) => (
+                      <a class="btn btn-quiet" href={l.url} target="_blank" rel="noopener"><Icon name={l.icon} />{l.label}<Icon name="ext" /></a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div class="mod-side">
+                <dl class="facts">
+                  <dt>Skill</dt><dd>{m.skill}</dd>
+                  <dt>Fits</dt>
+                  <dd><span class="chips">{m.devices.map((d) => <span class="chip">{deviceById[d]?.name}</span>)}</span></dd>
+                  {(m.partial || []).length > 0 && (
+                    <><dt>With a converter</dt><dd><span class="chips">{m.partial.map((d) => <span class="chip partial">{deviceById[d]?.name}</span>)}</span></dd></>
+                  )}
+                </dl>
+                {(m.firmware || []).length > 0 && (
+                  <div class="mod-fw">
+                    <h4>With custom firmware</h4>
+                    <ul>{m.firmware.map((n) => <li set:html={fmt(n)} />)}</ul>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {coming.length > 0 && (
+      <section class="section watch">
+        <div class="section-head">
+          <h2>Still on the tree</h2>
+          <p>Mods that have been announced but can’t be bought or built yet.</p>
+        </div>
+        <ul class="watch-list">
+          {coming.map((w) => (
+            <li class="watch-item">
+              <div class="watch-top"><a href={w.url} target="_blank" rel="noopener">{w.name} ↗</a><span class="maker">{w.maker}</span></div>
+              <p set:html={fmt(w.blurb) + (w.more ? " " + fmt(w.more) : "")} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <p class="aside-note">Opening an iPod can damage it, and lithium batteries can catch fire if punctured. Follow a teardown guide, and don’t pry near the battery. Looking for software instead? <a href={href("/")}>Browse the firmware</a>.</p>
+  </main>
+</Base>

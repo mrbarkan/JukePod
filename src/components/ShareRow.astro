@@ -1,0 +1,38 @@
+---
+import Icon from "./Icon.astro";
+const { url, title } = Astro.props;
+const reddit = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+---
+<div class="share" data-share data-url={url} data-title={title}>
+  <span class="share-label">Share</span>
+  <button type="button" class="share-btn" data-copy><Icon name="link" /><span data-copy-label>Copy link</span></button>
+  <button type="button" class="share-btn" data-native hidden><Icon name="share" />Share…</button>
+  <a class="share-btn" href={reddit} target="_blank" rel="noopener">Post to Reddit</a>
+  <input class="share-url" type="text" readonly value={url} aria-label="Link to this page" hidden />
+</div>
+<script>
+  document.querySelectorAll("[data-share]").forEach((box) => {
+    const url = box.getAttribute("data-url");
+    const title = box.getAttribute("data-title");
+    const copy = box.querySelector("[data-copy]");
+    const label = box.querySelector("[data-copy-label]");
+    const field = box.querySelector(".share-url");
+    const native = box.querySelector("[data-native]");
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        label.textContent = "Copied";
+        setTimeout(() => (label.textContent = "Copy link"), 1800);
+      } catch {
+        // Clipboard refused: show the address selected, ready to copy by hand.
+        field.hidden = false;
+        field.focus();
+        field.select();
+      }
+    });
+    if (navigator.share) {
+      native.hidden = false;
+      native.addEventListener("click", () => navigator.share({ title, url }).catch(() => {}));
+    }
+  });
+</script>

@@ -1,0 +1,76 @@
+---
+import "../styles/site.css";
+import Mark from "../components/Mark.astro";
+import { SITE, href, absolute, fmtDate, updatedOn } from "../lib/catalog.js";
+
+const { title, description = SITE.description, image = "/og.png", type = "website", section = "" } = Astro.props;
+const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name}: ${SITE.tagline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const nav = [
+  { id: "firmware", label: "Firmware", path: "/" },
+  { id: "apps", label: "Apps", path: "/#library-apps" },
+  { id: "mods", label: "Mods", path: "/mods/" },
+  { id: "blog", label: "Blog", path: "/blog/" },
+  { id: "about", label: "About", path: "/about/" },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href={href("/favicon.svg")} />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} blog`} href={href("/rss.xml")} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title || `${SITE.name}: ${SITE.tagline}`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={absolute(image, Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;700;800&family=Silkscreen&display=swap"
+    />
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap head-inner">
+        <a class="brand" href={href("/")} aria-label={`${SITE.name} home`}>
+          <Mark />
+          <span class="brand-text">
+            <span class="brand-name">{SITE.name}</span>
+            <span class="brand-kicker">Fresh for your iPod</span>
+          </span>
+        </a>
+        <nav class="head-nav" aria-label="Sections">
+          {nav.map((n) => (
+            <a href={href(n.path)} aria-current={section === n.id ? "page" : undefined}>{n.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="site-foot">
+      <div class="wrap foot-inner">
+        <p>Back up your music before you install anything or open your iPod. Everything listed here is made by independent developers and makers, and used at your own risk.</p>
+        <p>
+          Not affiliated with Apple Inc. iPod is a trademark of Apple Inc. Catalog updated <time datetime={updatedOn}>{fmtDate(updatedOn, true)}</time>.
+        </p>
+        <p class="foot-links">
+          <a href={href("/about/")}>About</a>
+          <a href={href("/blog/")}>Blog</a>
+          <a href={href("/rss.xml")}>RSS</a>
+          <a href={SITE.repo}>Source on GitHub</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

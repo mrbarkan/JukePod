@@ -1,15 +1,15 @@
 (function () {
   "use strict";
 
-  var DATA = window.IPOD_FIRMWARE_DATA;
+  var DATA = window.QUITANDA_DATA;
+  var BASE = DATA.base || "";
+  function pageUrl(item) { return BASE + item.path; }
   var devices = DATA.devices;
   var notDraft = function (x) { return !x.draft; };
   var firmwares = DATA.firmwares.filter(notDraft);
   var apps = (DATA.apps || []).filter(notDraft);
   firmwares.forEach(function (x) { x.type = "firmware"; });
   apps.forEach(function (x) { x.type = "app"; });
-  var GH = (window.IPOD_GITHUB_STATS && window.IPOD_GITHUB_STATS.repos) || {};
-  firmwares.concat(apps).forEach(function (x) { if (GH[x.id] && GH[x.id].stars != null) x.stars = GH[x.id].stars; });
   var watchlist = DATA.watchlist || [];
   var deviceById = indexBy(devices);
   var catById = indexBy(DATA.categories);
@@ -73,7 +73,12 @@
   };
   function icon(name) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[name] || ICON.info) + "</svg>"; }
   var CHEV = '<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5"/></svg>';
-  var STATUS = { stable: "Stable", beta: "Beta", experimental: "Experimental", archived: "Archived" };
+  // Ripeness is the shop's word for status; the plain word always sits beside it.
+  var STATUS_WORDS = DATA.status || {};
+  function statusLabel(key) {
+    var w = STATUS_WORDS[key];
+    return w ? w.ripeness + " \u00b7 " + w.plain : key;
+  }
 
   /* ---------- filtering ---------- */
   function fitOf(fw, deviceId) {
@@ -88,7 +93,7 @@
       fw.devices.concat(fw.partial || []).map(function (d) { return deviceById[d] ? deviceById[d].name : d; }).join(" "),
       (fw.categories || []).map(function (c) { return catById[c] ? catById[c].name : c; }).join(" "),
       (fw.platforms || []).join(" "), fw.price || "", fw.devicesNote || "",
-      STATUS[fw.status]].join(" ").toLowerCase();
+      statusLabel(fw.status)].join(" ").toLowerCase();
   }
   function matches(fw, opts) {
     opts = opts || state;
@@ -117,9 +122,15 @@
   function renderLatest() {
     var L = DATA.latest;
     if (!L) { $("latest-list").closest(".latest").hidden = true; return; }
-    $("latest-date").textContent = fmtDate(L.date, true);
-    $("latest-date").setAttribute("datetime", L.date);
-    $("latest-list").innerHTML = L.lines.map(function (line) {
+    var shown = DATA.updatedOn && DATA.updatedOn > L.date ? DATA.updatedOn : L.date;
+    $("latest-date").textContent = fmtDate(shown, true);
+    $("latest-date").setAttribute("datetime", shown);
+    var fresh = (DATA.recentChanges || []).map(function (c) {
+      var it = itemById[c.id];
+      return it ? '<a href="' + esc(pageUrl(it)) + '">' + esc(it.name) + " " + esc(c.version) + "</a>" : null;
+    }).filter(Boolean);
+    var freshLine = fresh.length ? '<li class="latest-item">New versions: ' + listJoin(fresh) + "</li>" : "";
+    $("latest-list").innerHTML = freshLine + L.lines.map(function (line) {
       var links = line.ids.map(function (id) {
         var fw = itemById[id], w = watchById[id];
         if (fw) return '<a href="#' + esc(id) + '">' + esc(fw.name) + (isNumbered(fw.version) ? " " + esc(fw.version) : "") + "</a>";
@@ -206,7 +217,7 @@
       (runs.length && fw.devicesNote ? "<dt>Note</dt><dd>" + fmt(fw.devicesNote) + "</dd>" : "") +
       (partial.length ? "<dt>Partial</dt><dd>" + esc(partial.join(", ")) + "</dd>" : "") +
       (fw.requires ? "<dt>Needs</dt><dd>" + fmt(fw.requires) + "</dd>" : "") +
-      (fw.basedOn ? "<dt>Based on</dt><dd>" + (fwById[fw.basedOn] ? '<a href="#' + esc(fw.basedOn) + '">' + esc(fwById[fw.basedOn].name) + "</a>" : esc(fw.basedOn)) + "</dd>" : "") +
+      (fw.basedOn ? "<dt>Based on</dt><dd>" + (fwById[fw.basedOn] ? '<a href="' + esc(pageUrl(fwById[fw.basedOn])) + '">' + esc(fwById[fw.basedOn].name) + "</a>" : esc(fw.basedOn)) + "</dd>" : "") +
       (fw.license ? "<dt>License</dt><dd>" + esc(fw.license) + "</dd>" : "") +
       "</dl>";
     var right = facts;
@@ -218,7 +229,16 @@
         return "<div><span>" + esc(f.label) + "</span><code>" + esc(f.file) + "</code></div>";
       }).join("") + "</div>";
     }
+    var shots = (fw.screenshots || []).length;
+    left += '<p><a class="more-link" href="' + esc(pageUrl(fw)) + '">' + (shots ? "Full page with " + plural(shots, "screenshot", "screenshots") : "Full page and share link") + " " + icon("ext") + "</a></p>";
     return '<div class="more" id="more-' + esc(fw.id) + '"><div class="more-col">' + left + '</div><div class="more-col">' + right + "</div></div>";
+  }
+  function thumb(fw) {
+    var shots = fw.screenshots || [];
+    if (!shots.length) return "";
+    var s = shots.filter(function (x) { return x.pixel; })[0] || shots[0];
+    return '<a class="thumb' + (s.pixel ? " is-pixel" : "") + '" href="' + esc(pageUrl(fw)) + '" aria-label="' + esc(fw.name) + ' screenshots">' +
+      '<img src="' + esc(BASE + "/" + s.src) + '" alt="" loading="lazy" width="' + s.w + '" height="' + s.h + '"></a>';
   }
   function card(fw) {
     var open = state.open.has(fw.id);
@@ -227,7 +247,7 @@
     var kinds = isApp
       ? (fw.platforms || []).map(function (p) { return '<span class="kind platform">' + esc(p) + "</span>"; }).join("")
       : (fw.categories || []).map(function (c) { return catById[c] ? '<span class="kind">' + esc(catById[c].name) + "</span>" : ""; }).join("");
-    var status = '<span class="pill pill-' + esc(fw.status) + '">' + esc(STATUS[fw.status] || fw.status) + "</span>";
+    var status = '<span class="pill pill-' + esc(fw.status) + '">' + esc(statusLabel(fw.status)) + "</span>";
     if (fit === "full") status += '<span class="fits">' + (isApp ? "Syncs your iPod" : "Runs on your iPod") + "</span>";
     if (fit === "partial") status += '<span class="fits partial">Partial on your iPod</span>';
     if (isApp && fw.price) status += '<span class="meta price">' + esc(fw.price) + "</span>";
@@ -237,10 +257,11 @@
     else if (!fw.github && !isApp) status += '<span class="meta">Not on GitHub</span>';
 
     return '<article class="card' + (fw.pinned && !isApp ? " is-pinned" : "") + (open ? " is-open" : "") + '" id="' + esc(fw.id) + '" aria-labelledby="t-' + esc(fw.id) + '">' +
-      '<div class="card-head"><div>' +
+      '<div class="card-head"><div class="card-head-text">' +
         '<p class="kicker">' + esc(fw.maker) + (fw.pinned ? '<span class="start">' + (isApp ? "Built in" : "Start here") + "</span>" : "") + "</p>" +
-        '<h3 class="card-title" id="t-' + esc(fw.id) + '"><a href="#' + esc(fw.id) + '">' + esc(fw.name) + "</a></h3>" +
-      '</div><div class="kinds">' + kinds + "</div></div>" +
+        '<h3 class="card-title" id="t-' + esc(fw.id) + '"><a href="' + esc(pageUrl(fw)) + '">' + esc(fw.name) + "</a></h3>" +
+        '<div class="kinds">' + kinds + "</div>" +
+      "</div>" + thumb(fw) + "</div>" +
       '<p class="status-line">' + status + "</p>" +
       '<p class="blurb">' + fmt(fw.blurb) + "</p>" +
       deviceChips(fw) +
@@ -288,7 +309,7 @@
   function renderMatrix() {
     var cols = firmwares.slice().sort(function (a, b) { return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name); });
     var head = "<thead><tr><th scope=\"col\">iPod</th>" + cols.map(function (fw) {
-      return '<th scope="col"><a href="#' + esc(fw.id) + '">' + esc(fw.name) + "</a></th>";
+      return '<th scope="col"><a href="' + esc(pageUrl(fw)) + '">' + esc(fw.name) + "</a></th>";
     }).join("") + "</tr></thead>";
     var body = "<tbody>" + devices.map(function (d) {
       return '<tr class="' + (state.device === d.id ? "is-mine" : "") + '"><th scope="row">' + esc(d.name) + "<small>" + esc(d.years) + "</small></th>" +
@@ -450,6 +471,5 @@
   renderWatch();
   setupWheel();
   bind();
-  if (DATA.updatedOn) { $("foot-date").textContent = fmtDate(DATA.updatedOn, true); $("foot-date").setAttribute("datetime", DATA.updatedOn); }
   if (location.hash) route();
 })();
