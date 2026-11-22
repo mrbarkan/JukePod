@@ -105,7 +105,7 @@ A shared theme is hidden until an admin approves it. Its files can only be fetch
 
 `/privacy/` and `/gdpr/` describe what the site does today. If you change what is collected, who processes it, or how deletion works, change those pages in the same commit. Before the first newsletter goes out, name the email service on `/privacy/`.
 
-Set `contactEmail` in `SITE` (`src/lib/catalog.js`) to the address people should write to about their data. Until it is set, the pages point to the account page and to GitHub issues.
+`contactEmail` in `SITE` (`src/lib/catalog.js`) is the address people write to about their data. It appears on both pages.
 
 The account page backs the promises those pages make: "Download my data", "Unsubscribe" and "Delete my account" (which removes the profile, settings, newsletter record, shared themes and their files, reports, and the sign-in). `src/lib/member.js` holds that code.
 
@@ -144,7 +144,7 @@ The listings were compiled from each project's public pages in November 2026. Th
 - Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
 - Stonepod: details come from its TestFlight page and search results.
 - CrateDigger: the listing assumes the PodBox features from the 2.3.4 betas shipped in 2.3.4. Confirm against the release notes.
-- Privacy policy and data-rights page: a plain-language description of what the site does, not legal advice. Have a lawyer read them if you need certainty, and add a contact address.
+- Privacy policy and data-rights page: a plain-language description of what the site does, not legal advice. Have a lawyer read them if you need certainty.
 - iPod model numbers in the owners' guide (`model` in the device list) were written from memory. Check them against Apple's "Identify your iPod model" page.
 - The owners' guide says Rockbox needs a Windows-formatted iPod and gives reset and disk-mode key presses. Check both against the Rockbox manual and Apple's support pages.
 - Hardware mods: written from vendor pages and press coverage, not hands-on testing. Check kit names, what each port does, and the haptic click entry in particular.

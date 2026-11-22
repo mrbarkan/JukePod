@@ -3,7 +3,7 @@
 import { SITE } from "../lib/catalog.js";
 ---
 {SITE.contactEmail ? (
-  <p>Write to <strong class="selectable">{SITE.contactEmail}</strong>. You’ll get an answer within one month, usually much sooner.</p>
+  <p>Most requests need no message at all: <slot /> For anything else, write to <strong class="selectable">{SITE.contactEmail}</strong>. You’ll get an answer within one month, usually much sooner.</p>
 ) : (
   <p>Most requests need no message at all: <slot /> For anything else, <a href={`${SITE.repo}/issues/new`}>open an issue on GitHub</a> asking to be contacted about a privacy matter. Issues are public, so don’t put personal details in it; you’ll be answered privately, within one month.</p>
 )}

@@ -1,7 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import Contact from "../components/Contact.astro";
-import { href } from "../lib/catalog.js";
+import { SITE, href } from "../lib/catalog.js";
 const UPDATED = "22 November 2026";
 ---
 <Base title="Privacy policy" description="What Quitanda collects, why, who handles it and how to remove it. No ads, no tracking, no selling.">
@@ -23,7 +23,7 @@ const UPDATED = "22 November 2026";
       </ul>
 
       <h2>Who is responsible</h2>
-      <p>Quitanda is a personal, non-commercial project run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who decides how the data described here is used (the “controller”, in the law’s words).</p>
+      <p>Quitanda is a personal, non-commercial project run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who decides how the data described here is used (the “controller”, in the law’s words). You can reach them at <strong class="selectable">{SITE.contactEmail}</strong>.</p>
 
       <h2>What we collect, and why</h2>
 

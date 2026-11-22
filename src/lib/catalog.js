@@ -126,9 +126,8 @@ export function absolute(path, site) {
 }
 
 export const SITE = {
-  // Where people write about their data. Set this to a real address; until
-  // then the privacy pages point to the account page and to GitHub.
-  contactEmail: "",
+  // Where people write about their data. Shown on the privacy pages.
+  contactEmail: "opa@mrbarkan.com",
   name: "Quitanda",
   tagline: "Fresh firmware, mods and apps for your iPod",
   description:
