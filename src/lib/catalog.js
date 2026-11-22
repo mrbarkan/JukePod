@@ -116,5 +116,7 @@ export const SITE = {
   tagline: "Fresh firmware, mods and apps for your iPod",
   description:
     "Quitanda is the corner shop for click-wheel iPods: custom firmware, hardware mods and library apps, with what each one does, which iPods it fits and where to get it.",
-  repo: "https://github.com/mrbarkan/JukePod",
+  // The deploy workflow passes the real address, so renaming the repository
+  // needs no change here.
+  repo: import.meta.env.PUBLIC_REPO_URL || "https://github.com/mrbarkan/quitanda",
 };

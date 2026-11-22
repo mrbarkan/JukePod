@@ -28,4 +28,4 @@ The status words follow the fruit: **Ripe** is stable, **Ripening** is beta, **U
 - A themes gallery, where people post their themes with screenshots.
 - More guides, starting with first installs and storage swaps.
 
-If something is missing, [tell us](https://github.com/mrbarkan/JukePod/issues/new). New listings are welcome, and so are corrections.
+If something is missing, [tell us](/about/#add-or-correct-a-listing). New listings are welcome, and so are corrections.
