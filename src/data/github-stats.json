@@ -1,1 +1,50 @@
-{ "date": null, "repos": {}, "changes": [] }
+{
+  "date": "2026-11-22",
+  "repos": {
+    "rockpod": {
+      "stars": 269,
+      "updated": "2026-08-01",
+      "version": "5.5"
+    },
+    "rockpod-apple2026": {
+      "stars": 6,
+      "updated": "2026-08-11"
+    },
+    "rpod": {
+      "stars": 0,
+      "updated": "2026-10-28"
+    },
+    "podbox": {
+      "stars": 72,
+      "updated": "2026-11-22"
+    },
+    "rodbox": {
+      "stars": 0,
+      "updated": "2026-11-21"
+    },
+    "skvm-podbox": {
+      "stars": 0,
+      "updated": "2026-10-25"
+    },
+    "ipod-sun": {
+      "stars": 97,
+      "updated": "2026-05-19"
+    },
+    "iopenpod": {
+      "stars": 534,
+      "updated": "2026-11-16",
+      "version": "2.1.4"
+    },
+    "foo-dop": {
+      "stars": 112,
+      "updated": "2020-02-02",
+      "version": "0.7.2"
+    },
+    "cratedigger": {
+      "stars": 3,
+      "updated": "2026-11-18",
+      "version": "2.3.4"
+    }
+  },
+  "changes": []
+}
