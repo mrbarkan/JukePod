@@ -1,0 +1,11 @@
+---
+// Hands the theme pages what they need from the catalog without shipping
+// the whole catalog to the browser.
+import { themeTargets, deviceById } from "../lib/catalog.js";
+const data = {
+  targets: themeTargets,
+  devices: Object.fromEntries(Object.values(deviceById).map((d) => [d.id, d.name])),
+};
+const json = JSON.stringify(data).replace(/</g, "\\u003c");
+---
+<script is:inline type="application/json" id="theme-data" set:html={json} />

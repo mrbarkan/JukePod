@@ -1,0 +1,94 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import ThemeData from "../../components/ThemeData.astro";
+import { href } from "../../lib/catalog.js";
+---
+<Base title="Review queue" description="Themes waiting to be checked." section="themes">
+  <main class="wrap page">
+    <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
+    <header class="intro"><h1>Review queue</h1></header>
+    <p id="rv-status" class="aside-note" role="status">Checking your access…</p>
+    <div id="rv" hidden>
+      <section class="section">
+        <div class="section-head"><h2>Waiting for review <span class="badge-count" id="rv-count">0</span></h2></div>
+        <div id="rv-pending" class="review-list"></div>
+      </section>
+      <section class="section">
+        <div class="section-head"><h2>Reported themes <span class="badge-count" id="rv-flag-count">0</span></h2></div>
+        <div id="rv-flags" class="review-list"></div>
+      </section>
+    </div>
+  </main>
+  <ThemeData />
+</Base>
+
+<script>
+  import { onUser, loadAuth } from "../../scripts/account.js";
+  import { isOwnFile } from "../../lib/themes-read.js";
+  import { h, pageData, link, fmtDate, preview, fileHref } from "../../scripts/theme-ui.js";
+
+  const { targets } = pageData();
+  const $ = (id) => document.getElementById(id);
+  const write = () => import("../../lib/themes-write.js");
+
+  function pendingCard(theme, reload) {
+    const target = targets.find((t) => t.id === theme.target);
+    const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the author (optional, shown if not accepted)" });
+    const out = h("span", { role: "status" });
+    const act = (status) => async () => {
+      out.textContent = "Saving…";
+      try { await (await write()).reviewTheme(theme.id, status, note.value); reload(); }
+      catch { out.textContent = "Couldn't save. Try again."; }
+    };
+    return h("article", { class: "card review-card" },
+      h("div", { class: "review-art" }, preview(theme)),
+      h("div", { class: "review-main" },
+        h("p", { class: "kicker" }, `by ${theme.ownerName} · ${fmtDate(theme.createdAt)}`),
+        h("h3", { class: "card-title" }, h("a", { href: link(`/themes/view/?id=${encodeURIComponent(theme.id)}`) }, theme.name)),
+        h("p", {}, `For ${target ? target.name : theme.target}${theme.targetVersion ? " " + theme.targetVersion : ""} · ${theme.license || "no license given"} · ${(theme.screenshots || []).length} screenshots`),
+        theme.description ? h("p", { class: "blurb" }, theme.description) : null,
+        h("div", { class: "item-actions" },
+          isOwnFile(theme.file?.url) ? h("a", { class: "btn btn-quiet", href: fileHref(theme.file.url), target: "_blank", rel: "noopener" }, "Download to check") : null
+        ),
+        note,
+        h("div", { class: "item-actions" },
+          h("button", { type: "button", class: "btn", onclick: act("approved") }, "Approve"),
+          h("button", { type: "button", class: "btn btn-quiet", onclick: act("rejected") }, "Don't accept"),
+          out
+        )
+      )
+    );
+  }
+
+  async function load() {
+    const { themesByStatus, listFlags, dismissFlag } = await write();
+    const [pending, flags] = await Promise.all([themesByStatus("pending"), listFlags()]);
+    $("rv-count").textContent = pending.length;
+    $("rv-pending").replaceChildren(...(pending.length ? pending.map((t) => pendingCard(t, load)) : [h("p", { class: "aside-note" }, "Nothing is waiting.")]));
+    $("rv-flag-count").textContent = flags.length;
+    $("rv-flags").replaceChildren(
+      ...(flags.length
+        ? flags.map((f) =>
+            h("article", { class: "card review-flag" },
+              h("p", {}, f.reason),
+              h("div", { class: "item-actions" },
+                h("a", { class: "btn btn-quiet", href: link(`/themes/view/?id=${encodeURIComponent(f.themeId)}`) }, "Open the theme"),
+                h("button", { type: "button", class: "btn btn-quiet", onclick: async () => { await dismissFlag(f.id); load(); } }, "Dismiss report")
+              )
+            )
+          )
+        : [h("p", { class: "aside-note" }, "No reports.")])
+    );
+  }
+
+  onUser(async (user) => {
+    $("rv").hidden = true;
+    if (!user) return ($("rv-status").textContent = "Sign in to see the review queue.");
+    const { isAdmin } = await loadAuth();
+    if (!(await isAdmin(user.uid))) return ($("rv-status").textContent = "This page is for the site's admins.");
+    $("rv-status").hidden = true;
+    $("rv").hidden = false;
+    load();
+  });
+</script>

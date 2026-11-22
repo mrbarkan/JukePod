@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Quitanda's file rules. Theme files and screenshots live under
+//   themes/{owner's user ID}/{theme ID}/file/...   the theme itself
+//   themes/{owner's user ID}/{theme ID}/shots/...  its screenshots
+// Only the owner (and an admin) can read them directly. Everyone else gets
+// them through the download links saved on the theme's database record,
+// which is only readable once the theme is approved.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    // Keep in step with the `admins` collection in the database.
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in ['kDqYLokNdCXlX7c9rggaypPbRGA3'];
+    }
+
+    match /themes/{uid}/{themeId}/file/{name} {
+      allow get: if isOwner(uid) || isAdmin();
+      // create only: an uploaded file can't be swapped for another later,
+      // so an approved theme keeps serving exactly what was reviewed.
+      allow create: if isOwner(uid)
+        && resource == null
+        && request.resource.size <= 5 * 1024 * 1024
+        && name.matches('.*\\.(zip|json)$');
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+
+    match /themes/{uid}/{themeId}/shots/{name} {
+      allow get: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && resource == null
+        && request.resource.size <= 1536 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp)');
+      allow delete: if isOwner(uid) || isAdmin();
+    }
+  }
+}

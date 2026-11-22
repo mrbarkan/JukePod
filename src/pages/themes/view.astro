@@ -1,0 +1,130 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import ThemeData from "../../components/ThemeData.astro";
+import { href } from "../../lib/catalog.js";
+---
+<Base title="Theme" description="A theme shared on Quitanda." section="themes">
+  <main class="wrap page">
+    <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
+    <p class="aside-note" id="view-status" role="status">Loading the theme…</p>
+    <article id="view" class="theme-view" hidden></article>
+  </main>
+  <ThemeData />
+</Base>
+
+<script>
+  import { getApproved, isOwnFile } from "../../lib/themes-read.js";
+  import { onUser, loadAuth } from "../../scripts/account.js";
+  import { h, pageData, link, fmtDate, consoleSwatch, ownShots, statusPill, installSteps, fileHref } from "../../scripts/theme-ui.js";
+
+  const { targets, devices } = pageData();
+  const id = new URLSearchParams(location.search).get("id") || "";
+  const status = document.getElementById("view-status");
+  const view = document.getElementById("view");
+  const write = () => import("../../lib/themes-write.js");
+  let theme = null;
+  let me = null;
+  let admin = false;
+
+  function draw() {
+    const target = targets.find((t) => t.id === theme.target);
+    const shots = ownShots(theme);
+    const swatch = consoleSwatch(theme.swatch, theme.name);
+    const mine = me && me.uid === theme.ownerUid;
+    document.title = `${theme.name} · Quitanda`;
+
+    const facts = h("dl", { class: "facts" },
+      h("dt", {}, "Made for"),
+      h("dd", {}, target ? h("a", { href: link(target.path) }, target.name) : theme.target, theme.targetVersion ? ` ${theme.targetVersion}` : ""),
+      theme.devices?.length ? [h("dt", {}, "iPods"), h("dd", {}, h("span", { class: "chips" }, theme.devices.map((d) => h("span", { class: "chip" }, devices[d] || d))))] : null,
+      theme.license ? [h("dt", {}, "License"), h("dd", {}, theme.license)] : null,
+      theme.createdAt ? [h("dt", {}, "Shared"), h("dd", {}, fmtDate(theme.createdAt))] : null
+    );
+
+    const copy = h("button", { type: "button", class: "share-btn", onclick: async () => {
+      try { await navigator.clipboard.writeText(location.href); copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy link"), 1800); }
+      catch { prompt.hidden = false; prompt.select(); }
+    } }, "Copy link");
+    const prompt = h("input", { class: "share-url", type: "text", readonly: true, value: location.href, hidden: true, "aria-label": "Link to this theme" });
+
+    const flagBox = h("div", { class: "flag-box", hidden: true },
+      h("label", { for: "flag-reason" }, "What's wrong with this theme?"),
+      h("textarea", { class: "field", id: "flag-reason", rows: "3", maxlength: "500" }),
+      h("div", { class: "item-actions" },
+        h("button", { type: "button", class: "btn btn-quiet", onclick: sendFlag }, "Send report"),
+        h("span", { id: "flag-status", role: "status" })
+      )
+    );
+    async function sendFlag() {
+      const out = document.getElementById("flag-status");
+      try { await (await write()).flagTheme(theme.id, document.getElementById("flag-reason").value); out.textContent = "Reported. Thank you."; }
+      catch (err) { out.textContent = err.code ? "Couldn't send. Try again in a moment." : err.message; }
+    }
+
+    const confirmBox = h("div", { class: "flag-box", hidden: true },
+      h("p", {}, h("strong", {}, "Delete this theme and its files for good?")),
+      h("div", { class: "item-actions" },
+        h("button", { type: "button", class: "btn btn-danger", onclick: async () => { await (await write()).deleteTheme(theme); location.href = link(mine ? "/account/" : "/themes/review/"); } }, "Yes, delete it"),
+        h("button", { type: "button", class: "btn btn-quiet", onclick: () => (confirmBox.hidden = true) }, "Keep it")
+      )
+    );
+
+    const parts = [
+      theme.status !== "approved"
+        ? h("div", { class: "theme-notice" }, statusPill(theme.status),
+            h("span", {}, theme.status === "pending" ? "Only you and the site's admins can see this until it's approved." : theme.reviewNote ? `Reviewer's note: ${theme.reviewNote}` : "This theme wasn't accepted."))
+        : null,
+      h("header", { class: "item-head" },
+        h("p", { class: "kicker" }, `by ${theme.ownerName || "someone"}`),
+        h("h1", {}, theme.name),
+        theme.description ? h("p", { class: "item-blurb" }, theme.description) : null,
+        h("div", { class: "item-actions" },
+          isOwnFile(theme.file?.url) ? h("a", { class: "btn", href: fileHref(theme.file.url), target: "_blank", rel: "noopener" }, "Download theme") : null,
+          theme.file?.size ? h("span", { class: "theme-size" }, `${Math.max(1, Math.round(theme.file.size / 1024))} KB`) : null
+        ),
+        h("div", { class: "share" }, h("span", { class: "share-label" }, "Share"), copy, prompt)
+      ),
+      shots.length || swatch
+        ? h("section", { class: "gallery" },
+            h("div", { class: "theme-shots" },
+              swatch,
+              shots.map((s) => h("a", { href: fileHref(s.url), target: "_blank", rel: "noopener" }, h("img", { class: s.w <= 640 ? "is-pixel" : "", src: fileHref(s.url), alt: `${theme.name} screenshot`, loading: "lazy", width: s.w || null, height: s.h || null })))
+            ))
+        : null,
+      h("div", { class: "item-body" },
+        h("div", { class: "item-col" }, h("section", {}, h("h2", {}, "Install"), h("ol", {}, installSteps(theme, targets).map((s) => h("li", {}, s))))),
+        h("aside", { class: "item-col item-facts" }, h("section", {}, h("h2", {}, "At a glance"), facts))
+      ),
+      h("div", { class: "theme-admin" },
+        me && !mine ? h("button", { type: "button", class: "share-btn", onclick: () => (flagBox.hidden = !flagBox.hidden) }, "Report a problem") : null,
+        mine || admin ? h("button", { type: "button", class: "share-btn", onclick: () => (confirmBox.hidden = false) }, "Delete theme") : null,
+        admin ? h("a", { class: "share-btn", href: link("/themes/review/") }, "Review queue") : null
+      ),
+      flagBox,
+      confirmBox,
+    ];
+    view.replaceChildren(...parts.filter(Boolean));
+    status.hidden = true;
+    view.hidden = false;
+  }
+
+  const missing = () => {
+    status.textContent = "This theme doesn't exist, or isn't public yet. If it's yours, sign in to see it.";
+  };
+
+  (async () => {
+    theme = await getApproved(id);
+    if (theme) draw();
+    else missing();
+    // Signed-in people may see more: their own hidden themes, and controls.
+    onUser(async (user) => {
+      me = user;
+      if (!user) return theme && draw();
+      const [{ isAdmin }, { getThemeAsMember }] = await Promise.all([loadAuth(), write()]);
+      admin = await isAdmin(user.uid);
+      theme = theme || (await getThemeAsMember(id));
+      if (theme) draw();
+    }, { lazy: true });
+  })();
+</script>

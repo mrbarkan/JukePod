@@ -15,7 +15,7 @@ import { href } from "../lib/catalog.js";
     </section>
 
     <section id="acct-in" class="acct" hidden>
-      <p class="acct-admin" id="acct-admin" hidden>You're an admin of this site.</p>
+      <p class="acct-admin" id="acct-admin" hidden>You're an admin of this site. <a id="acct-review" href={href("/themes/review/")}>Open the review queue</a></p>
       <form id="acct-form" class="acct-form" novalidate>
         <label>
           <span>Display name</span>
@@ -35,6 +35,12 @@ import { href } from "../lib/catalog.js";
           <span id="acct-status" role="status"></span>
         </div>
       </form>
+
+      <div class="acct-themes">
+        <h2>Your themes</h2>
+        <div id="acct-theme-list" class="acct-theme-list"><p class="aside-note">Loading…</p></div>
+        <p><a class="btn btn-quiet" href={href("/themes/submit/")}>Share a theme</a></p>
+      </div>
 
       <div class="acct-row">
         <button type="button" class="btn btn-quiet" id="acct-signout">Sign out</button>
@@ -59,6 +65,7 @@ import { href } from "../lib/catalog.js";
 
 <script>
   import { onUser, loadAuth } from "../scripts/account.js";
+  import { h, link, statusPill, fmtDate } from "../scripts/theme-ui.js";
 
   const $ = (id) => document.getElementById(id);
   let me = null;
@@ -75,6 +82,21 @@ import { href } from "../lib/catalog.js";
     $("acct-bio").value = profile.bio || "";
     $("acct-link").value = profile.link || "";
     $("acct-admin").hidden = !(await isAdmin(user.uid));
+
+    const { myThemes } = await import("../lib/themes-write.js");
+    const themes = await myThemes().catch(() => []);
+    $("acct-theme-list").replaceChildren(
+      ...(themes.length
+        ? themes.map((t) =>
+            h("a", { class: "acct-theme", href: link(`/themes/view/?id=${encodeURIComponent(t.id)}`) },
+              h("strong", {}, t.name),
+              statusPill(t.status),
+              h("span", {}, fmtDate(t.createdAt)),
+              t.status === "rejected" && t.reviewNote ? h("em", {}, t.reviewNote) : null
+            )
+          )
+        : [h("p", { class: "aside-note" }, "You haven't shared a theme yet.")])
+    );
   });
 
   $("acct-form").addEventListener("submit", async (e) => {

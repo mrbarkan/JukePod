@@ -23,6 +23,15 @@ service cloud.firestore {
     function optionalText(data, field, max) {
       return !(field in data) || (data[field] is string && data[field].size() <= max);
     }
+    // True for a download link to a file this owner uploaded to the site's
+    // own storage. Stops a theme from pointing at files hosted elsewhere.
+    function ownFile(url, uid) {
+      return url is string && url.size() <= 600
+        && url.matches('^https://firebasestorage[.]googleapis[.]com/v0/b/quitanda-95fa7[.]firebasestorage[.]app/o/themes%2F' + uid + '%2F.*');
+    }
+    function ownShot(shots, index, uid) {
+      return shots.size() <= index || (shots[index] is map && ownFile(shots[index].url, uid));
+    }
 
     match /admins/{uid} {
       allow get: if isOwner(uid);
@@ -75,8 +84,12 @@ service cloud.firestore {
           && optionalText(data, 'description', 1000)
           && optionalText(data, 'license', 80)
           && (!('devices' in data) || (data.devices is list && data.devices.size() <= 20))
-          && (!('screenshots' in data) || (data.screenshots is list && data.screenshots.size() <= 6))
-          && (!('file' in data) || data.file is map)
+          && data.file is map && ownFile(data.file.url, data.ownerUid)
+          && optionalText(data.file, 'name', 120)
+          && data.screenshots is list && data.screenshots.size() <= 6
+          && ownShot(data.screenshots, 0, data.ownerUid) && ownShot(data.screenshots, 1, data.ownerUid)
+          && ownShot(data.screenshots, 2, data.ownerUid) && ownShot(data.screenshots, 3, data.ownerUid)
+          && ownShot(data.screenshots, 4, data.ownerUid) && ownShot(data.screenshots, 5, data.ownerUid)
           && (!('swatch' in data) || (data.swatch is map && data.swatch.size() <= 12));
       }
     }

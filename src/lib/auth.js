@@ -1,14 +1,17 @@
 // Sign-in and profiles. This module pulls in Firebase, so it is only ever
 // loaded on demand (see src/scripts/account.js): visitors who never sign in
 // never download it.
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut, deleteUser } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore/lite";
-import { firebaseConfig } from "./firebase-config.js";
+import { getAuth, connectAuthEmulator, onAuthStateChanged, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut, deleteUser } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore/lite";
+import { EMULATORS } from "./emulator.js";
+import { app } from "./firebase-app.js";
 
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+if (EMULATORS) {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+}
 
 const PROVIDERS = { google: () => new GoogleAuthProvider(), github: () => new GithubAuthProvider() };
 

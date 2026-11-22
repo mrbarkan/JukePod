@@ -1,0 +1,72 @@
+---
+import Base from "../../layouts/Base.astro";
+import ThemeData from "../../components/ThemeData.astro";
+import { href } from "../../lib/catalog.js";
+---
+<Base
+  title="Themes for iPod firmware and CrateDigger"
+  description="Themes people have made for Rockbox, Rockpod, PodBox and CrateDigger, with screenshots. Download one or share your own."
+  section="themes"
+>
+  <main class="wrap page">
+    <header class="intro intro-row">
+      <div>
+        <h1>Themes</h1>
+        <p>Looks people have made for Rockbox and its forks, and for CrateDigger. Download one, or share your own with screenshots.</p>
+      </div>
+      <a class="btn" href={href("/themes/submit/")}>Share a theme</a>
+    </header>
+
+    <div class="segs" id="theme-filter" role="group" aria-label="Made for"></div>
+    <p class="aside-note" id="theme-status" role="status">Loading themes…</p>
+    <div class="theme-grid" id="theme-grid"></div>
+  </main>
+  <ThemeData />
+</Base>
+
+<script>
+  import { listApproved } from "../../lib/themes-read.js";
+  import { h, pageData, themeCard, link } from "../../scripts/theme-ui.js";
+
+  const { targets } = pageData();
+  const grid = document.getElementById("theme-grid");
+  const status = document.getElementById("theme-status");
+  const filter = document.getElementById("theme-filter");
+  let current = new URLSearchParams(location.search).get("for") || "";
+  if (!targets.some((t) => t.id === current)) current = "";
+
+  function drawFilter() {
+    filter.replaceChildren(
+      ...[{ id: "", name: "All" }, ...targets].map((t) =>
+        h("button", { type: "button", class: "seg", "aria-pressed": String(current === t.id), onclick: () => choose(t.id) }, t.name)
+      )
+    );
+  }
+
+  async function choose(id) {
+    current = id;
+    history.replaceState(null, "", id ? `?for=${id}` : location.pathname);
+    drawFilter();
+    grid.replaceChildren();
+    status.hidden = false;
+    status.textContent = "Loading themes…";
+    try {
+      const themes = await listApproved({ target: id || undefined });
+      if (id !== current) return; // a newer choice is already loading
+      grid.replaceChildren(...themes.map((t) => themeCard(t, targets)));
+      status.hidden = themes.length > 0;
+      if (!themes.length) {
+        const name = id ? targets.find((t) => t.id === id).name : null;
+        status.replaceChildren(
+          name ? `No themes for ${name} yet. ` : "No themes yet. ",
+          h("a", { href: link("/themes/submit/") }, "Share the first one"),
+          "."
+        );
+      }
+    } catch (err) {
+      status.textContent = `${err.message} Reload the page to try again.`;
+    }
+  }
+
+  choose(current);
+</script>

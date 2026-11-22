@@ -1,0 +1,234 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import ThemeData from "../../components/ThemeData.astro";
+import { href, themeTargets } from "../../lib/catalog.js";
+const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GPL-2.0", "All rights reserved"];
+---
+<Base title="Share a theme" description="Share a theme you made for Rockbox, its forks or CrateDigger, with screenshots." section="themes">
+  <main class="wrap page narrow">
+    <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
+    <header class="intro">
+      <h1>Share a theme</h1>
+      <p>Upload the theme and a few screenshots. It appears in the gallery once it has been checked.</p>
+    </header>
+
+    <p id="submit-loading" class="aside-note">Checking whether you're signed in…</p>
+    <section id="submit-out" hidden>
+      <p>You need to be signed in to share a theme. Use <strong>Sign in</strong> at the top of the page.</p>
+    </section>
+
+    <form id="submit-form" class="acct-form theme-form" novalidate hidden>
+      <label>
+        <span>What is it for?</span>
+        <span class="select">
+          <select class="field" id="t-target" required>
+            {themeTargets.map((t) => <option value={t.id}>{t.name}</option>)}
+          </select>
+          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        </span>
+      </label>
+
+      <label>
+        <span>Theme file</span>
+        <input class="field" id="t-file" type="file" accept=".zip,.json,application/zip,application/json" required />
+        <small id="t-file-help"></small>
+      </label>
+      <div id="t-inspect" class="theme-inspect" hidden></div>
+
+      <label>
+        <span>Name</span>
+        <input class="field" id="t-name" maxlength="60" required />
+      </label>
+      <label>
+        <span>Made for version <em>(optional)</em></span>
+        <input class="field" id="t-version" maxlength="40" placeholder="for example 5.5" />
+        <small>Themes often break between versions, so this helps people pick the right one.</small>
+      </label>
+      <fieldset id="t-devices-box" class="theme-devices" hidden>
+        <legend>Which iPods does it fit?</legend>
+        <div id="t-devices"></div>
+      </fieldset>
+      <label>
+        <span>Description <em>(optional)</em></span>
+        <textarea class="field" id="t-description" rows="4" maxlength="1000"></textarea>
+      </label>
+      <label>
+        <span>License</span>
+        <span class="select">
+          <select class="field" id="t-license">
+            {LICENSES.map((l) => <option value={l}>{l}</option>)}
+          </select>
+          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        </span>
+        <small>How others may use your theme.</small>
+      </label>
+
+      <label>
+        <span>Screenshots <em id="t-shots-rule"></em></span>
+        <input class="field" id="t-shots" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+        <small>Up to 6. PNG, JPEG or WebP. iPod screen captures stay pixel-sharp.</small>
+      </label>
+      <div id="t-shot-list" class="theme-shot-list"></div>
+
+      <label class="theme-check">
+        <input type="checkbox" id="t-rights" required />
+        <span>I made this or have the right to share it, and it contains no Apple fonts, icons or artwork.</span>
+      </label>
+
+      <div class="acct-actions">
+        <button type="submit" class="btn" id="t-send">Send for review</button>
+        <span id="t-status" role="status"></span>
+      </div>
+      <p id="t-error" class="signin-error" role="alert" hidden></p>
+    </form>
+
+    <section id="submit-done" hidden>
+      <h2>Sent for review</h2>
+      <p>Your theme will appear in the gallery once it has been checked. You can follow it from <a href={href("/account/")}>your account page</a>.</p>
+      <p><a class="btn btn-quiet" id="done-view" href={href("/themes/")}>See your theme</a></p>
+    </section>
+  </main>
+  <ThemeData />
+</Base>
+
+<script>
+  import { onUser } from "../../scripts/account.js";
+  import { h, pageData, link, consoleSwatch } from "../../scripts/theme-ui.js";
+
+  const { targets, devices } = pageData();
+  const $ = (id) => document.getElementById(id);
+  const fileTools = () => import("../../lib/theme-file.js");
+  let inspected = null; // result of checking the chosen file
+  let shots = []; // prepared screenshots
+  let busy = false;
+
+  const target = () => targets.find((t) => t.id === $("t-target").value);
+
+  onUser((user) => {
+    $("submit-loading").hidden = true;
+    if ($("submit-done").hidden) {
+      $("submit-out").hidden = !!user;
+      $("submit-form").hidden = !user;
+    }
+  });
+
+  function showError(message) {
+    $("t-error").textContent = message || "";
+    $("t-error").hidden = !message;
+  }
+
+  function onTargetChange() {
+    const t = target();
+    const forApp = t.kind === "app";
+    $("t-file-help").textContent = forApp
+      ? "Zip the whole .cdtheme folder, or choose a bare theme .json. 5 MB at most."
+      : "A .zip that unpacks into the iPod's .rockbox folder. 5 MB at most. No plugins or firmware files.";
+    $("t-shots-rule").textContent = forApp ? "(optional)" : "(at least one)";
+    $("t-devices-box").hidden = forApp;
+    $("t-devices").replaceChildren(
+      ...t.devices.map((d) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: d, checked: true }), h("span", {}, devices[d] || d)))
+    );
+    if ($("t-file").files[0]) inspect();
+  }
+
+  async function inspect() {
+    const file = $("t-file").files[0];
+    const box = $("t-inspect");
+    inspected = null;
+    showError("");
+    if (!file) return (box.hidden = true);
+    box.hidden = false;
+    box.replaceChildren("Checking the file…");
+    const { inspectThemeFile } = await fileTools();
+    const result = await inspectThemeFile(file, target().id);
+    if (!result.ok) {
+      box.replaceChildren(h("p", { class: "signin-error" }, result.problems.join(" ")));
+      return;
+    }
+    inspected = result;
+    if (result.name && !$("t-name").value) $("t-name").value = result.name;
+    if (result.version && !$("t-version").value && target().kind !== "app") $("t-version").value = result.version;
+    box.replaceChildren(
+      consoleSwatch(result.swatch, result.name || file.name),
+      h("p", {}, h("strong", {}, "Looks good. "), `${result.fileCount} ${result.fileCount === 1 ? "file" : "files"}, ${Math.max(1, Math.round(file.size / 1024))} KB.`,
+        result.author ? ` Author in the file: ${result.author}.` : "")
+    );
+  }
+
+  function drawShots() {
+    $("t-shot-list").replaceChildren(
+      ...shots.map((shot, i) =>
+        h("figure", {},
+          h("img", { src: shot.preview, alt: `Screenshot ${i + 1}`, class: shot.w <= 640 ? "is-pixel" : "" }),
+          h("button", { type: "button", class: "share-btn", onclick: () => { URL.revokeObjectURL(shot.preview); shots.splice(i, 1); drawShots(); } }, "Remove")
+        )
+      )
+    );
+  }
+
+  $("t-shots").addEventListener("change", async () => {
+    showError("");
+    const { prepareScreenshot } = await fileTools();
+    for (const file of [...$("t-shots").files]) {
+      if (shots.length >= 6) { showError("Six screenshots at most. The rest were left out."); break; }
+      try {
+        const shot = await prepareScreenshot(file);
+        shots.push({ ...shot, preview: URL.createObjectURL(shot.blob) });
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+    $("t-shots").value = "";
+    drawShots();
+  });
+
+  $("t-target").addEventListener("change", onTargetChange);
+  $("t-file").addEventListener("change", inspect);
+
+  $("submit-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const t = target();
+    const name = $("t-name").value.trim();
+    if (!$("t-file").files[0]) return showError("Choose the theme file.");
+    if (!inspected) return showError("The theme file has a problem. Fix it or choose another file.");
+    if (!name) return showError("Give the theme a name.");
+    if (t.kind !== "app" && !shots.length) return showError("Add at least one screenshot, so people can see the theme before they install it.");
+    if (!$("t-rights").checked) return showError("Confirm that you have the right to share this theme.");
+    showError("");
+    busy = true;
+    $("t-send").disabled = true;
+    try {
+      const { submitTheme } = await import("../../lib/themes-write.js");
+      const id = await submitTheme(
+        {
+          file: $("t-file").files[0],
+          shots,
+          swatch: inspected.swatch,
+          details: {
+            name,
+            target: t.id,
+            targetVersion: $("t-version").value,
+            description: $("t-description").value,
+            license: $("t-license").value,
+            devices: t.kind === "app" ? [] : [...$("t-devices").querySelectorAll("input:checked")].map((i) => i.value),
+          },
+        },
+        (step) => ($("t-status").textContent = step)
+      );
+      $("submit-form").hidden = true;
+      $("done-view").href = link(`/themes/view/?id=${encodeURIComponent(id)}`);
+      $("submit-done").hidden = false;
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      $("t-status").textContent = "";
+      showError(err.code ? "The upload didn't go through. Check your connection and try again." : err.message);
+    } finally {
+      busy = false;
+      $("t-send").disabled = false;
+    }
+  });
+
+  onTargetChange();
+</script>

@@ -38,11 +38,16 @@ function show(person) {
 
 const listeners = new Set();
 let current; // undefined until Firebase has answered
-/** Runs the callback with the signed-in user (or null) now and on changes. */
-export function onUser(callback) {
+/**
+ * Runs the callback with the signed-in user (or null) now and on changes.
+ * With { lazy: true } Firebase is only loaded if this browser remembers a
+ * signed-in visitor, so public pages stay light; the callback still runs if
+ * the visitor signs in later.
+ */
+export function onUser(callback, { lazy = false } = {}) {
   listeners.add(callback);
   if (current !== undefined) callback(current);
-  start();
+  if (!lazy || readHint()) start();
 }
 
 let started = false;

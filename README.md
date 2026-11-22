@@ -79,13 +79,36 @@ Sign-in and shared data run on Firebase (project `quitanda-95fa7`).
 
 - `src/lib/firebase-config.js` holds the project's public web config and the list of sign-in methods shown.
 - `src/lib/auth.js` is the only file that imports Firebase. It loads on demand, so visitors who never sign in never download it.
-- `firestore.rules` and `firestore.indexes.json` are the database's access rules and indexes. Publish changes with:
+- `firestore.rules`, `firestore.indexes.json` and `storage.rules` are the access rules for the database and for uploaded files. Publish changes with:
 
 ```bash
-npx firebase-tools deploy --only firestore
+npm run deploy:rules
 ```
 
-To make someone an admin, create a document in the `admins` collection named with their user ID. Admins can approve or reject shared themes.
+## Themes
+
+People share themes at `/themes/submit/`. The page checks the file in the browser before anything is uploaded (`src/lib/theme-file.js`): it refuses programs, Rockbox plugins and firmware images, reads a CrateDigger theme's name and colors from its `theme.json`, and asks for a license file beside any bundled font.
+
+A shared theme is hidden until an admin approves it. Its files can only be fetched through the links saved on its record, an uploaded file can never be replaced, and editing a theme sends it back for review.
+
+- `src/lib/themes-read.js` reads the gallery through the database's public web API, so browsing needs no Firebase download.
+- `src/lib/themes-write.js` uploads, deletes, flags and reviews. It loads only for signed-in people.
+
+## Testing the rules and the upload flow
+
+The Firebase emulators run the real rules on your machine, so nothing touches live data. They need Java.
+
+```bash
+npm run emulators
+```
+
+```bash
+npm run test:rules
+```
+
+To try the site itself against the emulators, run `npm run dev:local` while they are up.
+
+To make someone an admin, create a document in the `admins` collection named with their user ID, and add the same ID to `isAdmin()` in `storage.rules`. Admins approve or decline shared themes at `/themes/review/`.
 
 To add GitHub sign-in: enable the GitHub provider in the Firebase console (it needs a GitHub OAuth app), then add `"github"` to `providers` in `src/lib/firebase-config.js`.
 

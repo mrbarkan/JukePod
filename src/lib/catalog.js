@@ -63,6 +63,20 @@ export const clientData = {
   status: STATUS,
 };
 
+/** True for Rockbox and anything built on it, which all share its theme format. */
+function inRockboxFamily(item) {
+  for (let cur = item, hops = 0; cur && hops < 6; cur = byId[cur.basedOn], hops++) if (cur.id === "rockbox") return true;
+  return false;
+}
+
+/** What a shared theme can be made for: CrateDigger, plus the Rockbox family. */
+export const themeTargets = [
+  ...apps.filter((a) => a.id === "cratedigger").map((a) => ({ id: a.id, name: a.name, kind: "app", path: a.path, devices: [] })),
+  ...firmwares
+    .filter(inRockboxFamily)
+    .map((f) => ({ id: f.id, name: f.name, kind: "firmware", path: f.path, devices: [...f.devices, ...(f.partial || [])] })),
+];
+
 /** Listings built on this one, e.g. the Rockbox page lists its forks. */
 export function builtOn(id) {
   return firmwares.filter((f) => f.basedOn === id);
