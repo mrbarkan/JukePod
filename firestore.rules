@@ -1,11 +1,13 @@
 rules_version = '2';
 
 // Quitanda's database rules.
-//   users    public profiles, written only by their owner
+//   users        public profiles, written only by their owner
+//   members      private settings (iPod user or maker), seen only by their owner
+//   subscribers  newsletter opt-ins: a name and the email the person signed in with
 //   admins   one document per admin, named by user ID; created in the console only
 //   themes   shared themes; hidden until an admin approves them
 //   reports  "works on my iPod" reports, one per person, listing and iPod
-//   flags    reports of a problem with a theme; only admins can read them
+//   flags    reports of a problem with a theme; read by admins and their sender
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -50,6 +52,32 @@ service cloud.firestore {
           && optionalText(data, 'bio', 280)
           && (!('link' in data) || (data.link is string && data.link.size() <= 200 && data.link.matches('^https://.*')));
       }
+    }
+
+    // Private settings chosen on the welcome page.
+    match /members/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['role', 'onboardedAt', 'updatedAt'])
+        && request.resource.data.role in ['user', 'creator'];
+      allow delete: if isOwner(uid);
+    }
+
+    // The newsletter list. A record exists only while someone is opted in:
+    // unsubscribing deletes it. The address must be the verified one the
+    // person signed in with, so nobody can sign up someone else.
+    match /subscribers/{uid} {
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['email', 'name', 'consent', 'subscribedAt'])
+        && request.auth.token.email_verified == true
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 80
+        && request.resource.data.consent is string && request.resource.data.consent.size() <= 40;
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     match /themes/{themeId} {
@@ -115,7 +143,10 @@ service cloud.firestore {
         && request.resource.data.themeId is string && request.resource.data.themeId.size() <= 60
         && request.resource.data.reason is string
         && request.resource.data.reason.size() >= 1 && request.resource.data.reason.size() <= 500;
-      allow read, update, delete: if isAdmin();
+      // The sender may see and remove their own reports, so deleting an
+      // account can take them along.
+      allow read, delete: if isAdmin() || isOwner(resource.data.uid);
+      allow update: if false;
     }
   }
 }

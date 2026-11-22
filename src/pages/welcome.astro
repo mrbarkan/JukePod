@@ -1,0 +1,165 @@
+---
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/catalog.js";
+---
+<Base title="Welcome" description="Set up your Quitanda account: tell us whether you use an iPod or make things for one, and choose whether to get the newsletter.">
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1 id="w-title">Welcome to Quitanda</h1>
+      <p id="w-lede">Two quick choices and you’re set. You can change both later on your account page.</p>
+    </header>
+
+    <p id="w-loading" class="aside-note">Checking whether you’re signed in…</p>
+
+    <section id="w-out" hidden>
+      <p>Sign in with the button at the top of the page to set up your account. You don’t need one to browse or download.</p>
+      <p>Or go straight to a guide:</p>
+      <ul class="guide-links">
+        <li><a href={href("/start/ipod-users/")}><strong>I use an iPod</strong><span>Pick firmware, load music, add themes.</span></a></li>
+        <li><a href={href("/start/makers/")}><strong>I make things for iPods</strong><span>Get listed, share themes, keep your listing fresh.</span></a></li>
+      </ul>
+    </section>
+
+    <form id="w-form" class="welcome-form" novalidate hidden>
+      <fieldset class="role-choice">
+        <legend>What brings you here?</legend>
+        <label class="role-card">
+          <input type="radio" name="role" value="user" required />
+          <span class="role-text">
+            <strong>I use an iPod</strong>
+            <span>I want firmware, apps and themes for my iPod, and help installing them.</span>
+          </span>
+        </label>
+        <label class="role-card">
+          <input type="radio" name="role" value="creator" />
+          <span class="role-text">
+            <strong>I make things for iPods</strong>
+            <span>I build firmware, themes, apps or hardware mods, and want people to find them.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <fieldset class="news-choice">
+        <legend>News and updates</legend>
+        <label class="theme-check">
+          <input type="checkbox" id="w-news" />
+          <span>Email me Quitanda news and updates.</span>
+        </label>
+        <p class="news-terms">Occasional emails about new firmware, themes and guides. We use your name and email address for this and nothing else, never share them, and you can unsubscribe at any time. <a href={href("/privacy/")}>Privacy policy</a></p>
+        <div id="w-news-fields" hidden>
+          <label class="news-field">
+            <span>Name to greet you by</span>
+            <input class="field" id="w-name" maxlength="80" autocomplete="name" />
+          </label>
+          <p class="news-address">Emails go to <strong id="w-email"></strong>, the address you signed in with.</p>
+        </div>
+        <p id="w-news-unavailable" class="aside-note" hidden>Your sign-in has no verified email address, so the newsletter isn’t available for this account.</p>
+      </fieldset>
+
+      <div class="acct-actions">
+        <button type="submit" class="btn" id="w-save">Continue</button>
+        <span id="w-status" role="status"></span>
+      </div>
+      <p id="w-error" class="signin-error" role="alert" hidden></p>
+    </form>
+
+    <section id="w-done" class="welcome-done" hidden>
+      <h2 id="w-done-title">You’re all set</h2>
+      <p id="w-done-text"></p>
+      <p><a class="btn" id="w-guide" href={href("/start/ipod-users/")}>Open your guide</a></p>
+      <ul class="guide-links" id="w-next"></ul>
+      <p class="aside-note">Change your choices any time on <a href={href("/account/")}>your account page</a>.</p>
+    </section>
+  </main>
+</Base>
+
+<script>
+  import { onUser } from "../scripts/account.js";
+  import { h, link } from "../scripts/theme-ui.js";
+
+  const $ = (id) => document.getElementById(id);
+  const member = () => import("../lib/member.js");
+
+  const NEXT = {
+    user: {
+      guide: "/start/ipod-users/",
+      text: "Your guide walks through finding out which iPod you have, installing your first firmware, and loading music.",
+      links: [
+        ["/", "Browse firmware", "Choose your iPod and see what runs on it."],
+        ["/themes/", "Find a theme", "Looks other people have made."],
+        ["/mods/", "Hardware mods", "Flash storage, batteries, Bluetooth."],
+      ],
+    },
+    creator: {
+      guide: "/start/makers/",
+      text: "Your guide covers getting your project listed, keeping its version current automatically, and sharing themes.",
+      links: [
+        ["/themes/submit/", "Share a theme", "Upload it with screenshots."],
+        ["/about/#add-or-correct-a-listing", "Add or fix a listing", "Firmware, apps and mods."],
+        ["/blog/", "Read the blog", "News from the shop."],
+      ],
+    },
+  };
+
+  function showDone(role, subscribed) {
+    const next = NEXT[role] || NEXT.user;
+    $("w-form").hidden = true;
+    $("w-lede").hidden = true;
+    $("w-done-text").textContent = next.text + (subscribed ? " You’re on the newsletter list." : "");
+    $("w-guide").href = link(next.guide);
+    $("w-next").replaceChildren(...next.links.map(([path, title, text]) => h("li", {}, h("a", { href: link(path) }, h("strong", {}, title), h("span", {}, text)))));
+    $("w-done").hidden = false;
+  }
+
+  let ready = false;
+  onUser(async (user) => {
+    $("w-loading").hidden = true;
+    $("w-out").hidden = !!user;
+    if (!user) {
+      $("w-form").hidden = true;
+      $("w-done").hidden = true;
+      ready = false;
+      return;
+    }
+    if (ready) return; // already showing this person's form or result
+    ready = true;
+    const { loadMember, loadSubscription, canSubscribe, myEmail } = await member();
+    const [settings, subscription] = await Promise.all([loadMember(), loadSubscription().catch(() => null)]);
+    const first = (user.displayName || "").split(" ")[0];
+    if (first) $("w-title").textContent = `Welcome, ${first}`;
+    if (settings?.role) return showDone(settings.role, !!subscription);
+    $("w-name").value = user.displayName || "";
+    $("w-email").textContent = myEmail();
+    $("w-news").disabled = !canSubscribe();
+    $("w-news-unavailable").hidden = canSubscribe();
+    $("w-form").hidden = false;
+  });
+
+  $("w-news").addEventListener("change", () => ($("w-news-fields").hidden = !$("w-news").checked));
+  // A choice answers the "choose one" message, so clear it.
+  $("w-form").addEventListener("change", () => ($("w-error").hidden = true));
+
+  $("w-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const error = $("w-error");
+    const fail = (message) => ((error.textContent = message), (error.hidden = false), ($("w-status").textContent = ""));
+    error.hidden = true;
+    const role = new FormData($("w-form")).get("role");
+    if (!role) return fail("Choose one of the two options above.");
+    const wantsNews = $("w-news").checked;
+    if (wantsNews && !$("w-name").value.trim()) return fail("Enter the name to greet you by, or untick the newsletter.");
+    $("w-save").disabled = true;
+    $("w-status").textContent = "Saving…";
+    try {
+      const { saveMember, subscribe } = await member();
+      await saveMember(role);
+      if (wantsNews) await subscribe($("w-name").value);
+      showDone(role, wantsNews);
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      fail(err.code ? "Couldn’t save. Check your connection and try again." : err.message);
+    } finally {
+      $("w-save").disabled = false;
+    }
+  });
+</script>

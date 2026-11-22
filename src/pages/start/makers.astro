@@ -1,0 +1,128 @@
+---
+import Base from "../../layouts/Base.astro";
+import { SITE, STATUS, href } from "../../lib/catalog.js";
+
+const topics = [
+  ["list", "Get your project listed"],
+  ["releases", "Keep the version current"],
+  ["status", "Status and compatibility"],
+  ["pictures", "Screenshots"],
+  ["themes", "Share themes"],
+  ["mods", "Hardware mods"],
+  ["yours", "It’s your listing"],
+];
+const example = `{
+  id: "my-firmware",
+  name: "My Firmware",
+  maker: "your-handle",
+  categories: ["players", "interfaces"],
+  status: "beta",
+  github: "your-handle/my-firmware",
+  license: "GPL-2.0",
+  basedOn: "rockbox",
+  blurb: "One or two sentences on what it does and who it's for.",
+  features: ["What it adds, one line each"],
+  devices: ["ipod-classic", "ipod-video"],
+  partial: [],
+  requires: "Rockbox bootloader already installed",
+  install: ["Step one.", "Step two, with \`file-names\` in backticks."],
+  files: [{ label: "iPod Classic 6G / 7G", file: "my-firmware-ipod6g.zip" }],
+  links: [
+    { label: "Download", url: "https://github.com/your-handle/my-firmware/releases/latest", icon: "download" },
+    { label: "Source", url: "https://github.com/your-handle/my-firmware", icon: "source" }
+  ]
+}`;
+---
+<Base
+  title="Start here: makers and modders"
+  description="For people who build iPod firmware, themes, apps and hardware mods: how to get listed on Quitanda, keep your version current automatically, and share themes."
+>
+  <main class="wrap page narrow">
+    <article class="prose guide">
+      <header>
+        <p class="guide-kicker">Start here · makers and modders</p>
+        <h1>Put your work on the shelves</h1>
+        <p>Quitanda exists so people can find what you build. Listings are free, link straight to your own downloads, and stay under your control. This guide covers how to get listed and how to keep the listing accurate with almost no effort.</p>
+        <nav class="jump" aria-label="Topics">
+          {topics.map(([id, title]) => <a href={`#${id}`}>{title}</a>)}
+        </nav>
+      </header>
+
+      <h2 id="list">Get your project listed</h2>
+      <p>Firmware, library apps and hardware mods all live in one file in the site’s public repository. There are two ways in:</p>
+      <ul>
+        <li><strong>Open an issue</strong> with the details below and it will be added for you. <a href={`${SITE.repo}/issues/new`}>Open an issue</a></li>
+        <li><strong>Send a pull request</strong> that adds your entry to <code>src/data/catalog.js</code>. <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>Edit the file on GitHub</a></li>
+      </ul>
+      <p>A listing needs:</p>
+      <ul>
+        <li>The name, who makes it, and a sentence or two on what it does.</li>
+        <li>Which iPods it runs on, and any it only partly supports.</li>
+        <li>A public download link and the source repository.</li>
+        <li>Install steps a newcomer can follow, and what must be in place first.</li>
+        <li>The license. Checksums too, if you publish them.</li>
+      </ul>
+      <p>An entry looks like this:</p>
+      <pre class="code-block"><code>{example}</code></pre>
+      <p>Not ready for the public yet? Projects without a release go on the watch list, “Still on the tree”, and move up when they ship.</p>
+
+      <h2 id="releases">Keep the version current</h2>
+      <p>You shouldn’t have to tell us about every release. Every night the site reads each listed GitHub repository and updates the version, the date and the star count. A new version also appears in the <em>Fresh in</em> panel on the home page for two weeks. For that to work:</p>
+      <ul>
+        <li><strong>Publish GitHub Releases.</strong> Tags alone aren’t read.</li>
+        <li><strong>Tag with a version number,</strong> such as <code>v1.2</code> or <code>1.2.0</code>. A tag like <code>latest</code> or <code>nightly</code> updates the date but not the version shown.</li>
+        <li><strong>Mark betas as pre-releases.</strong> Pre-releases are skipped, so the listing keeps showing your last stable version.</li>
+        <li><strong>Put <code>github: "owner/repo"</code> in the listing.</strong> Projects hosted elsewhere are updated by hand, so tell us when you ship.</li>
+      </ul>
+      <p>If your listing’s first link points at <code>/releases/latest</code>, the download button always leads to your newest release.</p>
+
+      <h2 id="status">Status and compatibility</h2>
+      <p>Each listing carries a status. The shop shows it as ripeness, with the plain word beside it:</p>
+      <ul>
+        <li><span class="pill pill-stable">{STATUS.stable.ripeness} · {STATUS.stable.plain}</span> You call it stable and publish releases.</li>
+        <li><span class="pill pill-beta">{STATUS.beta.ripeness} · {STATUS.beta.plain}</span> Usable and still changing, or not yet released as stable.</li>
+        <li><span class="pill pill-experimental">{STATUS.experimental.ripeness} · {STATUS.experimental.plain}</span> For the curious, or carrying real risk to the iPod.</li>
+        <li><span class="pill pill-archived">{STATUS.archived.ripeness} · {STATUS.archived.plain}</span> No longer developed.</li>
+      </ul>
+      <p>Be exact about iPods. People filter the whole shop by their model, and the compatibility table is built from your list. Use <em>partial</em> for a model that boots with known gaps, and say what the gaps are in the description. “Untested on hardware” is useful information; say it.</p>
+
+      <h2 id="pictures">Screenshots</h2>
+      <p>Listings with pictures get opened far more. Send up to six, in the issue or pull request.</p>
+      <ul>
+        <li><strong>iPod screens:</strong> capture at the screen’s real size, 320×240 on the Classic and Video, and save as PNG. The site shows them pixel-sharp in a screen frame. Don’t scale them up.</li>
+        <li><strong>Apps and photos:</strong> JPEG or PNG, up to about 1,400 pixels wide.</li>
+        <li><strong>Mind what’s on screen.</strong> Album covers in a screenshot belong to someone else. Use art you’re allowed to show.</li>
+      </ul>
+      <p>One of them becomes the thumbnail on your card and the image in link previews.</p>
+
+      <h2 id="themes">Share themes</h2>
+      <p>Themes have their own shelf, and you upload them yourself. Sign in, open <a href={href("/themes/submit/")}>Share a theme</a>, and add the file and screenshots. A person checks each theme before it appears.</p>
+      <ul>
+        <li><strong>Rockbox and its forks:</strong> a zip that unpacks into the iPod’s <code>.rockbox</code> folder. Themes only: plugins, codecs and firmware files are refused.</li>
+        <li><strong>CrateDigger:</strong> zip the whole <code>.cdtheme</code> folder. The page reads the name from <code>theme.json</code> and draws a preview in the theme’s colors.</li>
+        <li><strong>Say which version it’s for.</strong> Themes break between firmware versions more than anything else does.</li>
+        <li><strong>Fonts need their license.</strong> Bundle only fonts you may redistribute, with the license file beside them.</li>
+        <li><strong>Nothing from Apple.</strong> No Apple fonts, icons or artwork. Themes that include them aren’t accepted.</li>
+      </ul>
+      <p>If you maintain a firmware with its own theme format or version quirks, tell us and the upload form can ask for what your users need to know.</p>
+
+      <h2 id="mods">Hardware mods</h2>
+      <p>If you design or sell a mod, the <a href={href("/mods/")}>hardware mods</a> page is where it goes. A good entry says:</p>
+      <ul>
+        <li>Exactly which iPods it fits, including back plate thickness where that matters.</li>
+        <li>The skill needed: no soldering, soldering, or case work.</li>
+        <li>What changes for firmware afterwards, such as a battery capacity or storage setting.</li>
+        <li>Measured numbers, not catalog ones. For batteries, state tested capacity.</li>
+        <li>What a port does. A charge-only USB-C port should say so.</li>
+      </ul>
+
+      <h2 id="yours">It’s your listing</h2>
+      <p>If you make something listed here, your word on it goes. Tell us when a description is wrong, a status has changed, or you’d rather not be listed, and it will be fixed quickly. The same route works: an <a href={`${SITE.repo}/issues/new`}>issue</a> or a pull request.</p>
+      <p>Pictures came from your project’s own pages and are credited to you. If you want one changed or removed, say so.</p>
+      <p>Quitanda links to your downloads and doesn’t host firmware files, so your release page stays the source of truth and your download counts stay yours.</p>
+
+      <h2>Stay in the loop</h2>
+      <p>When listing rules or the upload form change, it’s announced on the <a href={href("/blog/")}>blog</a>. To get that by email, turn on the newsletter on <a href={href("/account/")}>your account page</a>.</p>
+    </article>
+  </main>
+</Base>

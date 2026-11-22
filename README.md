@@ -94,6 +94,21 @@ A shared theme is hidden until an admin approves it. Its files can only be fetch
 - `src/lib/themes-read.js` reads the gallery through the database's public web API, so browsing needs no Firebase download.
 - `src/lib/themes-write.js` uploads, deletes, flags and reviews. It loads only for signed-in people.
 
+## Welcome page, guides and the newsletter list
+
+- `/welcome/` is where someone lands after their first sign-in. They choose "I use an iPod" or "I make things for iPods", and may tick the newsletter box. It is never ticked for them.
+- `/start/ipod-users/` and `/start/makers/` are the two guides. Anyone can read them.
+- The role is saved in the private `members` collection. A newsletter opt-in is a record in `subscribers` holding the name, the verified address the person signed in with, the date, and which wording they agreed to (`CONSENT` in `src/lib/member.js`; change it if the wording changes). Unsubscribing deletes the record.
+- As admin, your account page shows the subscriber count and a CSV download. Use the list only to send the newsletter.
+
+## Privacy pages
+
+`/privacy/` and `/gdpr/` describe what the site does today. If you change what is collected, who processes it, or how deletion works, change those pages in the same commit. Before the first newsletter goes out, name the email service on `/privacy/`.
+
+Set `contactEmail` in `SITE` (`src/lib/catalog.js`) to the address people should write to about their data. Until it is set, the pages point to the account page and to GitHub issues.
+
+The account page backs the promises those pages make: "Download my data", "Unsubscribe" and "Delete my account" (which removes the profile, settings, newsletter record, shared themes and their files, reports, and the sign-in). `src/lib/member.js` holds that code.
+
 ## Testing the rules and the upload flow
 
 The Firebase emulators run the real rules on your machine, so nothing touches live data. They need Java.
@@ -129,5 +144,8 @@ The listings were compiled from each project's public pages in November 2026. Th
 - Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
 - Stonepod: details come from its TestFlight page and search results.
 - CrateDigger: the listing assumes the PodBox features from the 2.3.4 betas shipped in 2.3.4. Confirm against the release notes.
+- Privacy policy and data-rights page: a plain-language description of what the site does, not legal advice. Have a lawyer read them if you need certainty, and add a contact address.
+- iPod model numbers in the owners' guide (`model` in the device list) were written from memory. Check them against Apple's "Identify your iPod model" page.
+- The owners' guide says Rockbox needs a Windows-formatted iPod and gives reset and disk-mode key presses. Check both against the Rockbox manual and Apple's support pages.
 - Hardware mods: written from vendor pages and press coverage, not hands-on testing. Check kit names, what each port does, and the haptic click entry in particular.
 - Screenshots come from each project's own repository and are credited on the page. Remove any a maker objects to.

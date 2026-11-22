@@ -16,6 +16,7 @@ import { href } from "../lib/catalog.js";
 
     <section id="acct-in" class="acct" hidden>
       <p class="acct-admin" id="acct-admin" hidden>You're an admin of this site. <a id="acct-review" href={href("/themes/review/")}>Open the review queue</a></p>
+      <p class="theme-notice" id="acct-welcome" hidden><span>You haven’t finished setting up.</span> <a href={href("/welcome/")}>Choose your guide and newsletter settings</a></p>
       <form id="acct-form" class="acct-form" novalidate>
         <label>
           <span>Display name</span>
@@ -37,6 +38,41 @@ import { href } from "../lib/catalog.js";
       </form>
 
       <div class="acct-themes">
+        <h2>Your guide</h2>
+        <fieldset class="role-inline">
+          <legend class="sr-text">Which describes you?</legend>
+          <label class="theme-check"><input type="radio" name="acct-role" value="user" /><span>I use an iPod</span></label>
+          <label class="theme-check"><input type="radio" name="acct-role" value="creator" /><span>I make things for iPods</span></label>
+        </fieldset>
+        <p><a class="more-link" id="acct-guide" href={href("/start/ipod-users/")}>Open your guide</a> <span id="acct-role-status" role="status"></span></p>
+      </div>
+
+      <div class="acct-themes">
+        <h2>Newsletter</h2>
+        <p id="news-state" class="aside-note">Loading…</p>
+        <div id="news-off" hidden>
+          <p>Occasional emails about new firmware, themes and guides. We use your name and email address for this and nothing else, never share them, and you can unsubscribe at any time. <a href={href("/privacy/")}>Privacy policy</a></p>
+          <label class="news-field">
+            <span>Name to greet you by</span>
+            <input class="field" id="news-name" maxlength="80" autocomplete="name" />
+          </label>
+          <p class="news-address">Emails go to <strong id="news-email"></strong>, the address you signed in with.</p>
+          <button type="button" class="btn btn-quiet" id="news-subscribe">Subscribe</button>
+        </div>
+        <div id="news-on" hidden>
+          <p>You’re subscribed as <strong id="news-as"></strong>.</p>
+          <button type="button" class="btn btn-quiet" id="news-unsubscribe">Unsubscribe</button>
+        </div>
+        <p id="news-error" class="signin-error" role="alert" hidden></p>
+      </div>
+
+      <div class="acct-themes" id="acct-subscribers" hidden>
+        <h2>Newsletter list <span class="badge-count" id="subs-count">0</span></h2>
+        <p>Only you, as admin, can see this. Use it only to send the newsletter people signed up for.</p>
+        <p><a class="btn btn-quiet" id="subs-download" download="quitanda-subscribers.csv" href="#">Download the list (CSV)</a></p>
+      </div>
+
+      <div class="acct-themes">
         <h2>Your themes</h2>
         <div id="acct-theme-list" class="acct-theme-list"><p class="aside-note">Loading…</p></div>
         <p><a class="btn btn-quiet" href={href("/themes/submit/")}>Share a theme</a></p>
@@ -46,9 +82,15 @@ import { href } from "../lib/catalog.js";
         <button type="button" class="btn btn-quiet" id="acct-signout">Sign out</button>
       </div>
 
+      <div class="acct-themes">
+        <h2>Your data</h2>
+        <p>Download everything Quitanda holds about you in one file. <a href={href("/gdpr/")}>Your data rights</a></p>
+        <p><button type="button" class="btn btn-quiet" id="acct-export">Download my data</button> <span id="acct-export-status" role="status"></span></p>
+      </div>
+
       <div class="acct-danger">
         <h2>Delete your account</h2>
-        <p>This removes your profile and your sign-in from Quitanda. It can't be undone.</p>
+        <p>This removes your profile, your settings, your newsletter record, the themes you shared and your sign-in. It can't be undone.</p>
         <button type="button" class="btn btn-quiet" id="acct-delete">Delete my account</button>
         <div id="acct-confirm" hidden>
           <p><strong>Delete your account for good?</strong></p>
@@ -83,6 +125,8 @@ import { href } from "../lib/catalog.js";
     $("acct-link").value = profile.link || "";
     $("acct-admin").hidden = !(await isAdmin(user.uid));
 
+    setUpMember(user, await isAdmin(user.uid));
+
     const { myThemes } = await import("../lib/themes-write.js");
     const themes = await myThemes().catch(() => []);
     $("acct-theme-list").replaceChildren(
@@ -97,6 +141,91 @@ import { href } from "../lib/catalog.js";
           )
         : [h("p", { class: "aside-note" }, "You haven't shared a theme yet.")])
     );
+  });
+
+  const member = () => import("../lib/member.js");
+  const GUIDES = { user: "/start/ipod-users/", creator: "/start/makers/" };
+
+  function saveFile(name, type, text, anchor) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const a = anchor || h("a", { download: name });
+    a.href = url;
+    if (!anchor) { a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
+  }
+
+  function showNewsletter(subscription, m) {
+    $("news-state").hidden = true;
+    $("news-error").hidden = true;
+    if (!m.canSubscribe() && !subscription) {
+      $("news-state").hidden = false;
+      $("news-state").textContent = "Your sign-in has no verified email address, so the newsletter isn’t available for this account.";
+      return;
+    }
+    $("news-on").hidden = !subscription;
+    $("news-off").hidden = !!subscription;
+    if (subscription) $("news-as").textContent = `${subscription.name} (${subscription.email})`;
+    else $("news-email").textContent = m.myEmail();
+  }
+
+  async function setUpMember(user, admin) {
+    const m = await member();
+    const [settings, subscription] = await Promise.all([m.loadMember(), m.loadSubscription().catch(() => null)]);
+    $("acct-welcome").hidden = !!settings?.role;
+    document.querySelectorAll('[name="acct-role"]').forEach((radio) => (radio.checked = radio.value === settings?.role));
+    $("acct-guide").href = link(GUIDES[settings?.role] || "/welcome/");
+    $("news-name").value = user.displayName || "";
+    showNewsletter(subscription, m);
+
+    if (admin) {
+      const list = await m.listSubscribers().catch(() => []);
+      $("subs-count").textContent = list.length;
+      // Cells starting with =, +, - or @ are quoted so a spreadsheet never runs them as formulas.
+      const cell = (v) => `"${String(v ?? "").replace(/^([=+\-@])/, "'$1").replace(/"/g, '""')}"`;
+      const csv = ["name,email,subscribed", ...list.map((s) => [s.name, s.email, s.subscribedAt].map(cell).join(","))].join("\n");
+      saveFile("quitanda-subscribers.csv", "text/csv", csv, $("subs-download"));
+      $("acct-subscribers").hidden = false;
+    }
+  }
+
+  document.querySelectorAll('[name="acct-role"]').forEach((radio) =>
+    radio.addEventListener("change", async () => {
+      $("acct-role-status").textContent = "Saving…";
+      try {
+        await (await member()).saveMember(radio.value);
+        $("acct-guide").href = link(GUIDES[radio.value]);
+        $("acct-welcome").hidden = true;
+        $("acct-role-status").textContent = "Saved";
+      } catch {
+        $("acct-role-status").textContent = "Couldn’t save. Try again.";
+      }
+    })
+  );
+
+  async function newsletter(action) {
+    const error = $("news-error");
+    error.hidden = true;
+    try {
+      const m = await member();
+      await (action === "subscribe" ? m.subscribe($("news-name").value) : m.unsubscribe());
+      showNewsletter(await m.loadSubscription(), m);
+    } catch (err) {
+      error.textContent = err.code ? "That didn’t go through. Try again in a moment." : err.message;
+      error.hidden = false;
+    }
+  }
+  $("news-subscribe").addEventListener("click", () => newsletter("subscribe"));
+  $("news-unsubscribe").addEventListener("click", () => newsletter("unsubscribe"));
+
+  $("acct-export").addEventListener("click", async () => {
+    const status = $("acct-export-status");
+    status.textContent = "Gathering your data…";
+    try {
+      const data = await (await member()).exportMyData();
+      saveFile("quitanda-my-data.json", "application/json", JSON.stringify(data, null, 2));
+      status.textContent = "Downloaded";
+    } catch {
+      status.textContent = "Couldn’t gather your data. Try again in a moment.";
+    }
   });
 
   $("acct-form").addEventListener("submit", async (e) => {
@@ -129,8 +258,7 @@ import { href } from "../lib/catalog.js";
     const error = $("acct-delete-error");
     error.hidden = true;
     try {
-      const { deleteAccount } = await loadAuth();
-      await deleteAccount(me);
+      await (await member()).deleteEverything();
     } catch (err) {
       error.textContent =
         err.code === "auth/requires-recent-login"

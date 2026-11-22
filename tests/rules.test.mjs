@@ -13,9 +13,15 @@ const FILES = `http://127.0.0.1:9199/v0/b/${BUCKET}/o`;
 
 const json = (body) => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
-async function newUser(label, localId) {
+async function newUser(label, localId, { verified = false } = {}) {
   const email = `${label}-${Date.now()}@example.test`;
   const password = "emulator-only-password";
+  if (verified && !localId) {
+    const made = await (await fetch(`${AUTH}/accounts:signUp?key=x`, json({ email, password, returnSecureToken: true }))).json();
+    await fetch(`${AUTH}/projects/${PROJECT}/accounts:update`, { ...json({ localId: made.localId, emailVerified: true }), headers: { "Content-Type": "application/json", Authorization: "Bearer owner" } });
+    const res = await (await fetch(`${AUTH}/accounts:signInWithPassword?key=x`, json({ email, password, returnSecureToken: true }))).json();
+    return { uid: res.localId, token: res.idToken, email };
+  }
   if (localId) {
     await fetch(`${AUTH}/projects/${PROJECT}/accounts`, { ...json({ localId, email, password }), headers: { "Content-Type": "application/json", Authorization: "Bearer owner" } });
     const res = await (await fetch(`${AUTH}/accounts:signInWithPassword?key=x`, json({ email, password, returnSecureToken: true }))).json();
@@ -67,7 +73,7 @@ before(async () => {
   // Start from an empty sign-in list and database so the tests can be rerun.
   await fetch(`http://127.0.0.1:9099/emulator/v1/projects/${PROJECT}/accounts`, { method: "DELETE" });
   await fetch(`http://127.0.0.1:8080/emulator/v1/projects/${PROJECT}/databases/(default)/documents`, { method: "DELETE" });
-  [ana, bo, admin] = await Promise.all([newUser("ana"), newUser("bo"), newUser("admin", ADMIN_UID)]);
+  [ana, bo, admin] = await Promise.all([newUser("ana", null, { verified: true }), newUser("bo"), newUser("admin", ADMIN_UID)]);
   assert.equal(await put("owner", `admins/${admin.uid}`, { role: "owner" }), 200);
 });
 
@@ -149,13 +155,44 @@ test("reports: one per person, listing and iPod", async () => {
   assert.equal(await get(null, `reports/${ana.uid}_rockpod_ipod-classic`), 200);
 });
 
-test("flags: members create them, only admins read them", async () => {
+test("flags: members create them; only admins and the sender read or remove them", async () => {
   assert.equal(await put(bo, "flags/f1", { uid: bo.uid, themeId: "t1", reason: "Contains Apple fonts" }), 200);
   assert.equal(await put(null, "flags/f2", { uid: "x", themeId: "t1", reason: "spam" }), 403);
   assert.equal(await put(bo, "flags/f3", { uid: ana.uid, themeId: "t1", reason: "pretending" }), 403);
-  assert.equal(await get(bo, "flags/f1"), 403);
+  assert.equal(await get(ana, "flags/f1"), 403);
+  assert.equal(await get(null, "flags/f1"), 403);
+  assert.equal(await get(bo, "flags/f1"), 200);
   assert.equal(await get(admin, "flags/f1"), 200);
-  assert.equal(await del(admin, "flags/f1"), 200);
+  assert.equal(await put(bo, "flags/f1", { reason: "Edited later" }, { update: ["reason"] }), 403);
+  assert.equal(await del(ana, "flags/f1"), 403);
+  assert.equal(await del(bo, "flags/f1"), 200);
+});
+
+test("member settings are private to their owner", async () => {
+  assert.equal(await put(ana, `members/${ana.uid}`, { role: "creator" }), 200);
+  assert.equal(await put(ana, `members/${ana.uid}`, { role: "superuser" }), 403);
+  assert.equal(await put(ana, `members/${ana.uid}`, { role: "user", email: "x@y.z" }), 403);
+  assert.equal(await put(bo, `members/${ana.uid}`, { role: "user" }), 403);
+  assert.equal(await get(bo, `members/${ana.uid}`), 403);
+  assert.equal(await get(null, `members/${ana.uid}`), 403);
+  assert.equal(await get(ana, `members/${ana.uid}`), 200);
+  assert.equal(await del(ana, `members/${ana.uid}`), 200);
+});
+
+test("newsletter: only your own verified sign-in address, readable by you and admins", async () => {
+  const mine = { email: ana.email, name: "Ana", consent: "newsletter-v1" };
+  assert.equal(await put(ana, `subscribers/${ana.uid}`, { ...mine, email: "someone-else@example.test" }), 403, "can't subscribe another address");
+  assert.equal(await put(ana, `subscribers/${ana.uid}`, { ...mine, name: "" }), 403);
+  assert.equal(await put(ana, `subscribers/${ana.uid}`, { ...mine, phone: "123" }), 403);
+  assert.equal(await put(ana, `subscribers/${ana.uid}`, mine), 200);
+  assert.equal(await put(bo, `subscribers/${bo.uid}`, { email: "bo@example.test", name: "Bo", consent: "newsletter-v1" }), 403, "an unverified address can't subscribe");
+  assert.equal(await put(bo, `subscribers/${ana.uid}`, mine), 403);
+  assert.equal(await get(bo, `subscribers/${ana.uid}`), 403);
+  assert.equal(await get(null, `subscribers/${ana.uid}`), 403);
+  assert.equal((await fetch(`${DOCS}/subscribers`, { headers: bearer(bo) })).status, 403, "members can't list subscribers");
+  assert.equal((await fetch(`${DOCS}/subscribers`, { headers: bearer(admin) })).status, 200);
+  assert.equal(await get(ana, `subscribers/${ana.uid}`), 200);
+  assert.equal(await del(ana, `subscribers/${ana.uid}`), 200, "unsubscribing deletes the record");
 });
 
 test("files: only the owner uploads, into their own folder, and only theme files", async () => {

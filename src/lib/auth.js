@@ -1,8 +1,8 @@
 // Sign-in and profiles. This module pulls in Firebase, so it is only ever
 // loaded on demand (see src/scripts/account.js): visitors who never sign in
 // never download it.
-import { getAuth, connectAuthEmulator, onAuthStateChanged, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut, deleteUser } from "firebase/auth";
-import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore/lite";
+import { getAuth, connectAuthEmulator, onAuthStateChanged, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator, doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore/lite";
 import { EMULATORS } from "./emulator.js";
 import { app } from "./firebase-app.js";
 
@@ -68,8 +68,11 @@ export async function isAdmin(uid) {
   }
 }
 
-/** Removes the profile and the sign-in. Firebase may ask for a fresh sign-in first. */
-export async function deleteAccount(user) {
-  await deleteDoc(doc(db, "users", user.uid));
-  await deleteUser(user);
+/** True until the person has been through the welcome page. */
+export async function needsWelcome(uid) {
+  try {
+    return !(await getDoc(doc(db, "members", uid))).exists();
+  } catch {
+    return false;
+  }
 }

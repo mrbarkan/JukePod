@@ -26,6 +26,9 @@
     q: "",
     open: new Set()
   };
+  // Guides link here as /?ipod=ipod-classic to open the shop already filtered.
+  var asked = new URLSearchParams(location.search).get("ipod");
+  if (asked && deviceById[asked]) { state.device = asked; store("cwf-device", asked); }
   if (state.device !== "all" && !deviceById[state.device]) state.device = "all";
 
   var $ = function (id) { return document.getElementById(id); };

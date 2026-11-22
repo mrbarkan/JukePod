@@ -1,0 +1,78 @@
+---
+import Base from "../layouts/Base.astro";
+import Contact from "../components/Contact.astro";
+import { href } from "../lib/catalog.js";
+const UPDATED = "22 November 2026";
+---
+<Base title="Your data rights (GDPR)" description="Your rights over your personal data on Quitanda under the GDPR, and how to use each one: access, download, correct, delete and unsubscribe.">
+  <main class="wrap page narrow">
+    <article class="prose">
+      <header>
+        <time>Last updated {UPDATED}</time>
+        <h1>Your data rights</h1>
+      </header>
+      <p>European data protection law, the GDPR, gives you rights over the personal data an organization holds about you. Quitanda gives the same rights to everyone, wherever you live, and most of them are a button on <a href={href("/account/")}>your account page</a>.</p>
+      <p>What we hold, and why, is set out in the <a href={href("/privacy/")}>privacy policy</a>. If you have never signed in, we hold nothing about you.</p>
+
+      <div class="table-scroll">
+        <table class="plain-table rights-table">
+          <thead><tr><th>Your right</th><th>What it means</th><th>How to use it here</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">Access</th>
+              <td>See what data we hold about you.</td>
+              <td>Account page › <strong>Download my data</strong>. You get one file with everything.</td>
+            </tr>
+            <tr>
+              <th scope="row">Portability</th>
+              <td>Take your data elsewhere in a common format.</td>
+              <td>The same download. It’s a JSON file any program can read.</td>
+            </tr>
+            <tr>
+              <th scope="row">Correction</th>
+              <td>Fix data that’s wrong.</td>
+              <td>Edit your profile on the account page. Your sign-in name and email address come from Google and are changed there.</td>
+            </tr>
+            <tr>
+              <th scope="row">Erasure</th>
+              <td>Have your data deleted.</td>
+              <td>Account page › <strong>Delete my account</strong>. It removes your profile, settings, newsletter record, shared themes and their files, the reports you sent, and your sign-in. You can also delete a single theme from its page.</td>
+            </tr>
+            <tr>
+              <th scope="row">Withdraw consent</th>
+              <td>Stop a use you agreed to.</td>
+              <td>Account page › <strong>Unsubscribe</strong>, or the link in any newsletter. It takes effect at once and deletes the record.</td>
+            </tr>
+            <tr>
+              <th scope="row">Objection and restriction</th>
+              <td>Ask us to stop or pause using your data.</td>
+              <td>We only use it to run your account and, if you opted in, to send the newsletter. Unsubscribing or deleting your account stops both. For anything else, contact us.</td>
+            </tr>
+            <tr>
+              <th scope="row">No automated decisions</th>
+              <td>Not be subject to decisions made only by a machine.</td>
+              <td>Quitanda makes none. A person reviews every shared theme.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Legal bases</h2>
+      <p>The GDPR asks organizations to say on what grounds they use personal data. Ours are:</p>
+      <ul>
+        <li><strong>Providing your account</strong> (Article 6(1)(b)): your sign-in details, profile and settings.</li>
+        <li><strong>Your consent</strong> (Article 6(1)(a)): the newsletter. It’s never switched on for you, and you can withdraw consent as easily as you gave it.</li>
+        <li><strong>Our legitimate interest in keeping the site safe</strong> (Article 6(1)(f)): reviewing shared themes and acting on reports.</li>
+      </ul>
+
+      <h2>Where your data is kept</h2>
+      <p>With Google (Firebase) and GitHub, in the United States, under the transfer safeguards European law requires. The <a href={href("/privacy/#who")}>privacy policy</a> has the details. Your data isn’t passed to anyone else.</p>
+
+      <h2>If you’re not satisfied</h2>
+      <p>Please get in touch first; most problems can be fixed quickly. You also have the right to complain to your data protection authority. In the EU, you’ll find yours on the <a href="https://www.edpb.europa.eu/about-edpb/about-edpb/members_en">European Data Protection Board’s list</a>. In the UK it’s the Information Commissioner’s Office.</p>
+
+      <h2 id="contact">Contact</h2>
+      <Contact>the buttons on <a href={href("/account/")}>your account page</a> handle access, download, unsubscribing and deletion straight away.</Contact>
+    </article>
+  </main>
+</Base>

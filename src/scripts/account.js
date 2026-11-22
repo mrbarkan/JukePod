@@ -98,9 +98,12 @@ if (root) {
         // Call straight from the click when the module is already here, so
         // browsers don't treat the sign-in window as an unrequested pop-up.
         const name = button.dataset.provider;
-        await (ready ? ready.signIn(name) : loadAuth().then((m) => m.signIn(name)));
+        const user = await (ready ? ready.signIn(name) : loadAuth().then((m) => m.signIn(name)));
         start();
         dialog.close();
+        // First time here: go to the welcome page to finish setting up.
+        const welcome = import.meta.env.BASE_URL.replace(/\/$/, "") + "/welcome/";
+        if (!location.pathname.endsWith("/welcome/") && (await ready.needsWelcome(user.uid))) location.href = welcome;
       } catch (err) {
         const text = MESSAGES[err.code] ?? "Sign-in didn't work. Try again in a moment.";
         error.textContent = text;

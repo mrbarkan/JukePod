@@ -1,0 +1,112 @@
+---
+import Base from "../../layouts/Base.astro";
+import { devices, firmwares, apps, platforms, href } from "../../lib/catalog.js";
+
+const runs = (device) => firmwares.filter((f) => f.devices.includes(device.id) || (f.partial || []).includes(device.id));
+const players = (device) => runs(device).filter((f) => !f.categories.every((c) => c === "tools"));
+const byPlatform = platforms.map((p) => ({ platform: p, apps: apps.filter((a) => (a.platforms || []).includes(p)) })).filter((g) => g.apps.length);
+const steps = [
+  ["which", "Find out which iPod you have"],
+  ["prepare", "Back up and prepare"],
+  ["install", "Install your first firmware"],
+  ["flavor", "Try another flavor"],
+  ["music", "Put music on it"],
+  ["themes", "Make it yours"],
+  ["rescue", "If something goes wrong"],
+];
+---
+<Base
+  title="Start here: iPod owners"
+  description="A step-by-step guide to custom iPod firmware: identify your iPod, back up, install Rockbox, try its forks, load music and add themes."
+>
+  <main class="wrap page narrow">
+    <article class="prose guide">
+      <header>
+        <p class="guide-kicker">Start here · iPod owners</p>
+        <h1>Give your iPod a second life</h1>
+        <p>This guide takes you from an iPod in a drawer to one running new firmware, full of music, with a look you chose. Set aside an hour for the first install. Nothing here needs you to open the iPod.</p>
+        <nav class="jump" aria-label="Steps">
+          {steps.map(([id, title], i) => <a href={`#${id}`}>{i + 1}. {title}</a>)}
+        </nav>
+      </header>
+
+      <h2 id="which">1. Find out which iPod you have</h2>
+      <p>Everything depends on the model. Turn the iPod over: the model number is engraved in small print on the back and usually starts with an A. Find it below, then follow the link to see the shop filtered to your iPod.</p>
+      <div class="table-scroll">
+        <table class="plain-table">
+          <thead><tr><th>iPod</th><th>On the back</th><th>Sold</th><th>What runs on it</th></tr></thead>
+          <tbody>
+            {devices.map((d) => (
+              <tr>
+                <th scope="row">{d.name}</th>
+                <td><code>{d.model}</code></td>
+                <td>{d.years}</td>
+                <td>
+                  {players(d).length > 0
+                    ? <a href={href(`/?ipod=${d.id}`)}>{players(d).length} {players(d).length === 1 ? "firmware" : "firmwares"}</a>
+                    : runs(d).length > 0 ? <a href={href(`/?ipod=${d.id}`)}>Developer tools only</a> : "No firmware yet"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p>The iPod Classic kept one model number for its whole life. The last version, sold from late 2009 with 160 GB in a thin case, is often called the 7th generation.</p>
+      <p>If your iPod has no firmware listed, you can still manage its music without iTunes. Skip to <a href="#music">step 5</a>.</p>
+
+      <h2 id="prepare">2. Back up and prepare</h2>
+      <ol>
+        <li><strong>Copy your music somewhere safe.</strong> A normal install doesn’t erase anything, but a restore does, and old drives fail. If the only copy of your music is on the iPod, copy it off first with one of the <a href={href("/#library-apps")}>library apps</a>.</li>
+        <li><strong>Turn on disk use.</strong> Connect the iPod. On a Mac, select it in the Finder sidebar; on Windows, open iTunes and click the iPod icon. Tick <em>Enable disk use</em> and apply. The iPod now shows up like a USB drive, which every install needs.</li>
+        <li><strong>Check how it’s formatted.</strong> Rockbox needs an iPod formatted for Windows. If yours was first set up on a Mac, it has to be restored from a Windows PC before Rockbox will run, and that erases it. The Rockbox manual explains how to tell and what to do.</li>
+        <li><strong>Charge it.</strong> Don’t install firmware on a nearly empty battery.</li>
+      </ol>
+
+      <h2 id="install">3. Install your first firmware</h2>
+      <p>Start with <a href={href("/firmware/rockbox/")}>Rockbox</a>, even if you plan to use something else. It’s stable, it runs on the most iPods, and it installs the bootloader that most other firmware here depends on.</p>
+      <ol>
+        <li>Download Rockbox Utility for your computer and open it.</li>
+        <li>Connect the iPod. Rockbox Utility detects the model.</li>
+        <li>Choose the complete installation. It installs the bootloader, Rockbox itself, fonts and a starter set of themes.</li>
+        <li>Eject the iPod and unplug it. It restarts into Rockbox.</li>
+      </ol>
+      <p>Apple’s firmware stays on the iPod. You can boot it whenever you like by holding a button as the iPod starts; the Rockbox manual shows which one for your model.</p>
+
+      <h2 id="flavor">4. Try another flavor</h2>
+      <p>If you have an iPod Classic or iPod Video, several projects build on Rockbox, and switching takes a minute: download the zip for your model and unzip it onto the iPod, over the <code>.rockbox</code> folder. Your music isn’t touched.</p>
+      <ul>
+        <li><a href={href("/firmware/rockpod/")}>Rockpod</a> for digital audio out to a DAC or dock, Cover Flow, and colors from your album art.</li>
+        <li><a href={href("/firmware/podbox/")}>PodBox</a> for album art beside every list, audiobooks and podcasts, listening stats and games.</li>
+        <li><a href={href("/blog/which-firmware-for-which-ipod/")}>Which firmware for which iPod</a> compares the rest.</li>
+      </ul>
+      <p><strong>Keep a way back.</strong> Before you switch, copy the iPod’s <code>.rockbox</code> folder to your computer. To return, delete the folder on the iPod and copy yours back.</p>
+      <p>Each listing shows its status. <em>Ripe</em> means stable. <em>Ripening</em> and <em>Unripe</em> mean beta and experimental: fine to try, with that backup in place.</p>
+
+      <h2 id="music">5. Put music on it</h2>
+      <p><strong>With Rockbox or a fork,</strong> you don’t need any special software. Connect the iPod, drag your music folders onto it, and eject. Then on the iPod open <em>Settings › General Settings › Database</em> and choose <em>Initialize Now</em>, so you can browse by artist and album. Rockbox plays FLAC, Opus and most other formats as they are.</p>
+      <p><strong>With Apple’s firmware,</strong> music has to be added by an app that writes the iPod’s own library. These are the ones listed here:</p>
+      <ul>
+        {byPlatform.map((g) => (
+          <li><strong>{g.platform}:</strong> {g.apps.map((a, i) => (<>{i > 0 && ", "}<a href={href(a.path)}>{a.name}</a></>))}</li>
+        ))}
+      </ul>
+      <p>You can use both. Music synced by one of these apps also plays in Rockbox.</p>
+
+      <h2 id="themes">6. Make it yours</h2>
+      <p>The <a href={href("/themes/")}>themes shelf</a> has looks other people have made. To install one on Rockbox or a fork, unzip it to the root of the iPod, then open <em>Settings › Theme Settings › Browse Theme Files</em> and choose it. Check the theme was made for your firmware and version; themes often break between versions.</p>
+      <p>Thinking about more storage, a new battery or Bluetooth? The <a href={href("/mods/")}>hardware mods</a> page covers what fits which iPod and what changes in the firmware afterwards. Those do mean opening the case.</p>
+
+      <h2 id="rescue">7. If something goes wrong</h2>
+      <p>It’s hard to permanently break a click-wheel iPod with the firmware on this page. These three steps get almost any of them back:</p>
+      <ol>
+        <li><strong>Reset it.</strong> Slide the Hold switch on and off, then hold <em>Menu</em> and the <em>center button</em> together for about eight seconds, until the Apple logo appears.</li>
+        <li><strong>Force disk mode.</strong> Reset as above. The moment the Apple logo appears, hold the <em>center button</em> and <em>Play/Pause</em> until the screen says Disk Mode. The iPod then mounts on your computer whatever state its firmware is in.</li>
+        <li><strong>Restore it.</strong> In Finder or iTunes, choose <em>Restore</em>. This erases the iPod and puts Apple’s firmware back exactly as it shipped. Then start again from step 2.</li>
+      </ol>
+      <p>The exceptions are the developer tools for the nano 6th and 7th generation, which can leave an iPod unusable. Their listings say so.</p>
+
+      <h2>Stay in the loop</h2>
+      <p>New firmware and versions appear in the <em>Fresh in</em> panel on the <a href={href("/")}>home page</a> and on the <a href={href("/blog/")}>blog</a>. If you’d like them by email, turn on the newsletter on <a href={href("/account/")}>your account page</a>.</p>
+    </article>
+  </main>
+</Base>

@@ -53,21 +53,22 @@ export default {
     { id: "games",      name: "Games & extras" }
   ],
 
+  // `model` is the number printed on the back of the iPod.
   devices: [
-    { id: "ipod-1g2g",    name: "iPod 1st / 2nd gen",   short: "1G/2G",   years: "2001–02" },
-    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003" },
-    { id: "ipod-4g",      name: "iPod 4th gen",         short: "4G",      years: "2004" },
-    { id: "ipod-photo",   name: "iPod Photo / Color",   short: "Photo",   years: "2004–05" },
-    { id: "ipod-video",   name: "iPod Video 5G / 5.5G", short: "Video",   years: "2005–07" },
-    { id: "ipod-classic", name: "iPod Classic 6G / 7G", short: "Classic", years: "2007–14" },
-    { id: "ipod-mini",    name: "iPod mini 1G / 2G",    short: "mini",    years: "2004–05" },
-    { id: "ipod-nano-1g", name: "iPod nano 1st gen",    short: "nano 1G", years: "2005" },
-    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006" },
-    { id: "ipod-nano-3g", name: "iPod nano 3rd gen",    short: "nano 3G", years: "2007" },
-    { id: "ipod-nano-4g", name: "iPod nano 4th gen",    short: "nano 4G", years: "2008" },
-    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009" },
-    { id: "ipod-nano-6g", name: "iPod nano 6th gen",    short: "nano 6G", years: "2010" },
-    { id: "ipod-nano-7g", name: "iPod nano 7th gen",    short: "nano 7G", years: "2012–15" }
+    { id: "ipod-1g2g",    name: "iPod 1st / 2nd gen",   short: "1G/2G",   years: "2001–02", model: "M8541 (1st gen), A1019 (2nd gen)" },
+    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003", model: "A1040" },
+    { id: "ipod-4g",      name: "iPod 4th gen",         short: "4G",      years: "2004", model: "A1059" },
+    { id: "ipod-photo",   name: "iPod Photo / Color",   short: "Photo",   years: "2004–05", model: "A1099" },
+    { id: "ipod-video",   name: "iPod Video 5G / 5.5G", short: "Video",   years: "2005–07", model: "A1136" },
+    { id: "ipod-classic", name: "iPod Classic 6G / 7G", short: "Classic", years: "2007–14", model: "A1238" },
+    { id: "ipod-mini",    name: "iPod mini 1G / 2G",    short: "mini",    years: "2004–05", model: "A1051" },
+    { id: "ipod-nano-1g", name: "iPod nano 1st gen",    short: "nano 1G", years: "2005", model: "A1137" },
+    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006", model: "A1199" },
+    { id: "ipod-nano-3g", name: "iPod nano 3rd gen",    short: "nano 3G", years: "2007", model: "A1236" },
+    { id: "ipod-nano-4g", name: "iPod nano 4th gen",    short: "nano 4G", years: "2008", model: "A1285" },
+    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009", model: "A1320" },
+    { id: "ipod-nano-6g", name: "iPod nano 6th gen",    short: "nano 6G", years: "2010", model: "A1366" },
+    { id: "ipod-nano-7g", name: "iPod nano 7th gen",    short: "nano 7G", years: "2012–15", model: "A1446" }
   ],
 
   firmwares: [

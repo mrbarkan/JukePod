@@ -1,0 +1,95 @@
+---
+import Base from "../layouts/Base.astro";
+import Contact from "../components/Contact.astro";
+import { href } from "../lib/catalog.js";
+const UPDATED = "22 November 2026";
+---
+<Base title="Privacy policy" description="What Quitanda collects, why, who handles it and how to remove it. No ads, no tracking, no selling.">
+  <main class="wrap page narrow">
+    <article class="prose">
+      <header>
+        <time>Last updated {UPDATED}</time>
+        <h1>Privacy policy</h1>
+      </header>
+
+      <h2>The short version</h2>
+      <ul>
+        <li>You can browse and download everything without an account.</li>
+        <li>No ads, no analytics, no tracking, and no cookies set by Quitanda.</li>
+        <li>Your data is never sold, rented or shared for marketing.</li>
+        <li>If you sign in, we keep your name, email address and profile picture so your account works.</li>
+        <li>The newsletter is opt-in. It uses your name and email address to send you news and for nothing else.</li>
+        <li>You can download everything we hold about you, unsubscribe, or delete your account yourself, at any time, from <a href={href("/account/")}>your account page</a>.</li>
+      </ul>
+
+      <h2>Who is responsible</h2>
+      <p>Quitanda is a personal, non-commercial project run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who decides how the data described here is used (the “controller”, in the law’s words).</p>
+
+      <h2>What we collect, and why</h2>
+
+      <h3>When you only browse</h3>
+      <p>Quitanda itself stores nothing about you. Your browser remembers two preferences on your own device and never sends them to us: the iPod you picked in the “My iPod” menu, and whether you hid the “Fresh in” panel.</p>
+      <p>Like any website, the companies that deliver the pages see your IP address and browser type when your browser asks for them. See <a href="#who">who handles your data</a>.</p>
+
+      <h3>When you sign in</h3>
+      <div class="table-scroll">
+        <table class="plain-table">
+          <thead><tr><th>What</th><th>Why</th><th>Who can see it</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Name, email address, profile picture and account ID from the Google account you sign in with</th><td>To create your account and recognize you when you return</td><td>Only you and the site’s admin</td></tr>
+            <tr><th scope="row">Public profile: display name, picture, and an optional short bio and link</th><td>To show who shared a theme</td><td>Everyone</td></tr>
+            <tr><th scope="row">Whether you’re an iPod owner or a maker</th><td>To show you the right guide</td><td>Only you and the site’s admin</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Your email address is never shown on the site. The legal basis is that we need this information to provide the account you asked for.</p>
+
+      <h3>When you subscribe to the newsletter</h3>
+      <p>Only if you tick the box: your name, the email address you signed in with, and the date you agreed. They are used to send you occasional Quitanda news and updates, and for nothing else. The legal basis is your consent, which you can withdraw at any time by unsubscribing on your account page or from any email. Unsubscribing deletes the record.</p>
+
+      <h3>When you share something</h3>
+      <p>Themes you upload, with their screenshots and descriptions, are public once approved, alongside your display name. If you report a problem with a theme, your report is kept so the admin can act on it.</p>
+
+      <h2>What we don’t do</h2>
+      <ul>
+        <li>We don’t sell or rent personal data, and we don’t share it with advertisers or data brokers.</li>
+        <li>We don’t run advertising or analytics, and we don’t build profiles of visitors.</li>
+        <li>We don’t make automated decisions about you.</li>
+        <li>We don’t ask for more than is listed above, and we don’t read your Google account beyond the name, email address and picture it shares at sign-in.</li>
+      </ul>
+
+      <h2 id="who">Who handles your data</h2>
+      <p>Quitanda runs on services from two companies, which process data on our behalf:</p>
+      <ul>
+        <li><strong>Google (Firebase)</strong> provides sign-in and stores accounts, profiles, the newsletter list and shared themes. Google’s servers also deliver the site’s fonts.</li>
+        <li><strong>GitHub</strong> hosts the site’s pages.</li>
+      </ul>
+      <p>Both are based in the United States, so your data is stored and processed there. Both commit to the safeguards European law requires for such transfers.</p>
+      <p>The newsletter hasn’t started yet. When it does, it will be sent through an email delivery service, which will receive subscribers’ names and addresses for that purpose only. This page will name the service before the first email goes out.</p>
+      <p>We’ll disclose data if the law requires it, and not otherwise.</p>
+
+      <h2>How long we keep it</h2>
+      <ul>
+        <li><strong>Account and profile:</strong> until you delete your account.</li>
+        <li><strong>Newsletter record:</strong> until you unsubscribe.</li>
+        <li><strong>Shared themes:</strong> until you delete them or your account, or the admin removes them.</li>
+      </ul>
+      <p>Deleting your account removes your profile, your settings, your newsletter record, the themes you shared with their files, the reports you sent, and the sign-in itself. Copies in our providers’ routine backups expire on their schedule.</p>
+
+      <h2>Your rights</h2>
+      <p>You can see, correct, download and delete your data yourself. <a href={href("/gdpr/")}>Your data rights</a> explains each right and exactly how to use it here.</p>
+
+      <h2>Children</h2>
+      <p>Quitanda isn’t aimed at children. Please don’t create an account if you’re under 16.</p>
+
+      <h2>Security</h2>
+      <p>Sign-in is handled by Google, so Quitanda never sees or stores a password. Access rules limit who can read each record, and all connections are encrypted. No system is perfect; if a breach ever affects your data, you’ll be told.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes in a way that matters, it will be announced on the <a href={href("/blog/")}>blog</a> before it takes effect, and newsletter subscribers will be told by email. The date at the top shows the latest version.</p>
+
+      <h2 id="contact">Contact</h2>
+      <Contact>use <a href={href("/account/")}>your account page</a> to download or delete your data and to unsubscribe.</Contact>
+    </article>
+  </main>
+</Base>
