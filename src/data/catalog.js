@@ -749,20 +749,20 @@ export default {
       platforms: ["macOS"],
       price: "Free, open source",
       status: "beta",
-      version: "2.3.2",
-      updated: "2026-10-20",
+      version: "2.3.4",
+      updated: null,
       github: "mrbarkan/cratedigger",
       stars: 3,
       license: "MIT",
       blurb: "A music-library workbench for the Mac, for people who keep their music as files. It rips, tags, converts and organizes, then sends the music to iPods running Rockbox or PodBox.",
       more: [
         "It looks like a hardware console, with an OLED display, VU meters and faders. Collections are saved as plain JSON crates, and new music lands in a Prep Crate for tagging before it joins the library.",
-        "Each iPod gets a profile in Preferences \u203a Devices. A Rockbox iPod gets `cover.jpg` files with embedded art stripped. The 2.3.4 betas recognize PodBox iPods, show their model and build, send artist pictures, and clean out the hidden `._` files macOS leaves behind, which PodBox would otherwise read as broken tracks."
+        "Each iPod gets a profile in Preferences \u203a Devices. A Rockbox iPod gets `cover.jpg` files with embedded art stripped. From 2.3.4 it recognizes PodBox iPods, shows their model and build, sends artist pictures, and cleans out the hidden `._` files macOS leaves behind, which PodBox would otherwise read as broken tracks."
       ],
       features: [
         "Per-device profiles for Rockbox and PodBox iPods",
-        "Artist pictures for PodBox, without overwriting yours (2.3.4 beta)",
-        "Removes macOS `._` files from the iPod (2.3.4 beta)",
+        "Artist pictures for PodBox, without overwriting yours",
+        "Removes macOS `._` files from the iPod",
         "Tag editing, artwork fixes and cover lookup",
         "Batch conversion with FFmpeg (beta)",
         "Splits vinyl side rips into tracks",
@@ -773,13 +773,13 @@ export default {
       devicesNote: "Sends to iPods running Rockbox or PodBox, plus USB players and SD cards. It doesn\u2019t sync to Apple\u2019s firmware.",
       requires: "macOS 13 Ventura or later. The download is built for Apple Silicon.",
       install: [
-        "Download `CrateDigger-2.3.2.dmg` and drag CrateDigger to Applications.",
+        "Download the latest `.dmg` from the Releases page and drag CrateDigger to Applications.",
         "Optional: run `brew install yt-dlp` to play YouTube links as radio.",
         "Add your music folders, then set up your iPod in Preferences \u203a Devices.",
         "On a PodBox iPod, run Update Database and Update Art Cache after a transfer, as CrateDigger\u2019s summary reminds you."
       ],
       files: [
-        { label: "macOS 13+, Apple Silicon", file: "CrateDigger-2.3.2.dmg" }
+        { label: "macOS 13+, Apple Silicon", file: "CrateDigger .dmg" }
       ],
       links: [
         { label: "Download", url: "https://github.com/mrbarkan/cratedigger/releases/latest", icon: "download" },

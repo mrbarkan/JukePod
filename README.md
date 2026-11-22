@@ -87,7 +87,6 @@ The listings were compiled from each project's public pages in November 2026. Th
 - iPodLinux: the device list is from memory of the old project, so treat it as approximate.
 - Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
 - Stonepod: details come from its TestFlight page and search results.
-- CrateDigger: its PodBox features are in the 2.3.4 betas, not in 2.3.2. Update the listing when 2.3.4 ships.
+- CrateDigger: the listing assumes the PodBox features from the 2.3.4 betas shipped in 2.3.4. Confirm against the release notes.
 - Hardware mods: written from vendor pages and press coverage, not hands-on testing. Check kit names, what each port does, and the haptic click entry in particular.
 - Screenshots come from each project's own repository and are credited on the page. Remove any a maker objects to.
-- The nightly tracker is tested against sample data but has not yet run against GitHub.
