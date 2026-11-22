@@ -73,6 +73,24 @@ GITHUB_TOKEN=your_token npm run refresh
 
 The tests for it run with `npm test`.
 
+## Sign-in and the database
+
+Sign-in and shared data run on Firebase (project `quitanda-95fa7`).
+
+- `src/lib/firebase-config.js` holds the project's public web config and the list of sign-in methods shown.
+- `src/lib/auth.js` is the only file that imports Firebase. It loads on demand, so visitors who never sign in never download it.
+- `firestore.rules` and `firestore.indexes.json` are the database's access rules and indexes. Publish changes with:
+
+```bash
+npx firebase-tools deploy --only firestore
+```
+
+To make someone an admin, create a document in the `admins` collection named with their user ID. Admins can approve or reject shared themes.
+
+To add GitHub sign-in: enable the GitHub provider in the Firebase console (it needs a GitHub OAuth app), then add `"github"` to `providers` in `src/lib/firebase-config.js`.
+
+A new site address must be added in the Firebase console under Authentication › Settings › Authorized domains, or sign-in will refuse it.
+
 ## Deploy
 
 `.github/workflows/deploy.yml` builds and publishes the site on every push to `main`, every night, and on demand from the Actions tab.

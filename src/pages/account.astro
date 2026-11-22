@@ -1,0 +1,120 @@
+---
+import Base from "../layouts/Base.astro";
+import { href } from "../lib/catalog.js";
+---
+<Base title="Your account" description="Your Quitanda profile.">
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1>Your account</h1>
+    </header>
+
+    <p id="acct-loading" class="aside-note">Checking whether you're signed in…</p>
+
+    <section id="acct-out" hidden>
+      <p>You're not signed in. Use <strong>Sign in</strong> at the top of the page.</p>
+    </section>
+
+    <section id="acct-in" class="acct" hidden>
+      <p class="acct-admin" id="acct-admin" hidden>You're an admin of this site.</p>
+      <form id="acct-form" class="acct-form" novalidate>
+        <label>
+          <span>Display name</span>
+          <input class="field" id="acct-name" name="displayName" maxlength="40" required autocomplete="nickname" />
+          <small>Shown next to anything you share.</small>
+        </label>
+        <label>
+          <span>About you <em>(optional)</em></span>
+          <textarea class="field" id="acct-bio" name="bio" maxlength="280" rows="3"></textarea>
+        </label>
+        <label>
+          <span>Link <em>(optional)</em></span>
+          <input class="field" id="acct-link" name="link" type="url" maxlength="200" placeholder="https://" />
+        </label>
+        <div class="acct-actions">
+          <button type="submit" class="btn">Save profile</button>
+          <span id="acct-status" role="status"></span>
+        </div>
+      </form>
+
+      <div class="acct-row">
+        <button type="button" class="btn btn-quiet" id="acct-signout">Sign out</button>
+      </div>
+
+      <div class="acct-danger">
+        <h2>Delete your account</h2>
+        <p>This removes your profile and your sign-in from Quitanda. It can't be undone.</p>
+        <button type="button" class="btn btn-quiet" id="acct-delete">Delete my account</button>
+        <div id="acct-confirm" hidden>
+          <p><strong>Delete your account for good?</strong></p>
+          <button type="button" class="btn btn-danger" id="acct-delete-yes">Yes, delete it</button>
+          <button type="button" class="btn btn-quiet" id="acct-delete-no">Keep my account</button>
+        </div>
+        <p id="acct-delete-error" class="signin-error" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <p><a class="more-link" href={href("/")}>Back to the shop</a></p>
+  </main>
+</Base>
+
+<script>
+  import { onUser, loadAuth } from "../scripts/account.js";
+
+  const $ = (id) => document.getElementById(id);
+  let me = null;
+
+  onUser(async (user) => {
+    me = user;
+    $("acct-loading").hidden = true;
+    $("acct-out").hidden = !!user;
+    $("acct-in").hidden = !user;
+    if (!user) return;
+    const { loadProfile, isAdmin } = await loadAuth();
+    const profile = (await loadProfile(user.uid)) || {};
+    $("acct-name").value = profile.displayName || user.displayName || "";
+    $("acct-bio").value = profile.bio || "";
+    $("acct-link").value = profile.link || "";
+    $("acct-admin").hidden = !(await isAdmin(user.uid));
+  });
+
+  $("acct-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = $("acct-status");
+    status.textContent = "Saving…";
+    try {
+      const { saveProfile } = await loadAuth();
+      await saveProfile(me, { displayName: $("acct-name").value, bio: $("acct-bio").value, link: $("acct-link").value });
+      status.textContent = "Saved";
+    } catch (err) {
+      status.textContent = err.code ? "Couldn't save. Try again in a moment." : err.message;
+    }
+  });
+
+  $("acct-signout").addEventListener("click", async () => {
+    const { signOutNow } = await loadAuth();
+    await signOutNow();
+  });
+
+  $("acct-delete").addEventListener("click", () => {
+    $("acct-confirm").hidden = false;
+    $("acct-delete").hidden = true;
+  });
+  $("acct-delete-no").addEventListener("click", () => {
+    $("acct-confirm").hidden = true;
+    $("acct-delete").hidden = false;
+  });
+  $("acct-delete-yes").addEventListener("click", async () => {
+    const error = $("acct-delete-error");
+    error.hidden = true;
+    try {
+      const { deleteAccount } = await loadAuth();
+      await deleteAccount(me);
+    } catch (err) {
+      error.textContent =
+        err.code === "auth/requires-recent-login"
+          ? "For safety, sign out, sign in again, and then delete your account."
+          : "Couldn't delete the account. Try again in a moment.";
+      error.hidden = false;
+    }
+  });
+</script>

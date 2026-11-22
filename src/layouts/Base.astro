@@ -2,6 +2,9 @@
 import "../styles/site.css";
 import Mark from "../components/Mark.astro";
 import { SITE, href, absolute, fmtDate, updatedOn } from "../lib/catalog.js";
+import { providers } from "../lib/firebase-config.js";
+
+const PROVIDER_NAMES = { google: "Google", github: "GitHub" };
 
 const { title, description = SITE.description, image = "/og.png", type = "website", section = "" } = Astro.props;
 const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name}: ${SITE.tagline}`;
@@ -53,8 +56,28 @@ const nav = [
             <a href={href(n.path)} aria-current={section === n.id ? "page" : undefined}>{n.label}</a>
           ))}
         </nav>
+        <div class="account" id="account">
+          <button type="button" class="account-btn" data-signed-out data-open>Sign in</button>
+          <a class="account-btn account-me" href={href("/account/")} data-signed-in hidden>
+            <img alt="" width="22" height="22" referrerpolicy="no-referrer" hidden />
+            <span data-name>Account</span>
+          </a>
+        </div>
       </div>
     </header>
+
+    <dialog class="signin" id="signin-dialog" aria-labelledby="signin-title">
+      <button type="button" class="signin-close" data-close aria-label="Close">×</button>
+      <h2 id="signin-title">Sign in to Quitanda</h2>
+      <p>Signing in lets you share themes and tell others what works on your iPod. Browsing and downloading never need an account.</p>
+      <div class="signin-buttons">
+        {providers.map((p) => (
+          <button type="button" class="btn btn-quiet" data-provider={p}>Continue with {PROVIDER_NAMES[p] || p}</button>
+        ))}
+      </div>
+      <p class="signin-error" data-error role="alert" hidden></p>
+      <p class="signin-note">We store your display name and profile picture, and show them next to what you share. <a href={href("/about/#privacy")}>Privacy</a></p>
+    </dialog>
 
     <slot />
 
@@ -72,5 +95,8 @@ const nav = [
         </p>
       </div>
     </footer>
+    <script>
+      import "../scripts/account.js";
+    </script>
   </body>
 </html>
