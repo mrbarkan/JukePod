@@ -14,9 +14,9 @@ import { href } from "../../lib/catalog.js";
 </Base>
 
 <script>
-  import { getApproved, isOwnFile } from "../../lib/themes-read.js";
+  import { getApproved, isOwnFile, remixesOf } from "../../lib/themes-read.js";
   import { onUser, loadAuth } from "../../scripts/account.js";
-  import { h, pageData, link, fmtDate, consoleSwatch, ownShots, statusPill, installSteps, fileHref } from "../../scripts/theme-ui.js";
+  import { h, pageData, link, fmtDate, consoleSwatch, ownShots, statusPill, installSteps, fileHref, themeCard, isRemix, sourceHref, hostOf } from "../../scripts/theme-ui.js";
 
   const { targets, devices } = pageData();
   const id = new URLSearchParams(location.search).get("id") || "";
@@ -26,6 +26,12 @@ import { href } from "../../lib/catalog.js";
   let theme = null;
   let me = null;
   let admin = false;
+  let originals = {}; // themeId -> the original theme, when it's still in the gallery
+  let remixes = [];
+  const targetLink = (id) => {
+    const t = targets.find((x) => x.id === id);
+    return t ? h("a", { class: "chip chip-link", href: link(t.path) }, t.name) : h("span", { class: "chip" }, id);
+  };
 
   function draw() {
     const target = targets.find((t) => t.id === theme.target);
@@ -37,6 +43,9 @@ import { href } from "../../lib/catalog.js";
     const facts = h("dl", { class: "facts" },
       h("dt", {}, "Made for"),
       h("dd", {}, target ? h("a", { href: link(target.path) }, target.name) : theme.target, theme.targetVersion ? ` ${theme.targetVersion}` : ""),
+      (theme.worksOn || []).length > 1
+        ? [h("dt", {}, "Also works on"), h("dd", {}, h("span", { class: "chips" }, theme.worksOn.filter((t) => t !== theme.target).map(targetLink)))]
+        : null,
       theme.devices?.length ? [h("dt", {}, "iPods"), h("dd", {}, h("span", { class: "chips" }, theme.devices.map((d) => h("span", { class: "chip" }, devices[d] || d))))] : null,
       theme.license ? [h("dt", {}, "License"), h("dd", {}, theme.license)] : null,
       theme.createdAt ? [h("dt", {}, "Shared"), h("dd", {}, fmtDate(theme.createdAt))] : null
@@ -83,7 +92,10 @@ import { href } from "../../lib/catalog.js";
           isOwnFile(theme.file?.url) ? h("a", { class: "btn", href: fileHref(theme.file.url), target: "_blank", rel: "noopener" }, "Download theme") : null,
           theme.file?.size ? h("span", { class: "theme-size" }, `${Math.max(1, Math.round(theme.file.size / 1024))} KB`) : null
         ),
-        h("div", { class: "share" }, h("span", { class: "share-label" }, "Share"), copy, prompt)
+        h("div", { class: "share" }, h("span", { class: "share-label" }, "Share"), copy, prompt,
+          theme.status === "approved" && theme.license !== "All rights reserved"
+            ? h("a", { class: "share-btn", href: link(`/themes/submit/?for=${encodeURIComponent(theme.target)}&remix=${encodeURIComponent(theme.id)}`) }, "Remix this")
+            : null)
       ),
       shots.length || swatch
         ? h("section", { class: "gallery" },
@@ -93,9 +105,17 @@ import { href } from "../../lib/catalog.js";
             ))
         : null,
       h("div", { class: "item-body" },
-        h("div", { class: "item-col" }, h("section", {}, h("h2", {}, "Install"), h("ol", {}, installSteps(theme, targets).map((s) => h("li", {}, s))))),
+        h("div", { class: "item-col" },
+          h("section", {}, h("h2", {}, "Install"), h("ol", {}, installSteps(theme, targets).map((s) => h("li", {}, s)))),
+          isRemix(theme) ? remixOfSection() : null
+        ),
         h("aside", { class: "item-col item-facts" }, h("section", {}, h("h2", {}, "At a glance"), facts))
       ),
+      remixes.length
+        ? h("section", { class: "section" },
+            h("div", { class: "section-head" }, h("h2", {}, `Remixed ${remixes.length === 1 ? "once" : `${remixes.length} times`}`)),
+            h("div", { class: "theme-grid" }, remixes.map((t) => themeCard(t, targets))))
+        : null,
       h("div", { class: "theme-admin" },
         me && !mine ? h("button", { type: "button", class: "share-btn", onclick: () => (flagBox.hidden = !flagBox.hidden) }, "Report a problem") : null,
         mine || admin ? h("button", { type: "button", class: "share-btn", onclick: () => (confirmBox.hidden = false) }, "Delete theme") : null,
@@ -109,13 +129,41 @@ import { href } from "../../lib/catalog.js";
     view.hidden = false;
   }
 
+  // Where this theme came from. Themes on this site are linked by ID and show
+  // their current name; outside links show where they lead.
+  function remixOfSection() {
+    return h("section", { class: "remix-of" },
+      h("h2", {}, "Remix of"),
+      h("ul", { class: "remix-list" },
+        theme.remixOf.map((r) => {
+          const original = r.themeId ? originals[r.themeId] : null;
+          const href = r.themeId ? (original ? sourceHref(r) : null) : sourceHref(r);
+          const outside = !r.themeId;
+          return h("li", {},
+            h("span", { class: "remix-where" }, outside ? hostOf(r.url) : original ? "On Quitanda" : "No longer on Quitanda"),
+            href ? h("a", { href, ...(outside ? { target: "_blank", rel: "noopener noreferrer nofollow ugc" } : {}) }, original ? original.name : r.title) : h("strong", {}, r.title),
+            original ? h("span", {}, `by ${original.ownerName || "someone"}`) : null
+          );
+        })
+      )
+    );
+  }
+
+  async function loadRelations() {
+    const ids = (theme.remixOf || []).map((r) => r.themeId).filter(Boolean);
+    const found = await Promise.all(ids.map((rid) => getApproved(rid).catch(() => null)));
+    originals = Object.fromEntries(found.filter((t) => t && t.status === "approved").map((t) => [t.id, t]));
+    remixes = theme.status === "approved" ? await remixesOf(theme.id).catch(() => []) : [];
+    draw();
+  }
+
   const missing = () => {
     status.textContent = "This theme doesn't exist, or isn't public yet. If it's yours, sign in to see it.";
   };
 
   (async () => {
     theme = await getApproved(id);
-    if (theme) draw();
+    if (theme) { draw(); loadRelations(); }
     else missing();
     // Signed-in people may see more: their own hidden themes, and controls.
     onUser(async (user) => {
@@ -123,8 +171,10 @@ import { href } from "../../lib/catalog.js";
       if (!user) return theme && draw();
       const [{ isAdmin }, { getThemeAsMember }] = await Promise.all([loadAuth(), write()]);
       admin = await isAdmin(user.uid);
+      const hidden = !theme;
       theme = theme || (await getThemeAsMember(id));
       if (theme) draw();
+      if (theme && hidden) loadRelations();
     }, { lazy: true });
   })();
 </script>

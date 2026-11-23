@@ -17,7 +17,7 @@ export function h(tag, attrs = {}, ...children) {
     else if (key === "hidden" || key === "disabled" || key === "required" || key === "checked") el[key] = !!value;
     else el.setAttribute(key, value === true ? "" : value);
   }
-  for (const child of children.flat()) if (child != null && child !== false) el.append(child);
+  for (const child of children.flat(Infinity)) if (child != null && child !== false) el.append(child);
   return el;
 }
 
@@ -66,8 +66,26 @@ export function preview(theme) {
 const STATUS = { pending: "Waiting for review", approved: "In the gallery", rejected: "Not accepted" };
 export const statusPill = (status) => h("span", { class: `pill pill-theme-${status}` }, STATUS[status] || status);
 
+/** "Rockbox 4.0 · also Rockpod, RodBox" for a theme's cards and review. */
+export function worksOnText(theme, targets) {
+  const name = (id) => targets.find((t) => t.id === id)?.name || id;
+  const extra = (theme.worksOn || []).filter((id) => id !== theme.target).map(name);
+  return `${name(theme.target)}${theme.targetVersion ? " " + theme.targetVersion : ""}${extra.length ? " · also " + extra.join(", ") : ""}`;
+}
+
+export const isRemix = (theme) => Array.isArray(theme.remixOf) && theme.remixOf.length > 0;
+
+/** Where a remix source points: its page on this site, or the outside link. */
+export function sourceHref(source) {
+  if (source.themeId) return link(`/themes/view/?id=${encodeURIComponent(source.themeId)}`);
+  // An outside link is only followed if it is https.
+  return /^https:\/\//.test(source.url || "") ? source.url : null;
+}
+export function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; }
+}
+
 export function themeCard(theme, targets) {
-  const target = targets.find((t) => t.id === theme.target);
   return h(
     "a",
     { class: "theme-card", href: link(`/themes/view/?id=${encodeURIComponent(theme.id)}`) },
@@ -75,7 +93,8 @@ export function themeCard(theme, targets) {
     h("div", { class: "theme-card-text" },
       h("strong", {}, theme.name),
       h("span", {}, `by ${theme.ownerName || "someone"}`),
-      h("span", { class: "theme-for" }, `${target ? target.name : theme.target}${theme.targetVersion ? " " + theme.targetVersion : ""}`)
+      h("span", { class: "theme-for" }, worksOnText(theme, targets)),
+      isRemix(theme) ? h("span", { class: "theme-remix-tag" }, "Remix") : null
     )
   );
 }

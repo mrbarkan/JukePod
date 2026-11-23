@@ -1,0 +1,136 @@
+---
+import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import ThemeData from "../../components/ThemeData.astro";
+import { href, themeTargets } from "../../lib/catalog.js";
+
+// Rockbox and every firmware built on it can load the same kind of theme.
+const family = themeTargets.filter((t) => t.kind === "firmware");
+const SCREENS = [
+  ["iPod 1G–4G, 3G", "160 × 128", "grayscale"],
+  ["iPod mini", "138 × 110", "grayscale"],
+  ["iPod Photo / Color", "220 × 176", "color"],
+  ["iPod nano 1G and 2G", "176 × 132", "color"],
+  ["iPod Video and Classic", "320 × 240", "color"],
+];
+---
+<Base
+  title="Rockbox themes for iPod"
+  description="Themes for Rockbox and the firmware built on it: Rockpod, RodBox, PodBox and more. Browse them, or share yours with screenshots, tags for the forks it runs on, and credit for what it remixes."
+  section="themes"
+>
+  <main class="wrap page">
+    <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
+    <header class="intro intro-row">
+      <div>
+        <p class="lcd-kicker">Rockbox themes</p>
+        <h1>Skins for the screen.</h1>
+        <p>Themes for Rockbox and everything built on it. One theme can run on several of them, so each one says where it's been tried.</p>
+      </div>
+      <div class="intro-side">
+        <a class="btn btn-lg" href={href("/themes/submit/?for=rockbox")}>Share a Rockbox theme <span aria-hidden="true">↑</span></a>
+        <span>Made it for a fork? You can choose that instead.</span>
+      </div>
+    </header>
+
+    <div class="segs" id="rb-filter" role="group" aria-label="Works on"></div>
+    <p class="aside-note" id="rb-status" role="status">Loading themes…</p>
+    <div class="theme-grid" id="rb-grid"></div>
+
+    <section class="section">
+      <div class="section-head"><h2>Sharing one</h2></div>
+      <ol class="how">
+        <li><b aria-hidden="true">1</b><strong>Zip the .rockbox folder</strong><span>Put your theme's files inside a <code>.rockbox</code> folder, laid out the way they sit on the iPod, and zip that folder. Leave out plugins, codecs and firmware files.</span></li>
+        <li><b aria-hidden="true">2</b><strong>Tag where it runs</strong><span>Choose the firmware you made it for, then tick the forks you've also tried it on. It shows up on each of their shelves.</span></li>
+        <li><b aria-hidden="true">3</b><strong>Credit what you remixed</strong><span>Started from someone else's theme? Link it: a theme on this site or a page anywhere else. The original gets a link back to your remix.</span></li>
+      </ol>
+    </section>
+
+    <section class="section rb-guide">
+      <div class="rb-guide-col">
+        <h2>What goes in the zip</h2>
+        <p>A Rockbox theme is a <code>.cfg</code> file that points at the rest. A typical theme called <em>Citrus</em>:</p>
+        <pre class="code-block rb-tree"><code>.rockbox/
+  themes/Citrus.cfg        the file people choose
+  wps/Citrus.wps           the Now Playing screen
+  wps/Citrus.sbs           the status bar and menus
+  wps/Citrus/              images the screens use
+  backdrops/Citrus.bmp     the background
+  fonts/                   .fnt fonts, with their licenses
+  icons/                   icon sets, if it has its own</code></pre>
+        <p>Name everything after the theme so it doesn't overwrite someone else's files. Screen captures from the Rockbox simulator or theme editor make the sharpest screenshots; a clear photo of the iPod works too.</p>
+      </div>
+      <div class="rb-guide-col">
+        <h2>Screen sizes</h2>
+        <p>Themes are drawn for one screen size. Say which iPods yours fits on the upload form.</p>
+        <div class="table-scroll">
+          <table class="plain-table rb-screens">
+            <thead><tr><th scope="col">iPod</th><th scope="col">Pixels</th><th scope="col">Screen</th></tr></thead>
+            <tbody>{SCREENS.map(([name, px, kind]) => <tr><th scope="row">{name}</th><td>{px}</td><td>{kind}</td></tr>)}</tbody>
+          </table>
+        </div>
+        <h2>Remixing</h2>
+        <p>Remix only themes whose license allows it, keep the original's license terms, and link the original when you share. Themes marked "All rights reserved" don't offer a Remix button: ask their author first.</p>
+      </div>
+    </section>
+
+    <section class="band">
+      <div>
+        <h2>Before you upload</h2>
+        <ul>
+          <li>Only what you made or may share</li>
+          <li>Fonts come with their license</li>
+          <li>Nothing from Apple: no fonts, icons or artwork</li>
+          <li>Say which version it was made for</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <ThemeData />
+  <script is:inline type="application/json" id="rb-family" set:html={JSON.stringify(family.map((f) => f.id))} />
+</Base>
+
+<script>
+  import { listApproved } from "../../lib/themes-read.js";
+  import { h, pageData, themeCard, link } from "../../scripts/theme-ui.js";
+
+  const { targets } = pageData();
+  const family = JSON.parse(document.getElementById("rb-family").textContent || "[]");
+  const firmwares = targets.filter((t) => family.includes(t.id));
+  const grid = document.getElementById("rb-grid");
+  const status = document.getElementById("rb-status");
+  const filter = document.getElementById("rb-filter");
+  let current = new URLSearchParams(location.search).get("on") || "";
+  if (!family.includes(current)) current = "";
+
+  function drawFilter() {
+    filter.replaceChildren(
+      ...[{ id: "", name: "All" }, ...firmwares].map((t) =>
+        h("button", { type: "button", class: "seg", "aria-pressed": String(current === t.id), onclick: () => choose(t.id) }, t.name)
+      )
+    );
+  }
+
+  async function choose(id) {
+    current = id;
+    history.replaceState(null, "", id ? `?on=${id}` : location.pathname);
+    drawFilter();
+    grid.replaceChildren();
+    status.hidden = false;
+    status.textContent = "Loading themes…";
+    try {
+      const themes = await listApproved(id ? { target: id } : { anyOf: family });
+      if (id !== current) return; // a newer choice is already loading
+      const name = firmwares.find((f) => f.id === id)?.name || "Rockbox";
+      const yours = h("a", { class: "theme-yours", href: link(`/themes/submit/?for=${id || "rockbox"}`) },
+        h("i", { "aria-hidden": "true" }, "+"), h("strong", {}, "Yours goes here"),
+        h("span", {}, `Made a theme for ${name}? Put it on the shelf.`));
+      grid.replaceChildren(...themes.map((t) => themeCard(t, targets)), yours);
+      status.hidden = true;
+    } catch (err) {
+      status.textContent = `${err.message} Reload the page to try again.`;
+    }
+  }
+
+  choose(current);
+</script>

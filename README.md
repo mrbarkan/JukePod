@@ -107,6 +107,11 @@ npm run deploy:rules
 
 People share themes at `/themes/submit/`. The page checks the file in the browser before anything is uploaded (`src/lib/theme-file.js`): it refuses programs, Rockbox plugins and firmware images, reads a CrateDigger theme's name and colors from its `theme.json`, and asks for a license file beside any bundled font.
 
+`/themes/rockbox/` is the Rockbox shelf: every theme that runs on Rockbox or a firmware built on it, a filter per firmware, and a guide to what goes in a Rockbox theme's zip. Its "Share a Rockbox theme" button opens the form set to Rockbox (`/themes/submit/?for=rockbox`).
+
+- **Also works on:** a firmware theme can be tagged with the other Rockbox-family firmware it runs on. They're saved in `worksOn` (the firmware it was made for comes first), and the theme appears on each of their shelves.
+- **Remixes:** a theme can name up to five themes it remixes, saved in `remixOf`: a theme on this site by its ID (also listed in `remixIds`, so the original can show its remixes), or an https link to anywhere else. Each theme's page has a "Remix this" button that opens the form with the original filled in, except for themes marked "All rights reserved".
+
 A shared theme is hidden until an admin approves it. Its files can only be fetched through the links saved on its record, an uploaded file can never be replaced, and editing a theme sends it back for review.
 
 - `src/lib/themes-read.js` reads the gallery through the database's public web API, so browsing needs no Firebase download.

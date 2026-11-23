@@ -98,7 +98,8 @@ const example = `{
       <h2 id="themes">Share themes</h2>
       <p>Themes have their own shelf, and you upload them yourself. Sign in, open <a href={href("/themes/submit/")}>Share a theme</a>, and add the file and screenshots. A person checks each theme before it appears.</p>
       <ul>
-        <li><strong>Rockbox and its forks:</strong> a zip that unpacks into the iPod’s <code>.rockbox</code> folder. Themes only: plugins, codecs and firmware files are refused.</li>
+        <li><strong>Rockbox and its forks:</strong> a zip that unpacks into the iPod’s <code>.rockbox</code> folder. Themes only: plugins, codecs and firmware files are refused. Tag the other forks it runs on. <a href={href("/themes/rockbox/")}>The Rockbox themes page</a> shows what goes in the zip.</li>
+        <li><strong>Remixes:</strong> if you built on someone else’s theme, link the original on the form, on this site or anywhere else. The original gets a link back to your remix.</li>
         <li><strong>CrateDigger:</strong> zip the whole <code>.cdtheme</code> folder. The page reads the name from <code>theme.json</code> and draws a preview in the theme’s colors.</li>
         <li><strong>Say which version it’s for.</strong> Themes break between firmware versions more than anything else does.</li>
         <li><strong>Fonts need their license.</strong> Bundle only fonts you may redistribute, with the license file beside them.</li>

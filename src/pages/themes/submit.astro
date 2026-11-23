@@ -5,12 +5,12 @@ import ThemeData from "../../components/ThemeData.astro";
 import { href, themeTargets } from "../../lib/catalog.js";
 const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GPL-2.0", "All rights reserved"];
 ---
-<Base title="Share a theme" description="Share a theme you made for Rockbox, its forks or CrateDigger, with screenshots." section="themes">
+<Base title="Share a theme" description="Share a theme you made for Rockbox, its forks or CrateDigger, with screenshots. Tag the firmware it runs on and credit what it remixes." section="themes">
   <main class="wrap page narrow">
     <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
     <header class="intro">
-      <h1>Share a theme</h1>
-      <p>Upload the theme and a few screenshots. It appears in the gallery once it has been checked.</p>
+      <h1 id="submit-title">Share a theme</h1>
+      <p>Upload the theme and a few screenshots. It appears in the gallery once it has been checked. Making one for Rockbox? <a href={href("/themes/rockbox/")}>How to package a Rockbox theme</a>.</p>
     </header>
 
     <p id="submit-loading" class="aside-note">Checking whether you're signed in…</p>
@@ -28,6 +28,12 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
           <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
         </span>
       </label>
+
+      <fieldset id="t-also-box" class="theme-devices" hidden>
+        <legend>Also works on <em>(optional)</em></legend>
+        <small>Tick the other firmware you've tried it on. Rockbox themes often run on its forks too.</small>
+        <div id="t-also" class="tag-picks"></div>
+      </fieldset>
 
       <label>
         <span>Theme file</span>
@@ -64,6 +70,18 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
         <small>How others may use your theme.</small>
       </label>
 
+      <fieldset class="theme-remix">
+        <legend>Is it a remix? <em>(optional)</em></legend>
+        <small>If you started from someone else's theme, link it so they get the credit. Paste a theme's link from this site, or a link from anywhere else. Up to 5.</small>
+        <div class="remix-add">
+          <input class="field" id="t-remix-url" type="url" inputmode="url" maxlength="300" placeholder="https://…" aria-label="Link to the original theme" />
+          <input class="field" id="t-remix-title" maxlength="80" placeholder="Its name (for outside links)" aria-label="Name of the original theme" />
+          <button type="button" class="btn btn-quiet" id="t-remix-add">Add</button>
+        </div>
+        <p id="t-remix-note" class="aside-note" role="status"></p>
+        <ul id="t-remix-list" class="remix-list"></ul>
+      </fieldset>
+
       <label>
         <span>Screenshots <em id="t-shots-rule"></em></span>
         <input class="field" id="t-shots" type="file" accept="image/png,image/jpeg,image/webp" multiple />
@@ -94,7 +112,7 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
 
 <script>
   import { onUser } from "../../scripts/account.js";
-  import { h, pageData, link, consoleSwatch } from "../../scripts/theme-ui.js";
+  import { h, pageData, link, consoleSwatch, hostOf } from "../../scripts/theme-ui.js";
 
   const { targets, devices } = pageData();
   const $ = (id) => document.getElementById(id);
@@ -104,7 +122,14 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
   let busy = false;
 
   const target = () => targets.find((t) => t.id === $("t-target").value);
+  const params = new URLSearchParams(location.search);
+  if (targets.some((t) => t.id === params.get("for"))) $("t-target").value = params.get("for");
+  let remixes = []; // { url, title, themeId? }
 
+  const firmwares = targets.filter((t) => t.kind === "firmware");
+  // Ticked tags are remembered, so switching what it's for doesn't lose them.
+  const ticked = new Set();
+  const alsoOn = () => firmwares.map((f) => f.id).filter((id) => ticked.has(id) && id !== $("t-target").value);
   onUser((user) => {
     $("submit-loading").hidden = true;
     if ($("submit-done").hidden) {
@@ -126,10 +151,81 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
       : "A .zip that unpacks into the iPod's .rockbox folder. 5 MB at most. No plugins or firmware files.";
     $("t-shots-rule").textContent = forApp ? "(optional)" : "(at least one)";
     $("t-devices-box").hidden = forApp;
-    $("t-devices").replaceChildren(
-      ...t.devices.map((d) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: d, checked: true }), h("span", {}, devices[d] || d)))
+    $("t-also-box").hidden = forApp;
+    $("t-also").replaceChildren(
+      ...(forApp ? [] : firmwares.filter((f) => f.id !== t.id)).map((f) =>
+        h("label", { class: "tag-pick" },
+          h("input", { type: "checkbox", value: f.id, checked: ticked.has(f.id), onchange: (e) => { e.target.checked ? ticked.add(f.id) : ticked.delete(f.id); drawDevices(); } }),
+          h("span", {}, f.name))
+      )
     );
+    $("submit-title").textContent = `Share a ${t.name} theme`;
+    drawDevices();
     if ($("t-file").files[0]) inspect();
+  }
+
+  // The iPods to choose from are those the chosen firmware runs on, and
+  // those of any it is also tagged with. Choices already made are kept.
+  let deviceChoices = new Map();
+  function drawDevices() {
+    for (const input of $("t-devices").querySelectorAll("input")) deviceChoices.set(input.value, input.checked);
+    const ids = [target(), ...alsoOn().map((id) => targets.find((t) => t.id === id))].filter(Boolean).flatMap((t) => t.devices);
+    const unique = Object.keys(devices).filter((d) => ids.includes(d));
+    $("t-devices").replaceChildren(
+      ...unique.map((d) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: d, checked: deviceChoices.get(d) ?? true }), h("span", {}, devices[d] || d)))
+    );
+  }
+
+  /* ---------- remix sources ---------- */
+  const remixNote = (text) => ($("t-remix-note").textContent = text || "");
+  function drawRemixes() {
+    $("t-remix-list").replaceChildren(
+      ...remixes.map((r, i) =>
+        h("li", {},
+          h("span", { class: "remix-where" }, r.themeId ? "On Quitanda" : hostOf(r.url)),
+          h("strong", {}, r.title),
+          h("button", { type: "button", class: "share-btn", onclick: () => { remixes.splice(i, 1); drawRemixes(); } }, "Remove")
+        )
+      )
+    );
+    $("t-remix-add").disabled = remixes.length >= 5;
+  }
+
+  async function addRemix(text, title = "") {
+    remixNote("");
+    const raw = String(text || "").trim();
+    if (!raw) return remixNote("Paste a link to the original theme.");
+    if (remixes.length >= 5) return remixNote("Five at most.");
+    const { themeIdFromLink, getApproved } = await import("../../lib/themes-read.js");
+    const themeId = themeIdFromLink(raw);
+    if (themeId) {
+      if (remixes.some((r) => r.themeId === themeId)) return remixNote("That one is already on the list.");
+      remixNote("Looking it up…");
+      const original = await getApproved(themeId).catch(() => null);
+      if (!original || original.status !== "approved") return remixNote("That theme isn't in the gallery. Check the link.");
+      remixes.push({ themeId, title: original.name.slice(0, 80) });
+      remixNote(original.license === "All rights reserved"
+        ? `Added. ${original.ownerName || "Its author"} keeps all rights to that theme, so ask them before you share a remix.`
+        : `Added ${original.name} by ${original.ownerName || "someone"}.`);
+    } else {
+      let url;
+      try { url = new URL(raw); } catch { return remixNote("That doesn't look like a link. It should start with https://"); }
+      if (url.protocol !== "https:") return remixNote("Use a link that starts with https://");
+      if (url.href.length > 300) return remixNote("That link is too long.");
+      if (remixes.some((r) => r.url === url.href)) return remixNote("That one is already on the list.");
+      if (/(^|\.)(quitanda\.mrbarkan\.com|mrbarkan\.github\.io)$/.test(url.hostname) || url.origin === location.origin) {
+        return remixNote("That's a page on this site, not a theme. Paste the link of the theme's own page.");
+      }
+      remixes.push({ url: url.href, title: String(title).trim().slice(0, 80) || hostOf(url.href) });
+      remixNote("");
+    }
+    $("t-remix-url").value = "";
+    $("t-remix-title").value = "";
+    drawRemixes();
+  }
+  $("t-remix-add").addEventListener("click", () => addRemix($("t-remix-url").value, $("t-remix-title").value));
+  for (const id of ["t-remix-url", "t-remix-title"]) {
+    $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("t-remix-add").click(); } });
   }
 
   async function inspect() {
@@ -150,9 +246,10 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
     if (result.name && !$("t-name").value) $("t-name").value = result.name;
     if (result.version && !$("t-version").value && target().kind !== "app") $("t-version").value = result.version;
     box.replaceChildren(
-      consoleSwatch(result.swatch, result.name || file.name),
+      ...[consoleSwatch(result.swatch, result.name || file.name)].filter(Boolean),
       h("p", {}, h("strong", {}, "Looks good. "), `${result.fileCount} ${result.fileCount === 1 ? "file" : "files"}, ${Math.max(1, Math.round(file.size / 1024))} KB.`,
-        result.author ? ` Author in the file: ${result.author}.` : "")
+        result.author ? ` Author in the file: ${result.author}.` : ""),
+      ...(result.warnings || []).map((w) => h("p", { class: "aside-note" }, w))
     );
   }
 
@@ -213,6 +310,8 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
             description: $("t-description").value,
             license: $("t-license").value,
             devices: t.kind === "app" ? [] : [...$("t-devices").querySelectorAll("input:checked")].map((i) => i.value),
+            alsoOn: t.kind === "app" ? [] : alsoOn(),
+            remixOf: remixes,
           },
         },
         (step) => ($("t-status").textContent = step)
@@ -231,4 +330,6 @@ const LICENSES = ["CC BY 4.0", "CC BY-SA 4.0", "CC0 (public domain)", "MIT", "GP
   });
 
   onTargetChange();
+  // "Remix this" on a theme's page links here with the original filled in.
+  if (params.get("remix")) addRemix(new URL(link(`/themes/view/?id=${encodeURIComponent(params.get("remix"))}`), location.href).href);
 </script>

@@ -52,7 +52,7 @@ const del = async (who, path) => (await fetch(`${DOCS}/${path}`, { method: "DELE
 
 const fileUrl = (uid, themeId, rest) => `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/themes%2F${uid}%2F${themeId}%2F${rest}?alt=media&token=t`;
 const theme = (uid, id, extra = {}) => ({
-  ownerUid: uid, ownerName: "Tester", name: "Test theme", target: "cratedigger", status: "pending",
+  ownerUid: uid, ownerName: "Tester", name: "Test theme", target: "cratedigger", worksOn: [extra.target || "cratedigger"], status: "pending",
   file: { url: fileUrl(uid, id, "file%2Ftest.zip"), name: "test.zip", size: 1000 },
   screenshots: [{ url: fileUrl(uid, id, "shots%2F1.png"), w: 320, h: 240 }],
   ...extra,
@@ -131,6 +131,44 @@ test("the public gallery query returns approved themes only", async () => {
   assert.ok(names.includes("Test theme") && !names.includes("Still hidden"));
   const everything = await fetch(`${DOCS}/themes`);
   assert.equal(everything.status, 403);
+});
+
+test("firmware tags: the first is the theme's own target, at most eight", async () => {
+  const rb = (id, extra) => theme(ana.uid, id, { target: "rockbox", worksOn: ["rockbox"], ...extra });
+  assert.equal(await put(ana, "themes/w-none", rb("w-none", { worksOn: [] })), 403);
+  assert.equal(await put(ana, "themes/w-wrong", rb("w-wrong", { worksOn: ["rockpod", "rockbox"] })), 403);
+  assert.equal(await put(ana, "themes/w-bad", rb("w-bad", { worksOn: ["rockbox", "Not A Slug!"] })), 403);
+  assert.equal(await put(ana, "themes/w-nine", rb("w-nine", { worksOn: ["rockbox", "a", "b", "c", "d", "e", "f", "g", "h"] })), 403);
+  const missing = rb("w-missing"); delete missing.worksOn;
+  assert.equal(await put(ana, "themes/w-missing", missing), 403);
+  assert.equal(await put(ana, "themes/w-ok", rb("w-ok", { worksOn: ["rockbox", "rockpod", "rodbox"] })), 200);
+  await del(ana, "themes/w-ok");
+});
+
+test("remix links: https only, five at most, site themes by ID", async () => {
+  const site = { title: "Citrus", themeId: "abc123" };
+  const outside = { url: "https://themes.rockbox.org/index.php?themeid=1", title: "Classic Blue" };
+  const rx = (id, extra) => theme(ana.uid, id, { target: "rockbox", worksOn: ["rockbox"], ...extra });
+  assert.equal(await put(ana, "themes/r-http", rx("r-http", { remixOf: [{ url: "http://example.com/x", title: "x" }] })), 403);
+  assert.equal(await put(ana, "themes/r-js", rx("r-js", { remixOf: [{ url: "javascript:alert(1)", title: "x" }] })), 403);
+  assert.equal(await put(ana, "themes/r-notitle", rx("r-notitle", { remixOf: [{ url: outside.url, title: "" }] })), 403);
+  assert.equal(await put(ana, "themes/r-extra", rx("r-extra", { remixOf: [{ ...outside, html: "<b>" }] })), 403);
+  assert.equal(await put(ana, "themes/r-six", rx("r-six", { remixOf: Array(6).fill(outside) })), 403);
+  assert.equal(await put(ana, "themes/r-badid", rx("r-badid", { remixOf: [{ ...site, themeId: "../admins" }] })), 403);
+  assert.equal(await put(ana, "themes/r-both", rx("r-both", { remixOf: [{ ...site, url: "https://evil.example/" }] })), 403);
+  assert.equal(await put(ana, "themes/r-ids", rx("r-ids", { remixIds: ["abc123"] })), 403);
+  assert.equal(await put(ana, "themes/r-empty", rx("r-empty", { remixOf: [] })), 403);
+  assert.equal(await put(ana, "themes/r-ok", rx("r-ok", { remixOf: [site, outside], remixIds: ["abc123"] })), 200);
+  await put(admin, "themes/r-ok", { status: "approved" }, { update: ["status"] });
+  const query = (filter) => fetch(`${DOCS}:runQuery`, json({ structuredQuery: { from: [{ collectionId: "themes" }],
+    where: { compositeFilter: { op: "AND", filters: [{ fieldFilter: { field: { fieldPath: "status" }, op: "EQUAL", value: { stringValue: "approved" } } }, filter] } } } }));
+  const remixes = await query({ fieldFilter: { field: { fieldPath: "remixIds" }, op: "ARRAY_CONTAINS", value: { stringValue: "abc123" } } });
+  assert.equal(remixes.status, 200);
+  assert.equal((await remixes.json()).filter((r) => r.document).length, 1);
+  const onRockbox = await query({ fieldFilter: { field: { fieldPath: "worksOn" }, op: "ARRAY_CONTAINS_ANY", value: { arrayValue: { values: [{ stringValue: "rockbox" }, { stringValue: "rockpod" }] } } } });
+  assert.equal(onRockbox.status, 200);
+  assert.ok((await onRockbox.json()).some((r) => r.document?.fields.name.stringValue === "Test theme"));
+  await del(ana, "themes/r-ok");
 });
 
 test("an owner's edit sends an approved theme back for review", async () => {

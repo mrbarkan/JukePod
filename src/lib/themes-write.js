@@ -70,6 +70,17 @@ export async function submitTheme({ file, shots, details, swatch }, onStep = () 
     if (clean(details.description, 1000)) record.description = clean(details.description, 1000);
     if (clean(details.license, 80)) record.license = clean(details.license, 80);
     if (details.devices?.length) record.devices = details.devices.slice(0, 20);
+    record.worksOn = [details.target, ...(details.alsoOn || []).filter((t) => t !== details.target)].slice(0, 8);
+    // A theme on this site is kept by its ID; anything else by its link.
+    const remixOf = (details.remixOf || []).slice(0, 5).map((r) => ({
+      title: clean(r.title, 80) || "Untitled",
+      ...(r.themeId ? { themeId: r.themeId } : { url: clean(r.url, 300) }),
+    }));
+    if (remixOf.length) {
+      record.remixOf = remixOf;
+      const ids = remixOf.map((r) => r.themeId).filter(Boolean);
+      if (ids.length) record.remixIds = [...new Set(ids)];
+    }
     if (swatch) record.swatch = swatch;
     await setDoc(themeRef, record);
     return themeRef.id;

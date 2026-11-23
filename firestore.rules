@@ -5,7 +5,8 @@ rules_version = '2';
 //   members      private settings (iPod user or maker), seen only by their owner
 //   subscribers  newsletter opt-ins: a name and the email the person signed in with
 //   admins   one document per admin, named by user ID; created in the console only
-//   themes   shared themes; hidden until an admin approves them
+//   themes   shared themes; hidden until an admin approves them. worksOn lists the
+//            firmware they run on; remixOf links the themes they remix
 //   reports  "works on my iPod" reports, one per person, listing and iPod
 //   flags    reports of a problem with a theme; read by admins and their sender
 service cloud.firestore {
@@ -104,7 +105,8 @@ service cloud.firestore {
 
       function validTheme(data) {
         return data.keys().hasOnly(['ownerUid', 'ownerName', 'name', 'target', 'targetVersion', 'devices', 'description',
-            'license', 'file', 'screenshots', 'swatch', 'status', 'reviewNote', 'reviewedAt', 'createdAt', 'updatedAt'])
+            'license', 'file', 'screenshots', 'swatch', 'worksOn', 'remixOf', 'remixIds',
+            'status', 'reviewNote', 'reviewedAt', 'createdAt', 'updatedAt'])
           && data.name is string && data.name.size() >= 1 && data.name.size() <= 60
           && data.ownerName is string && data.ownerName.size() <= 40
           && isSlug(data.target)
@@ -118,7 +120,36 @@ service cloud.firestore {
           && ownShot(data.screenshots, 0, data.ownerUid) && ownShot(data.screenshots, 1, data.ownerUid)
           && ownShot(data.screenshots, 2, data.ownerUid) && ownShot(data.screenshots, 3, data.ownerUid)
           && ownShot(data.screenshots, 4, data.ownerUid) && ownShot(data.screenshots, 5, data.ownerUid)
-          && (!('swatch' in data) || (data.swatch is map && data.swatch.size() <= 12));
+          && (!('swatch' in data) || (data.swatch is map && data.swatch.size() <= 12))
+          // What it runs on: the firmware or app it was made for, then any it is tagged with.
+          && data.worksOn is list && data.worksOn.size() >= 1 && data.worksOn.size() <= 8
+          && data.worksOn[0] == data.target
+          && slugAt(data.worksOn, 1) && slugAt(data.worksOn, 2) && slugAt(data.worksOn, 3)
+          && slugAt(data.worksOn, 4) && slugAt(data.worksOn, 5) && slugAt(data.worksOn, 6) && slugAt(data.worksOn, 7)
+          // What it remixes: themes on this site (by ID) or links to anywhere else.
+          && (!('remixOf' in data) || (data.remixOf is list && data.remixOf.size() >= 1 && data.remixOf.size() <= 5
+            && sourceAt(data.remixOf, 0) && sourceAt(data.remixOf, 1) && sourceAt(data.remixOf, 2)
+            && sourceAt(data.remixOf, 3) && sourceAt(data.remixOf, 4)))
+          && (!('remixIds' in data) || ('remixOf' in data && data.remixIds is list && data.remixIds.size() >= 1 && data.remixIds.size() <= 5
+            && themeIdAt(data.remixIds, 0) && themeIdAt(data.remixIds, 1) && themeIdAt(data.remixIds, 2)
+            && themeIdAt(data.remixIds, 3) && themeIdAt(data.remixIds, 4)));
+      }
+      function slugAt(list, index) {
+        return list.size() <= index || isSlug(list[index]);
+      }
+      function isThemeId(value) {
+        return value is string && value.matches('^[A-Za-z0-9]{1,40}$');
+      }
+      function themeIdAt(list, index) {
+        return list.size() <= index || isThemeId(list[index]);
+      }
+      // Each source is a theme on this site (by ID) or a link elsewhere, never both.
+      function sourceAt(list, index) {
+        return list.size() <= index || (list[index] is map
+          && list[index].title is string && list[index].title.size() >= 1 && list[index].title.size() <= 80
+          && ((list[index].keys().hasOnly(['title', 'themeId']) && isThemeId(list[index].themeId))
+            || (list[index].keys().hasOnly(['title', 'url'])
+              && list[index].url is string && list[index].url.size() <= 300 && list[index].url.matches('^https://[^ ]+$'))));
       }
     }
 

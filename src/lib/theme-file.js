@@ -68,7 +68,7 @@ function listZip(bytes) {
  * Returns { ok, problems, name, author, version, swatch, fileCount }.
  */
 export async function inspectThemeFile(file, target) {
-  const result = { ok: false, problems: [], name: "", author: "", version: "", swatch: null, fileCount: 0 };
+  const result = { ok: false, problems: [], warnings: [], name: "", author: "", version: "", swatch: null, fileCount: 0 };
   const fail = (message) => (result.problems.push(message), result);
   if (file.size > MAX_FILE_BYTES) return fail("The file is larger than 5 MB.");
   const isZip = /\.zip$/i.test(file.name);
@@ -99,6 +99,12 @@ export async function inspectThemeFile(file, target) {
         Object.assign(result, { name: definition.name, author: definition.author || "", version: definition.version || "", swatch: swatchFrom(definition) });
       } else if (!names.some((n) => /\.(wps|sbs|fms|cfg)$/i.test(n))) {
         return fail("This doesn't look like a Rockbox theme: no .wps, .sbs or .cfg file inside.");
+      } else {
+        if (!names.every((n) => n.startsWith(".rockbox/"))) {
+          result.warnings.push("The files aren't inside a .rockbox folder, so people will have to move them by hand after unzipping. Zip the .rockbox folder itself if you can.");
+        }
+        const cfg = names.find((n) => /(^|\/)themes\/[^/]+\.cfg$/i.test(n));
+        if (cfg) result.name = cfg.split("/").pop().replace(/\.cfg$/i, "");
       }
     }
   } catch (err) {

@@ -26,14 +26,13 @@ import { href } from "../../lib/catalog.js";
 <script>
   import { onUser, loadAuth } from "../../scripts/account.js";
   import { isOwnFile } from "../../lib/themes-read.js";
-  import { h, pageData, link, fmtDate, preview, fileHref } from "../../scripts/theme-ui.js";
+  import { h, pageData, link, fmtDate, preview, fileHref, worksOnText, isRemix, sourceHref, hostOf } from "../../scripts/theme-ui.js";
 
   const { targets } = pageData();
   const $ = (id) => document.getElementById(id);
   const write = () => import("../../lib/themes-write.js");
 
   function pendingCard(theme, reload) {
-    const target = targets.find((t) => t.id === theme.target);
     const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the author (optional, shown if not accepted)" });
     const out = h("span", { role: "status" });
     const act = (status) => async () => {
@@ -46,7 +45,12 @@ import { href } from "../../lib/catalog.js";
       h("div", { class: "review-main" },
         h("p", { class: "kicker" }, `by ${theme.ownerName} · ${fmtDate(theme.createdAt)}`),
         h("h3", { class: "card-title" }, h("a", { href: link(`/themes/view/?id=${encodeURIComponent(theme.id)}`) }, theme.name)),
-        h("p", {}, `For ${target ? target.name : theme.target}${theme.targetVersion ? " " + theme.targetVersion : ""} · ${theme.license || "no license given"} · ${(theme.screenshots || []).length} screenshots`),
+        h("p", {}, `For ${worksOnText(theme, targets)} · ${theme.license || "no license given"} · ${(theme.screenshots || []).length} screenshots`),
+        isRemix(theme)
+          ? h("p", {}, "Remix of: ", theme.remixOf.map((r, i) => [i ? ", " : "",
+              sourceHref(r) ? h("a", { href: sourceHref(r), target: "_blank", rel: "noopener noreferrer nofollow ugc" }, r.title) : r.title,
+              r.themeId ? " (on this site)" : ` (${hostOf(r.url)})`]))
+          : null,
         theme.description ? h("p", { class: "blurb" }, theme.description) : null,
         h("div", { class: "item-actions" },
           isOwnFile(theme.file?.url) ? h("a", { class: "btn btn-quiet", href: fileHref(theme.file.url), target: "_blank", rel: "noopener" }, "Download to check") : null

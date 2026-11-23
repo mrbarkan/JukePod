@@ -27,12 +27,13 @@ export function fromDocument(doc) {
   return { id: doc.name.split("/").pop(), ...decodeFields(doc.fields || {}) };
 }
 
-const equals = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: { stringValue: value } } });
+const string = (value) => ({ stringValue: value });
+const equals = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: "EQUAL", value: string(value) } });
+const contains = (field, value) => ({ fieldFilter: { field: { fieldPath: field }, op: "ARRAY_CONTAINS", value: string(value) } });
+const containsAny = (field, values) => ({ fieldFilter: { field: { fieldPath: field }, op: "ARRAY_CONTAINS_ANY", value: { arrayValue: { values: values.map(string) } } } });
 
-/** Approved themes, newest first, optionally for one target. */
-export async function listApproved({ target, limit = 60 } = {}) {
-  const filters = [equals("status", "approved")];
-  if (target) filters.push(equals("target", target));
+async function runQuery(extra, limit) {
+  const filters = [equals("status", "approved"), ...(extra ? [extra] : [])];
   const structuredQuery = {
     from: [{ collectionId: "themes" }],
     where: filters.length > 1 ? { compositeFilter: { op: "AND", filters } } : filters[0],
@@ -48,10 +49,44 @@ export async function listApproved({ target, limit = 60 } = {}) {
   return (await res.json()).filter((row) => row.document).map((row) => fromDocument(row.document));
 }
 
+/**
+ * Approved themes, newest first. `target` keeps those that work on one
+ * firmware or app (the one they were made for, or one they're tagged with);
+ * `anyOf` keeps those that work on any of a list of them (ten at most).
+ */
+export function listApproved({ target, anyOf, limit = 60 } = {}) {
+  if (target) return runQuery(contains("worksOn", target), limit);
+  if (anyOf?.length) return runQuery(containsAny("worksOn", anyOf.slice(0, 10)), limit);
+  return runQuery(null, limit);
+}
+
+/** Approved themes that say they are a remix of this one. */
+export function remixesOf(themeId, limit = 24) {
+  return runQuery(contains("remixIds", themeId), limit);
+}
+
+export const THEME_ID = /^[A-Za-z0-9]{1,40}$/;
+
 /** One approved theme, or null if it doesn't exist or isn't public. */
 export async function getApproved(id) {
-  if (!/^[A-Za-z0-9_-]{1,60}$/.test(id || "")) return null;
+  if (!THEME_ID.test(id || "")) return null;
   const res = await fetch(`${DOCS}/themes/${id}?${KEY}`);
   if (!res.ok) return null;
   return fromDocument(await res.json());
+}
+
+/**
+ * The theme ID in a link to a theme page on this site (any of its
+ * addresses), or "" if the link points somewhere else.
+ */
+export function themeIdFromLink(text) {
+  let url;
+  try {
+    url = new URL(String(text).trim(), location.href);
+  } catch {
+    return "";
+  }
+  const ours = url.origin === location.origin || ["quitanda.mrbarkan.com", "mrbarkan.github.io"].includes(url.hostname);
+  const id = url.searchParams.get("id") || "";
+  return ours && /\/themes\/view\/?$/.test(url.pathname) && THEME_ID.test(id) ? id : "";
 }
