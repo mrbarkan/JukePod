@@ -123,6 +123,8 @@ A shared theme is hidden until an admin approves it. Its files can only be fetch
 
 `/privacy/` and `/gdpr/` describe what the site does today. If you change what is collected, who processes it, or how deletion works, change those pages in the same commit. Before the first newsletter goes out, name the email service on `/privacy/`.
 
+The site shows Google AdSense ads, and `/privacy/#ads` describes them. Before the ads go live, turn on Google's consent message for the EU, UK and Switzerland in AdSense › Privacy & messaging (with the "Privacy and cookie settings" link the pages mention). If the ads change, for example another ad network is added, update `/privacy/` and `/gdpr/` in the same commit.
+
 `contactEmail` in `SITE` (`src/lib/catalog.js`) is the address people write to about their data. It appears on both pages.
 
 The account page backs the promises those pages make: "Download my data", "Unsubscribe" and "Delete my account" (which removes the profile, settings, newsletter record, shared themes and their files, reports, and the sign-in). `src/lib/member.js` holds that code.

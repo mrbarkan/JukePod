@@ -2,9 +2,9 @@
 import Base from "../layouts/Base.astro";
 import Contact from "../components/Contact.astro";
 import { SITE, href } from "../lib/catalog.js";
-const UPDATED = "22 November 2026";
+const UPDATED = "23 November 2026";
 ---
-<Base title="Privacy policy" description="What Quitanda collects, why, who handles it and how to remove it. No ads, no tracking, no selling.">
+<Base title="Privacy policy" description="What Quitanda collects, why, who handles it and how to remove it, including the small Google ads that help pay for the site.">
   <main class="wrap page narrow">
     <article class="prose">
       <header>
@@ -15,21 +15,34 @@ const UPDATED = "22 November 2026";
       <h2>The short version</h2>
       <ul>
         <li>You can browse and download everything without an account.</li>
-        <li>No ads, no analytics, no tracking, and no cookies set by Quitanda.</li>
-        <li>Your data is never sold, rented or shared for marketing.</li>
+        <li>The site shows a few small ads from Google to help pay for itself. Google may use cookies to choose them. In the EU, the UK and Switzerland you’re asked first, and you can say no. <a href="#ads">How the ads work</a>.</li>
+        <li>No analytics, and Quitanda itself sets no cookies.</li>
+        <li>Your account data is never sold, rented or shared with advertisers.</li>
         <li>If you sign in, we keep your name, email address and profile picture so your account works.</li>
         <li>The newsletter is opt-in. It uses your name and email address to send you news and for nothing else.</li>
         <li>You can download everything we hold about you, unsubscribe, or delete your account yourself, at any time, from <a href={href("/account/")}>your account page</a>.</li>
       </ul>
 
       <h2>Who is responsible</h2>
-      <p>Quitanda is a personal, non-commercial project run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who decides how the data described here is used (the “controller”, in the law’s words). You can reach them at <strong class="selectable">{SITE.contactEmail}</strong>.</p>
+      <p>Quitanda is a personal project, not a business. The ads help cover its costs. It is run by <a href="https://github.com/mrbarkan">mrbarkan</a>, who decides how the data described here is used (the “controller”, in the law’s words). You can reach them at <strong class="selectable">{SITE.contactEmail}</strong>.</p>
 
       <h2>What we collect, and why</h2>
 
       <h3>When you only browse</h3>
       <p>Quitanda itself stores nothing about you. Your browser remembers two preferences on your own device and never sends them to us: the iPod you picked in the “My iPod” menu, and whether you hid the “Fresh in” panel.</p>
       <p>Like any website, the companies that deliver the pages see your IP address and browser type when your browser asks for them. See <a href="#who">who handles your data</a>.</p>
+      <p>The ads on the page come from Google, which receives the same kind of information and may use cookies. That is described next.</p>
+
+      <h3 id="ads">Ads and cookies</h3>
+      <p>Quitanda shows a small number of ads served by Google AdSense. The money helps cover the domain and running costs. Quitanda doesn’t choose the individual ads and never learns who saw or clicked which one.</p>
+      <ul>
+        <li>Google and its partners use cookies and similar technology to show ads, limit how often you see the same one, measure them and fight fraud.</li>
+        <li>With your permission, Google may also personalize ads using your visits to this site and to other sites. Google’s use of advertising cookies lets it and its partners serve ads based on those visits.</li>
+        <li>In the EU, the UK and Switzerland, a consent message from Google asks you first. Personalized ads and the cookies they need are only used if you agree. If you say no, you may still see ads, chosen without personal profiling. You can change your answer at any time with the “Privacy and cookie settings” link on the page.</li>
+        <li>Anywhere, you can turn off personalized ads in <a href="https://myadcenter.google.com/">Google’s My Ad Center</a>, and opt out of other companies’ personalized ads at <a href="https://www.aboutads.info/choices/">aboutads.info</a> (or <a href="https://www.youronlinechoices.eu/">youronlinechoices.eu</a> in Europe).</li>
+        <li>An ad blocker also works. The site doesn’t need the ads to function, and nothing is locked behind them.</li>
+      </ul>
+      <p>Google explains what it does with this information in <a href="https://policies.google.com/technologies/partner-sites">How Google uses information from sites that use its services</a>. The legal basis for personalized ads and advertising cookies in Europe is your consent.</p>
 
       <h3>When you sign in</h3>
       <div class="table-scroll">
@@ -53,17 +66,18 @@ const UPDATED = "22 November 2026";
 
       <h2>What we don’t do</h2>
       <ul>
-        <li>We don’t sell or rent personal data, and we don’t share it with advertisers or data brokers.</li>
-        <li>We don’t run advertising or analytics, and we don’t build profiles of visitors.</li>
+        <li>We don’t sell or rent personal data, and we don’t give account data (your name, email address, profile or anything you share) to advertisers or data brokers.</li>
+        <li>We don’t run analytics, and Quitanda doesn’t build profiles of visitors. Google’s ad service works as described under <a href="#ads">ads and cookies</a>.</li>
         <li>We don’t make automated decisions about you.</li>
         <li>We don’t ask for more than is listed above, and we don’t read your Google account beyond the name, email address and picture it shares at sign-in.</li>
       </ul>
 
       <h2 id="who">Who handles your data</h2>
-      <p>Quitanda runs on services from two companies, which process data on our behalf:</p>
+      <p>Quitanda runs on services from two companies:</p>
       <ul>
         <li><strong>Google (Firebase)</strong> provides sign-in and stores accounts, profiles, the newsletter list and shared themes. Google’s servers also deliver the site’s fonts.</li>
         <li><strong>GitHub</strong> hosts the site’s pages.</li>
+        <li><strong>Google (AdSense)</strong> serves the ads, as described under <a href="#ads">ads and cookies</a>. For personalized ads, Google acts on its own account rather than on Quitanda’s behalf, under <a href="https://policies.google.com/privacy">Google’s privacy policy</a>.</li>
       </ul>
       <p>Both are based in the United States, so your data is stored and processed there. Both commit to the safeguards European law requires for such transfers.</p>
       <p>The newsletter hasn’t started yet. When it does, it will be sent through an email delivery service, which will receive subscribers’ names and addresses for that purpose only. This page will name the service before the first email goes out.</p>
@@ -74,6 +88,7 @@ const UPDATED = "22 November 2026";
         <li><strong>Account and profile:</strong> until you delete your account.</li>
         <li><strong>Newsletter record:</strong> until you unsubscribe.</li>
         <li><strong>Shared themes:</strong> until you delete them or your account, or the admin removes them.</li>
+        <li><strong>Advertising cookies:</strong> they’re set and kept by Google on its own schedule. You can delete them from your browser at any time.</li>
       </ul>
       <p>Deleting your account removes your profile, your settings, your newsletter record, the themes you shared with their files, the reports you sent, and the sign-in itself. Copies in our providers’ routine backups expire on their schedule.</p>
 
