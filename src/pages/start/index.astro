@@ -1,0 +1,27 @@
+---
+import Base from "../../layouts/Base.astro";
+import { posts } from "../../lib/blog.js";
+import { href } from "../../lib/catalog.js";
+const guides = posts.filter((p) => p.kind === "Guide");
+---
+<Base title="Guides" description="Step-by-step guides for iPod owners and for people who make firmware, themes, apps and mods." section="guides">
+  <main class="wrap page">
+    <header class="intro">
+      <p class="lcd-kicker">Start here</p>
+      <h1>Pick a guide.</h1>
+      <p>Two places to begin, depending on why you’re here.</p>
+    </header>
+    <ul class="guide-links">
+      <li><a href={href("/start/ipod-users/")}><em>Seven steps · about an hour</em><strong>I use an iPod</strong><span>Find your model, back up, install your first firmware, load music, and get it back if something goes wrong.</span></a></li>
+      <li><a href={href("/start/makers/")}><em>For firmware, themes, apps and mods</em><strong>I make things for iPods</strong><span>Get listed, keep your version current automatically, and share themes with screenshots.</span></a></li>
+    </ul>
+    {guides.length > 0 && (
+      <section class="section">
+        <div class="section-head"><h2>More guides</h2></div>
+        <ul class="guide-links compact">
+          {guides.map((p) => (<li><a href={href(`/blog/${p.slug}/`)}><strong>{p.title}</strong><span>{p.summary}</span></a></li>))}
+        </ul>
+      </section>
+    )}
+  </main>
+</Base>

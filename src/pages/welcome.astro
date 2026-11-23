@@ -1,75 +1,92 @@
 ---
 import Base from "../layouts/Base.astro";
+import IpodShape from "../components/IpodShape.astro";
 import { href } from "../lib/catalog.js";
 ---
 <Base title="Welcome" description="Set up your Quitanda account: tell us whether you use an iPod or make things for one, and choose whether to get the newsletter.">
-  <main class="wrap page narrow">
-    <header class="intro">
-      <h1 id="w-title">Welcome to Quitanda</h1>
-      <p id="w-lede">Two quick choices and you’re set. You can change both later on your account page.</p>
-    </header>
+  <main class="wrap page">
+    <div class="welcome">
+      <div class="welcome-main">
+        <header class="intro">
+          <p class="lcd-kicker" id="w-kicker">Welcome</p>
+          <h1 id="w-title">Welcome to Quitanda</h1>
+          <p id="w-lede">Tell us what you’re here for and we’ll point you to the right guide. You can change both answers later on your account page.</p>
+        </header>
 
-    <p id="w-loading" class="aside-note">Checking whether you’re signed in…</p>
+        <p id="w-loading" class="aside-note">Checking whether you’re signed in…</p>
 
-    <section id="w-out" hidden>
-      <p>Sign in with the button at the top of the page to set up your account. You don’t need one to browse or download.</p>
-      <p>Or go straight to a guide:</p>
-      <ul class="guide-links">
-        <li><a href={href("/start/ipod-users/")}><strong>I use an iPod</strong><span>Pick firmware, load music, add themes.</span></a></li>
-        <li><a href={href("/start/makers/")}><strong>I make things for iPods</strong><span>Get listed, share themes, keep your listing fresh.</span></a></li>
-      </ul>
-    </section>
+        <section id="w-out" hidden>
+          <p>Sign in with the button at the top of the page to set up your account. You don’t need one to browse or download.</p>
+        </section>
 
-    <form id="w-form" class="welcome-form" novalidate hidden>
-      <fieldset class="role-choice">
-        <legend>What brings you here?</legend>
-        <label class="role-card">
-          <input type="radio" name="role" value="user" required />
-          <span class="role-text">
-            <strong>I use an iPod</strong>
-            <span>I want firmware, apps and themes for my iPod, and help installing them.</span>
-          </span>
-        </label>
-        <label class="role-card">
-          <input type="radio" name="role" value="creator" />
-          <span class="role-text">
-            <strong>I make things for iPods</strong>
-            <span>I build firmware, themes, apps or hardware mods, and want people to find them.</span>
-          </span>
-        </label>
-      </fieldset>
+        <form id="w-form" class="welcome-form" novalidate hidden>
+          <fieldset class="role-choice">
+            <legend>What brings you here?</legend>
+            <div class="role-cards">
+              <label class="role-card">
+                <input type="radio" name="role" value="user" required />
+                <IpodShape look="classic" />
+                <span class="role-text">
+                  <strong>I use an iPod</strong>
+                  <span>I want firmware, apps and themes for my iPod, and help installing them.</span>
+                </span>
+              </label>
+              <label class="role-card">
+                <input type="radio" name="role" value="creator" />
+                <span class="crate-draw" aria-hidden="true"><span class="box"><i></i><i></i><i></i></span><span class="f1"></span><span class="f2"></span></span>
+                <span class="role-text">
+                  <strong>I make things for iPods</strong>
+                  <span>I build firmware, themes, apps or hardware mods, and want people to find them.</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
-      <fieldset class="news-choice">
-        <legend>News and updates</legend>
-        <label class="theme-check">
-          <input type="checkbox" id="w-news" />
-          <span>Email me Quitanda news and updates.</span>
-        </label>
-        <p class="news-terms">Occasional emails about new firmware, themes and guides. We use your name and email address for this and nothing else, never share them, and you can unsubscribe at any time. <a href={href("/privacy/")}>Privacy policy</a></p>
-        <div id="w-news-fields" hidden>
-          <label class="news-field">
-            <span>Name to greet you by</span>
-            <input class="field" id="w-name" maxlength="80" autocomplete="name" />
-          </label>
-          <p class="news-address">Emails go to <strong id="w-email"></strong>, the address you signed in with.</p>
-        </div>
-        <p id="w-news-unavailable" class="aside-note" hidden>Your sign-in has no verified email address, so the newsletter isn’t available for this account.</p>
-      </fieldset>
+          <fieldset class="news-choice">
+            <legend>News and updates</legend>
+            <label class="theme-check">
+              <input type="checkbox" id="w-news" />
+              <span>Email me Quitanda news and updates.</span>
+            </label>
+            <p class="news-terms">Occasional emails about new firmware, themes and guides. We use your name and email address for this and nothing else, never share them, and you can unsubscribe at any time. <a href={href("/privacy/")}>Privacy policy</a></p>
+            <div id="w-news-fields" hidden>
+              <label class="news-field">
+                <span>Name to greet you by</span>
+                <input class="field" id="w-name" maxlength="80" autocomplete="name" />
+              </label>
+              <p class="news-address">Emails go to <strong id="w-email"></strong>, the address you signed in with.</p>
+            </div>
+            <p id="w-news-unavailable" class="aside-note" hidden>Your sign-in has no verified email address, so the newsletter isn’t available for this account.</p>
+          </fieldset>
 
-      <div class="acct-actions">
-        <button type="submit" class="btn" id="w-save">Continue</button>
-        <span id="w-status" role="status"></span>
+          <div class="acct-actions">
+            <button type="submit" class="btn btn-lg" id="w-save">Continue</button>
+            <span id="w-status" role="status"></span>
+          </div>
+          <p id="w-error" class="signin-error" role="alert" hidden></p>
+        </form>
+
+        <section id="w-done" class="welcome-done" hidden>
+          <h2 id="w-done-title">You’re all set</h2>
+          <p id="w-done-text"></p>
+          <p><a class="btn btn-lg" id="w-guide" href={href("/start/ipod-users/")}>Open your guide →</a></p>
+          <ul class="guide-links compact" id="w-next"></ul>
+          <p class="aside-note">Change your choices any time on <a href={href("/account/")}>your account page</a>.</p>
+        </section>
       </div>
-      <p id="w-error" class="signin-error" role="alert" hidden></p>
-    </form>
 
-    <section id="w-done" class="welcome-done" hidden>
-      <h2 id="w-done-title">You’re all set</h2>
-      <p id="w-done-text"></p>
-      <p><a class="btn" id="w-guide" href={href("/start/ipod-users/")}>Open your guide</a></p>
-      <ul class="guide-links" id="w-next"></ul>
-      <p class="aside-note">Change your choices any time on <a href={href("/account/")}>your account page</a>.</p>
-    </section>
+      <aside class="guide-preview" aria-label="Your guide">
+        <p class="lcd-kicker">Your guide, ready when you are</p>
+        <div class="frame">
+          <div class="lcd-menu" id="w-menu">
+            <div><span id="w-menu-title">iPod owners</span><span aria-hidden="true">▮▮▮▯</span></div>
+          </div>
+        </div>
+        <h2 id="w-guide-title">Give your iPod a second life</h2>
+        <p id="w-guide-text">Seven steps, about an hour for the first install. Nothing in it needs you to open the iPod.</p>
+        <p><a class="more-link" id="w-guide-link" href={href("/start/ipod-users/")}>Read it now →</a></p>
+      </aside>
+    </div>
   </main>
 </Base>
 
@@ -101,7 +118,33 @@ import { href } from "../lib/catalog.js";
     },
   };
 
+  // The preview beside the form: the chosen guide, drawn as an iPod menu.
+  const PREVIEW = {
+    user: {
+      menu: "iPod owners", title: "Give your iPod a second life", path: "/start/ipod-users/",
+      text: "Seven steps, about an hour for the first install. Nothing in it needs you to open the iPod.",
+      rows: ["Find out which iPod you have", "Back up and prepare", "Install your first firmware", "Try another flavor", "Put music on it", "Make it yours", "If something goes wrong"],
+    },
+    creator: {
+      menu: "Makers and modders", title: "Put your work on the shelves", path: "/start/makers/",
+      text: "Listings are free, link straight to your own downloads, and stay under your control.",
+      rows: ["Get your project listed", "Keep the version current", "Status and compatibility", "Screenshots", "Share themes", "Hardware mods", "It’s your listing"],
+    },
+  };
+  function showPreview(role) {
+    const g = PREVIEW[role] || PREVIEW.user;
+    $("w-menu-title").textContent = g.menu;
+    $("w-menu").replaceChildren($("w-menu").firstElementChild, ...g.rows.map((label) => h("div", {}, h("span", {}, label), h("span", { "aria-hidden": "true" }, "›"))));
+    $("w-guide-title").textContent = g.title;
+    $("w-guide-text").textContent = g.text;
+    $("w-guide-link").href = link(g.path);
+    $("w-save").textContent = role === "creator" ? "Continue as a maker" : role === "user" ? "Continue as an iPod owner" : "Continue";
+  }
+  showPreview();
+  document.querySelectorAll('#w-form [name="role"]').forEach((radio) => radio.addEventListener("change", () => showPreview(radio.value)));
+
   function showDone(role, subscribed) {
+    showPreview(role);
     const next = NEXT[role] || NEXT.user;
     $("w-form").hidden = true;
     $("w-lede").hidden = true;
@@ -126,7 +169,8 @@ import { href } from "../lib/catalog.js";
     const { loadMember, loadSubscription, canSubscribe, myEmail } = await member();
     const [settings, subscription] = await Promise.all([loadMember(), loadSubscription().catch(() => null)]);
     const first = (user.displayName || "").split(" ")[0];
-    if (first) $("w-title").textContent = `Welcome, ${first}`;
+    if (first) $("w-title").textContent = `Welcome, ${first}.`;
+    $("w-kicker").textContent = "You’re in · two quick choices";
     if (settings?.role) return showDone(settings.role, !!subscription);
     $("w-name").value = user.displayName || "";
     $("w-email").textContent = myEmail();

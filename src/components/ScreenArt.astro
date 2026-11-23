@@ -1,0 +1,19 @@
+---
+// What stands for a listing: its screenshot in a screen bezel, or, when it
+// has none, a drawn iPod menu with four of its own words.
+import { href, categoryById } from "../lib/catalog.js";
+const { item } = Astro.props;
+const shots = item.screenshots || [];
+const shot = shots.find((s) => s.pixel) || shots[0];
+const rows = item.menu || (item.platforms || (item.categories || []).map((c) => categoryById[c]?.name)).filter(Boolean).slice(0, 4);
+---
+<span class="bezel">
+  {shot ? (
+    <img class={shot.pixel ? "is-pixel" : ""} src={href("/" + shot.src)} alt={`${item.name}: ${shot.alt}`} width={shot.w} height={shot.h} loading="lazy" />
+  ) : (
+    <span class="lcd-menu" aria-hidden="true">
+      <div><span>{item.name}</span><span>▮▮▯</span></div>
+      {rows.map((r) => <div><span>{r}</span><span>›</span></div>)}
+    </span>
+  )}
+</span>

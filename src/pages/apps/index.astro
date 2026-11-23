@@ -1,0 +1,46 @@
+---
+import Base from "../../layouts/Base.astro";
+import ListingCard from "../../components/ListingCard.astro";
+import { apps, platforms, devices, href } from "../../lib/catalog.js";
+const shelf = [...apps].sort((a, b) => (a.pinned ? 1 : 0) - (b.pinned ? 1 : 0) || a.name.localeCompare(b.name));
+const names = Object.fromEntries(devices.map((d) => [d.id, d.short]));
+---
+<Base title="Library apps for iPod" description="Apps for your computer or phone that put music on an iPod, edit playlists and back it up, with or without iTunes." section="apps">
+  <main class="wrap page" id="apps-page" data-device-names={JSON.stringify(names)}>
+    <header class="intro">
+      <p class="lcd-kicker">Library apps</p>
+      <h1>Fill it with music.</h1>
+      <p>Software for your computer or phone that puts music on the iPod, edits playlists and backs it up. Running Rockbox or a fork? You can also just drag folders onto the iPod.</p>
+    </header>
+    <div class="segs" id="platforms" role="group" aria-label="Platform">
+      <button type="button" class="seg" data-platform="all" aria-pressed="true">All <span class="n">{apps.length}</span></button>
+      {platforms.map((p) => (
+        <button type="button" class="seg" data-platform={p} aria-pressed="false">{p} <span class="n">{apps.filter((a) => (a.platforms || []).includes(p)).length}</span></button>
+      ))}
+    </div>
+    <div class="fw-grid" id="grid">
+      {shelf.map((item) => <ListingCard item={item} />)}
+    </div>
+    <p class="aside-note">Looking for what runs on the iPod itself? <a href={href("/")}>Browse the firmware</a>.</p>
+  </main>
+</Base>
+
+<script>
+  const cards = [...document.querySelectorAll("#grid [data-card]")];
+  const names = JSON.parse(document.getElementById("apps-page").dataset.deviceNames);
+  let mine = null;
+  try { mine = localStorage.getItem("cwf-device"); } catch { /* private window */ }
+  if (names[mine]) {
+    cards.forEach((card) => {
+      const fits = (card.dataset.devices || "").split(" ").includes(mine);
+      if (fits) card.querySelector("[data-fit]").textContent = `Syncs your ${names[mine]} · ${card.querySelector("[data-fit]").dataset.default}`;
+    });
+  }
+  document.getElementById("platforms").addEventListener("click", (e) => {
+    const button = e.target.closest("[data-platform]");
+    if (!button) return;
+    const platform = button.dataset.platform;
+    document.querySelectorAll("#platforms [data-platform]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+    cards.forEach((card) => (card.hidden = platform !== "all" && !(card.dataset.platforms || "").split("|").includes(platform)));
+  });
+</script>

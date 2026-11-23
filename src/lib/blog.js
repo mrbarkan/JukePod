@@ -19,6 +19,8 @@ export const posts = Object.entries(files)
       title: mod.frontmatter.title,
       summary: mod.frontmatter.summary || "",
       author: mod.frontmatter.author || "Quitanda",
+      kind: mod.frontmatter.kind || "News",
+      art: mod.frontmatter.art || "mark",
       // Posts link to pages as "/firmware/rockbox/"; add the base path so
       // those links work wherever the site is served from.
       html: mod.compiledContent,

@@ -7,16 +7,18 @@ A quitanda is the small neighborhood shop that sells fruit. The iPod came with o
 The site is static. [Astro](https://astro.build) turns the catalog into one page per listing, and GitHub Pages serves the result.
 
 ```
-src/data/catalog.js         THE CATALOG: firmware, apps, mods and the watch list
+src/data/catalog.js         THE CATALOG: firmware, apps, mods, devices and the watch list
 src/data/github-stats.json  versions, dates and stars, refreshed nightly (generated)
 src/data/screenshots.json   which pictures belong to which listing
 src/content/blog/           blog posts, one Markdown file each
-src/pages/                  home, listing pages, mods, blog, about, RSS, sitemap
-src/components/             listing page, gallery, share row, icons, the mark
-src/styles/site.css         all styling (light and dark)
-public/assets/app.js        home page filters, cards and the click wheel
+src/pages/                  home, listings, apps, mods, themes, guides, blog, account, legal
+src/components/             listing page and card, iPod drawings, sticker, ripeness chip
+src/scripts/                page behavior: home.js (picker, filters, search), item.js, account.js
+src/lib/                    catalog helpers, sign-in, themes, reports, member data
+src/styles/site.css         all styling, light and dark, every color a token
 public/screenshots/         the pictures
 scripts/refresh-github.mjs  the nightly release tracker
+firestore.rules, storage.rules, tests/   access rules and their tests
 .github/workflows/deploy.yml
 ```
 
@@ -43,6 +45,18 @@ Projects with no release yet go in `watchlist`. Move one into `firmwares` once i
 
 Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it.
 
+## How the shop works
+
+The home page opens with "Which iPod is yours?". Picking one is remembered in the browser and used everywhere: the home page shows only what runs on it, each listing says whether it runs on yours and offers the right file, and the compatibility table highlights its row. A link such as `/?ipod=ipod-classic` opens the shop already filtered.
+
+- The picker's drawings come from each device's `look` in the catalog.
+- A listing's version shows on a sticker when it is short (five characters or fewer).
+- A listing without screenshots gets a drawn iPod screen showing the four words in its `menu`.
+- Give a `files` entry a `device` id and the listing offers that file to people with that iPod.
+- The header search box searches firmware, apps, mods, guides and blog posts.
+
+"Does it work on yours?" on each listing counts reports per iPod model. Anyone can read the totals; sending one needs sign-in and a chosen iPod. `src/lib/reports.js` holds it.
+
 ## Add screenshots
 
 Put the pictures in `public/screenshots/<listing id>/` and list them in `src/data/screenshots.json` with their size and a short caption. Set `"pixel": true` for an iPod screen capture (320×240) so it's shown sharp at its real pixels. The first picture becomes the card thumbnail.
@@ -55,11 +69,15 @@ Add a file to `src/content/blog/` named `YYYY-MM-DD-your-title.md`:
 ---
 title: Your title
 date: 2026-11-18
+kind: News
+art: mark
 summary: One sentence for the blog index, RSS and link previews.
 ---
 
 The post, in Markdown. Link to pages as /firmware/rockbox/.
 ```
+
+`kind` is `News` or `Guide`; guides also appear on the Guides page. `art` picks the picture on the blog index: `mark`, `ipods` or `themes`.
 
 ## Release tracking
 

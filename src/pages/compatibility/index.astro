@@ -1,0 +1,42 @@
+---
+import Base from "../../layouts/Base.astro";
+import { firmwares, devices, href } from "../../lib/catalog.js";
+const cols = [...firmwares].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name));
+const fit = (f, d) => (f.devices.includes(d.id) ? "full" : (f.partial || []).includes(d.id) ? "partial" : "none");
+const LABEL = { full: "Supported", partial: "Partial", none: "Not supported" };
+---
+<Base title="Compatibility" description="Which custom firmware runs on which iPod, in one table." section="firmware">
+  <main class="wrap page">
+    <header class="intro">
+      <p class="lcd-kicker">Compatibility</p>
+      <h1>What runs on what.</h1>
+      <p>Every firmware in the shop against every iPod. Partial means it boots, with known gaps. Your iPod, if you picked one, is highlighted.</p>
+    </header>
+    <div class="table-scroll">
+      <table class="matrix">
+        <thead>
+          <tr><th scope="col">iPod</th>{cols.map((f) => <th scope="col"><a href={href(f.path)}>{f.name}</a></th>)}</tr>
+        </thead>
+        <tbody>
+          {devices.map((d) => (
+            <tr data-device={d.id}>
+              <th scope="row"><a href={href(`/?ipod=${d.id}`)}>{d.name}</a><small>{d.years} · {d.model}</small></th>
+              {cols.map((f) => (<td><i class={`dot dot-${fit(f, d)}`} title={`${f.name} on ${d.name}: ${LABEL[fit(f, d)]}`}></i><span class="sr-text">{LABEL[fit(f, d)]}</span></td>))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="matrix-legend">
+      <span><i class="dot dot-full"></i>Supported</span>
+      <span><i class="dot dot-partial"></i>Partial</span>
+      <span><i class="dot dot-none"></i>Not supported</span>
+    </p>
+  </main>
+</Base>
+
+<script>
+  let mine = null;
+  try { mine = localStorage.getItem("cwf-device"); } catch { /* private window */ }
+  if (mine) document.querySelector(`tr[data-device="${CSS.escape(mine)}"]`)?.classList.add("is-mine");
+</script>

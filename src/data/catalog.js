@@ -24,7 +24,11 @@
  *   devices      device ids it fully supports; `partial` for ones with gaps
  *   requires     what must be in place first (optional)
  *   install      ordered steps. Wrap file names and paths in `backticks`.
- *   files        file names per device: { label, file }
+ *   files        file names per device: { label, file, device }. `device` is
+ *                a device id; with it, the listing offers that file to
+ *                people who picked that iPod.
+ *   menu         four short words shown on a drawn iPod screen when the
+ *                listing has no screenshot
  *   links        the first is the main button; the rest go in its menu.
  *                icon: "download" | "install" | "source" | "docs" | "release" | "info"
  *
@@ -53,27 +57,29 @@ export default {
     { id: "games",      name: "Games & extras" }
   ],
 
-  // `model` is the number printed on the back of the iPod.
+  // `model` is the number printed on the back of the iPod. `look` picks the
+  // little drawing used in the "Which iPod is yours?" picker.
   devices: [
-    { id: "ipod-1g2g",    name: "iPod 1st / 2nd gen",   short: "1G/2G",   years: "2001–02", model: "M8541 (1st gen), A1019 (2nd gen)" },
-    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003", model: "A1040" },
-    { id: "ipod-4g",      name: "iPod 4th gen",         short: "4G",      years: "2004", model: "A1059" },
-    { id: "ipod-photo",   name: "iPod Photo / Color",   short: "Photo",   years: "2004–05", model: "A1099" },
-    { id: "ipod-video",   name: "iPod Video 5G / 5.5G", short: "Video",   years: "2005–07", model: "A1136" },
-    { id: "ipod-classic", name: "iPod Classic 6G / 7G", short: "Classic", years: "2007–14", model: "A1238" },
-    { id: "ipod-mini",    name: "iPod mini 1G / 2G",    short: "mini",    years: "2004–05", model: "A1051" },
-    { id: "ipod-nano-1g", name: "iPod nano 1st gen",    short: "nano 1G", years: "2005", model: "A1137" },
-    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006", model: "A1199" },
-    { id: "ipod-nano-3g", name: "iPod nano 3rd gen",    short: "nano 3G", years: "2007", model: "A1236" },
-    { id: "ipod-nano-4g", name: "iPod nano 4th gen",    short: "nano 4G", years: "2008", model: "A1285" },
-    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009", model: "A1320" },
-    { id: "ipod-nano-6g", name: "iPod nano 6th gen",    short: "nano 6G", years: "2010", model: "A1366" },
-    { id: "ipod-nano-7g", name: "iPod nano 7th gen",    short: "nano 7G", years: "2012–15", model: "A1446" }
+    { id: "ipod-1g2g",    name: "iPod 1st / 2nd gen",   short: "1G/2G",   years: "2001–02", model: "M8541 (1st gen), A1019 (2nd gen)", look: "full" },
+    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003", model: "A1040", look: "full" },
+    { id: "ipod-4g",      name: "iPod 4th gen",         short: "4G",      years: "2004", model: "A1059", look: "full" },
+    { id: "ipod-photo",   name: "iPod Photo / Color",   short: "Photo",   years: "2004–05", model: "A1099", look: "full" },
+    { id: "ipod-video",   name: "iPod Video 5G / 5.5G", short: "Video",   years: "2005–07", model: "A1136", look: "video" },
+    { id: "ipod-classic", name: "iPod Classic 6G / 7G", short: "Classic", years: "2007–14", model: "A1238", look: "classic" },
+    { id: "ipod-mini",    name: "iPod mini 1G / 2G",    short: "mini",    years: "2004–05", model: "A1051", look: "mini" },
+    { id: "ipod-nano-1g", name: "iPod nano 1st gen",    short: "nano 1G", years: "2005", model: "A1137", look: "nano" },
+    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006", model: "A1199", look: "nano" },
+    { id: "ipod-nano-3g", name: "iPod nano 3rd gen",    short: "nano 3G", years: "2007", model: "A1236", look: "squat" },
+    { id: "ipod-nano-4g", name: "iPod nano 4th gen",    short: "nano 4G", years: "2008", model: "A1285", look: "tall" },
+    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009", model: "A1320", look: "tall" },
+    { id: "ipod-nano-6g", name: "iPod nano 6th gen",    short: "nano 6G", years: "2010", model: "A1366", look: "clip" },
+    { id: "ipod-nano-7g", name: "iPod nano 7th gen",    short: "nano 7G", years: "2012–15", model: "A1446", look: "touch" }
   ],
 
   firmwares: [
     {
       id: "rockbox",
+      menu: ["Files", "Database", "Now Playing", "Plugins"],
       name: "Rockbox",
       maker: "The Rockbox Project",
       categories: ["players", "games"],
@@ -154,8 +160,8 @@ export default {
         "Eject and reboot. Cover Flow rebuilds its album art cache on first launch."
       ],
       files: [
-        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip" },
-        { label: "iPod Video 5G / 5.5G", file: "rockbox-ipodvideo-5g.zip" }
+        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip", device: "ipod-classic" },
+        { label: "iPod Video 5G / 5.5G", file: "rockbox-ipodvideo-5g.zip", device: "ipod-video" }
       ],
       links: [
         { label: "Download", url: "https://github.com/nuxcodes/rockpod/releases/latest", icon: "download" },
@@ -198,8 +204,8 @@ export default {
         "Eject and reboot. With a battery upgrade or iFlash mod, check Settings › System › Battery and Disk."
       ],
       files: [
-        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip" },
-        { label: "iPod Video 5G / 5.5G (alpha)", file: "rockbox-ipodvideo-5g.zip" }
+        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip", device: "ipod-classic" },
+        { label: "iPod Video 5G / 5.5G (alpha)", file: "rockbox-ipodvideo-5g.zip", device: "ipod-video" }
       ],
       links: [
         { label: "Download", url: "https://github.com/Ricolinos/ipod-custom-os", icon: "download" },
@@ -277,8 +283,8 @@ export default {
         "On first run PodBox builds its database and art cache. To update, unzip the new release over the old one."
       ],
       files: [
-        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip" },
-        { label: "iPod Video 5G / 5.5G", file: "rockbox-ipodvideo-5g.zip" },
+        { label: "iPod Classic 6G / 7G", file: "rockbox-ipod6g.zip", device: "ipod-classic" },
+        { label: "iPod Video 5G / 5.5G", file: "rockbox-ipodvideo-5g.zip", device: "ipod-video" },
         { label: "PodBox bootloader", file: "podbox-bootloader.zip" },
         { label: "Every theme", file: "all-themes.zip" }
       ],
@@ -292,6 +298,7 @@ export default {
 
     {
       id: "rodbox",
+      menu: ["Music", "Audiobooks", "Now Playing", "Update Now"],
       name: "RodBox",
       maker: "RodrigoM09",
       categories: ["players", "interfaces"],
@@ -336,6 +343,7 @@ export default {
 
     {
       id: "skvm-podbox",
+      menu: ["Cover Flow", "Database", "Now Playing", "Settings"],
       name: "SKVM PodBox",
       maker: "JL2030",
       categories: ["players", "audio", "interfaces"],
@@ -369,8 +377,8 @@ export default {
         "Eject and reboot. The album art cache rebuilds on first launch."
       ],
       files: [
-        { label: "iPod Classic 6G / 7G", file: "skvm-podbox-ipod6g.zip" },
-        { label: "iPod Video 5G / 5.5G", file: "skvm-podbox-ipodvideo-5g.zip" }
+        { label: "iPod Classic 6G / 7G", file: "skvm-podbox-ipod6g.zip", device: "ipod-classic" },
+        { label: "iPod Video 5G / 5.5G", file: "skvm-podbox-ipodvideo-5g.zip", device: "ipod-video" }
       ],
       links: [
         { label: "Source", url: "https://github.com/JL2030/skvm-podbox", icon: "source" },
@@ -380,6 +388,7 @@ export default {
 
     {
       id: "ipod-sun",
+      menu: ["DFU", "Read memory", "Write memory", "Run code"],
       name: "ipod_sun",
       maker: "CUB3D",
       categories: ["tools"],
@@ -418,6 +427,7 @@ export default {
 
     {
       id: "ipodlinux",
+      menu: ["Podzilla", "Loader2", "Games", "Tools"],
       name: "iPodLinux",
       maker: "iPodLinux Project",
       categories: ["players", "games"],

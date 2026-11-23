@@ -2,121 +2,204 @@
 import Base from "../layouts/Base.astro";
 import Icon from "./Icon.astro";
 import ShareRow from "./ShareRow.astro";
-import Gallery from "./Gallery.astro";
-import { STATUS, byId, builtOn, deviceById, categoryById, fmt, plain, fmtDate, isNumbered, href } from "../lib/catalog.js";
+import Ripeness from "./Ripeness.astro";
+import Sticker from "./Sticker.astro";
+import { byId, builtOn, deviceById, devices, categoryById, themeTargets, fmt, plain, fmtDate, isNumbered, href } from "../lib/catalog.js";
 
 const { item } = Astro.props;
 const isApp = item.type === "app";
-const status = STATUS[item.status] || { ripeness: item.status, plain: item.status };
 const runs = item.devices.map((d) => deviceById[d]).filter(Boolean);
 const partial = (item.partial || []).map((d) => deviceById[d]).filter(Boolean);
 const parent = item.basedOn ? byId[item.basedOn] : null;
 const forks = builtOn(item.id);
 const links = item.links || [];
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
-const kinds = isApp ? item.platforms || [] : (item.categories || []).map((c) => categoryById[c]?.name).filter(Boolean);
-const social = item.screenshots.find((s) => !s.pixel);
+const kinds = isApp ? [] : (item.categories || []).map((c) => categoryById[c]?.name).filter(Boolean);
+const shots = item.screenshots || [];
+const heroShot = shots.find((s) => !s.pixel);
+const pixelShots = shots.filter((s) => s.pixel);
+const wideShots = shots.filter((s) => !s.pixel && s !== heroShot);
 const repoUrl = item.github ? `https://github.com/${item.github}` : null;
+const files = (item.files || []).filter((f) => f.device);
+const otherFiles = (item.files || []).filter((f) => !f.device);
+const hasThemes = themeTargets.some((t) => t.id === item.id);
+const steps = item.install || [];
+const meta = [
+  item.updated && `Updated ${fmtDate(item.updated)}`,
+  item.stars != null && `${item.stars} ${item.stars === 1 ? "star" : "stars"} on GitHub`,
+].filter(Boolean).join(" · ");
+const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.version : ""}`;
 ---
 <Base
   title={`${item.name}${isApp ? "" : " firmware"} for iPod`}
   description={plain(item.blurb)}
-  image={social ? "/" + social.src : "/og.png"}
+  image={heroShot ? "/" + heroShot.src : "/og.png"}
   type="article"
   section={isApp ? "apps" : "firmware"}
 >
-  <main class="wrap page item">
-    <a class="back" href={href(isApp ? "/#library-apps" : "/")}><Icon name="back" />{isApp ? "All library apps" : "All firmware"}</a>
+  <main
+    class="wrap page item"
+    id="item"
+    data-item={item.id}
+    data-name={item.name}
+    data-version={item.version || ""}
+    data-devices={item.devices.join(" ")}
+    data-partial={(item.partial || []).join(" ")}
+    data-device-names={JSON.stringify(Object.fromEntries(devices.map((d) => [d.id, [d.short, d.name]])))}
+  >
+    <div>
+      <a class="back" href={href(isApp ? "/apps/" : "/")}><Icon name="back" />{isApp ? "All library apps" : "All firmware"}</a>
+      <div class="item-top">
+        <header class="item-head">
+          <p class="kicker">{[item.maker, ...kinds].join(" · ")}</p>
+          <div class="item-title">
+            <h1>{item.name}</h1>
+            <Sticker version={item.version} large />
+          </div>
+          <div class="item-meta">
+            <Ripeness status={item.status} />
+            {item.version && !isNumbered(item.version) && <span>{item.version}</span>}
+            {meta && <span>{meta}</span>}
+          </div>
+          <p class="item-blurb" set:html={fmt(item.blurb)} />
+          {(runs.length > 0 || partial.length > 0) && (
+            <div class="fit-banner" id="fit" hidden>
+              <strong id="fit-text"></strong>
+              <a href={href("/")}>Change iPod</a>
+            </div>
+          )}
+        </header>
 
-    <header class="item-head">
-      <p class="kicker">{item.maker}</p>
-      <h1>{item.name}</h1>
-      <div class="kinds">{kinds.map((k) => <span class:list={["kind", { platform: isApp }]}>{k}</span>)}</div>
-      <p class="status-line">
-        <span class={`pill pill-${item.status}`}>{status.ripeness} · {status.plain}</span>
-        {isApp && item.price && <span class="meta price">{item.price}</span>}
-        {item.version && <span class="meta ver">{isNumbered(item.version) ? "Latest " : ""}{item.version}</span>}
-        {item.updated && (
-          <span class="meta"><Icon name="clock" />Updated <time datetime={item.updated}>{fmtDate(item.updated)}</time></span>
-        )}
-        {item.stars != null && (
-          <span class="meta" title={`${item.stars} stars on GitHub`}><Icon name="star" /><span class="n">{item.stars}</span></span>
-        )}
-      </p>
-      <p class="item-blurb" set:html={fmt(item.blurb)} />
-      {links.length > 0 && (
-        <div class="item-actions">
-          <a class="btn" href={links[0].url} target="_blank" rel="noopener"><Icon name={links[0].icon} />{links[0].label}<Icon name="ext" /></a>
-          {links.slice(1).map((l) => (
-            <a class="btn btn-quiet" href={l.url} target="_blank" rel="noopener"><Icon name={l.icon} />{l.label}</a>
-          ))}
-        </div>
-      )}
-      <ShareRow url={pageUrl} title={`${item.name}: ${plain(item.blurb)}`} />
-    </header>
+        <aside class="get-panel" aria-label={getTitle}>
+          <h2>{getTitle}</h2>
+          {isApp && (item.platforms || []).length > 0 && <div class="chips">{item.platforms.map((p) => <span class="chip">{p}</span>)}</div>}
+          {files.length > 1 && (
+            <div class="model-switch" role="group" aria-label="Your iPod" id="model-switch">
+              {files.map((f, i) => (
+                <button type="button" data-device={f.device} data-file={f.file} data-short={deviceById[f.device]?.short} aria-pressed={i === 0 ? "true" : "false"}>{deviceById[f.device]?.short}</button>
+              ))}
+            </div>
+          )}
+          {files.length > 0 && <p class="file-name" id="file-name">{files[0].file}</p>}
+          {links.length > 0 && (
+            <a class="btn btn-lg" href={links[0].url} target="_blank" rel="noopener">
+              <span id="get-label" data-plain={links[0].label}>{files.length > 0 ? `${links[0].label} for ${deviceById[files[0].device]?.short}` : links[0].label}</span>
+              <Icon name={links[0].icon} />
+            </a>
+          )}
+          <p>{isApp ? "Opens the maker’s own page." : "Opens the project’s own page. Quitanda doesn’t host firmware files."}</p>
+          <dl class="facts">
+            {isApp && item.price && (<><dt>Price</dt><dd>{item.price}</dd></>)}
+            {item.requires && (<><dt>Needs first</dt><dd set:html={fmt(item.requires)} /></>)}
+            {parent && (<><dt>Based on</dt><dd><a href={href(parent.path)}>{parent.name}</a></dd></>)}
+            {item.license && (<><dt>License</dt><dd>{item.license}</dd></>)}
+          </dl>
+          {links.length > 1 && (
+            <div class="item-actions">
+              {links.slice(1).map((l) => (<a class="share-btn" href={l.url} target="_blank" rel="noopener">{l.label}</a>))}
+            </div>
+          )}
+          <ShareRow url={pageUrl} title={`${item.name}: ${plain(item.blurb)}`} />
+        </aside>
+      </div>
+    </div>
 
-    <Gallery shots={item.screenshots} credit={`the ${item.name} project`} creditUrl={repoUrl || links[0]?.url} />
+    {heroShot && <img class="hero-shot" src={href("/" + heroShot.src)} alt={`${item.name}: ${heroShot.alt}`} width={heroShot.w} height={heroShot.h} />}
+
+    {(pixelShots.length > 0 || wideShots.length > 0) && (
+      <section class="gallery" aria-label="Screenshots">
+        <h2>{pixelShots.length > 0 ? "On the screen" : "Screenshots"}</h2>
+        {pixelShots.length > 0 && (
+          <div class="gallery-pixel">
+            {pixelShots.map((s) => (
+              <figure><span class="lcd-frame"><img src={href("/" + s.src)} alt={s.alt} width={s.w} height={s.h} loading="lazy" /></span><figcaption>{s.alt}</figcaption></figure>
+            ))}
+          </div>
+        )}
+        {wideShots.length > 0 && (
+          <div class="gallery-wide">
+            {wideShots.map((s) => (
+              <figure><a href={href("/" + s.src)} target="_blank" rel="noopener"><img src={href("/" + s.src)} alt={s.alt} width={s.w} height={s.h} loading="lazy" /></a><figcaption>{s.alt}</figcaption></figure>
+            ))}
+          </div>
+        )}
+        <p class="gallery-credit">Pictures from {repoUrl || links[0]?.url ? <a href={repoUrl || links[0].url} target="_blank" rel="noopener">the {item.name} project</a> : `the ${item.name} project`}.</p>
+      </section>
+    )}
+
+    {(item.features || []).length > 0 && (
+      <section class="gallery">
+        <h2>{isApp ? "What it does" : "What it adds"}</h2>
+        <ul class="feature-grid">{item.features.map((f) => <li><span set:html={fmt(f)} /></li>)}</ul>
+      </section>
+    )}
 
     <div class="item-body">
       <div class="item-col">
+        {steps.length > 0 && (
+          <section id="install">
+            <div class="steps-head">
+              <h2>{isApp ? "Get started" : "Install"} in {steps.length} {steps.length === 1 ? "step" : "steps"}</h2>
+              <span class="lcd-kicker" id="steps-count" hidden></span>
+            </div>
+            <div class="progress" aria-hidden="true"><i id="steps-bar"></i></div>
+            <ol class="steps" id="steps">
+              {steps.map((s, i) => (
+                <li><label><input type="checkbox" data-step={i} /><b aria-hidden="true">{i + 1}</b><span set:html={fmt(s)} /></label></li>
+              ))}
+            </ol>
+            {parent && !isApp && (
+              <p class="tip"><strong>Keep a way back.</strong> Before you switch, copy the iPod’s <code>.rockbox</code> folder to your computer. To return, delete the folder on the iPod and copy yours back.</p>
+            )}
+          </section>
+        )}
         {(item.more || []).length > 0 && (
           <section>
             <h2>About {item.name}</h2>
             {item.more.map((p) => <p set:html={fmt(p)} />)}
           </section>
         )}
-        {(item.features || []).length > 0 && (
-          <section>
-            <h2>{isApp ? "What it does" : "What it adds"}</h2>
-            <ul>{item.features.map((f) => <li set:html={fmt(f)} />)}</ul>
-          </section>
-        )}
-        {(item.install || []).length > 0 && (
-          <section>
-            <h2>{isApp ? "Get started" : "Install"}</h2>
-            <ol>{item.install.map((s) => <li set:html={fmt(s)} />)}</ol>
-          </section>
-        )}
       </div>
 
-      <aside class="item-col item-facts">
-        <section>
-          <h2>At a glance</h2>
-          <dl class="facts">
-            {isApp && (item.platforms || []).length > 0 && (<><dt>Platforms</dt><dd>{item.platforms.join(", ")}</dd></>)}
-            {isApp && item.price && (<><dt>Price</dt><dd>{item.price}</dd></>)}
-            <dt>{isApp ? "Syncs" : "Runs on"}</dt>
-            <dd>
-              {runs.length > 0 ? (
-                <span class="chips">{runs.map((d) => <span class="chip" title={d.years}>{d.name}</span>)}</span>
-              ) : (
-                <span set:html={fmt(item.devicesNote || "Not listed by the developer")} />
-              )}
-            </dd>
-            {partial.length > 0 && (<><dt>Partial</dt><dd><span class="chips">{partial.map((d) => <span class="chip partial">{d.name}</span>)}</span></dd></>)}
-            {runs.length > 0 && item.devicesNote && (<><dt>Note</dt><dd set:html={fmt(item.devicesNote)} /></>)}
-            {item.requires && (<><dt>Needs</dt><dd set:html={fmt(item.requires)} /></>)}
-            {parent && (<><dt>Based on</dt><dd><a href={href(parent.path)}>{parent.name}</a></dd></>)}
-            {item.license && (<><dt>License</dt><dd>{item.license}</dd></>)}
-          </dl>
-        </section>
-        {(item.files || []).length > 0 && (
-          <section>
-            <h2>Files</h2>
-            <div class="files">
-              {item.files.map((f) => (<div><span>{f.label}</span><code>{f.file}</code></div>))}
-            </div>
+      <div class="item-side">
+        {(runs.length > 0 || partial.length > 0 || item.devicesNote) && (
+          <section class="side-card">
+            <h2>{isApp ? "Which iPods it syncs" : "Which iPods it runs on"}</h2>
+            {runs.length > 0 && <div class="chips">{runs.map((d) => <span class="chip" title={d.years}>{d.name}</span>)}</div>}
+            {partial.length > 0 && (<><p>Partly, with known gaps:</p><div class="chips">{partial.map((d) => <span class="chip partial">{d.name}</span>)}</div></>)}
+            {item.devicesNote && <p set:html={fmt(item.devicesNote)} />}
+            {otherFiles.length > 0 && (
+              <div class="files">{otherFiles.map((f) => (<div><span>{f.label}</span><code>{f.file}</code></div>))}</div>
+            )}
           </section>
         )}
-        {forks.length > 0 && (
-          <section>
-            <h2>Built on {item.name}</h2>
+
+        {(runs.length > 0 || partial.length > 0) && (
+          <section class="side-card" id="reports">
+            <h2>Does it work on yours?</h2>
+            <p id="report-line">Loading reports…</p>
+            <div class="report-buttons" id="report-buttons">
+              <button type="button" class="btn yes" data-works="true" aria-pressed="false">It works</button>
+              <button type="button" class="btn no" data-works="false" aria-pressed="false">It has problems</button>
+            </div>
+            <p id="report-status" role="status" hidden></p>
+          </section>
+        )}
+
+        {(forks.length > 0 || hasThemes) && (
+          <section class="side-card">
+            <h2>{forks.length > 0 ? `Grown from ${item.name}` : `More for ${item.name}`}</h2>
             <ul class="link-list">
-              {forks.map((f) => (<li><a href={href(f.path)}>{f.name}</a><span>{plain(f.blurb)}</span></li>))}
+              {forks.map((f) => (<li><a href={href(f.path)}><strong>{f.name}</strong><span>{plain(f.blurb)}</span></a></li>))}
+              {hasThemes && (<li><a href={href(`/themes/?for=${item.id}`)}><strong>Themes for {item.name}</strong><span>See what people have made, or share yours.</span></a></li>)}
             </ul>
           </section>
         )}
-      </aside>
+      </div>
     </div>
   </main>
 </Base>
+
+<script>
+  import "../scripts/item.js";
+</script>

@@ -1,0 +1,24 @@
+---
+// A small drawn iPod for the picker. `look` comes from the device list.
+const SHAPES = {
+  classic: { w: 48, h: 80, r: 8, pad: 6, gap: 7, screen: [34, 26], wheel: 30 },
+  video: { w: 48, h: 80, r: 8, pad: 6, gap: 7, screen: [36, 28], wheel: 28 },
+  mini: { w: 38, h: 68, r: 7, pad: 6, gap: 8, screen: [26, 16], wheel: 26 },
+  nano: { w: 30, h: 70, r: 6, pad: 6, gap: 9, screen: [20, 16], wheel: 20 },
+  full: { w: 50, h: 82, r: 9, pad: 7, gap: 9, screen: [34, 24], wheel: 30 },
+  squat: { w: 52, h: 54, r: 8, pad: 5, gap: 4, screen: [40, 24], wheel: 17 },
+  tall: { w: 28, h: 76, r: 10, pad: 6, gap: 10, screen: [18, 24], wheel: 18 },
+  clip: { w: 36, h: 36, r: 8, pad: 4, gap: 0, screen: [26, 26], wheel: 0 },
+  touch: { w: 32, h: 74, r: 7, pad: 5, gap: 5, screen: [22, 50], wheel: 0, home: 8 },
+};
+const { look = "classic", scale = 1 } = Astro.props;
+const s = SHAPES[look] || SHAPES.classic;
+const px = (n) => `${Math.round(n * scale * 10) / 10}px`;
+---
+<span class="ipod-draw" aria-hidden="true" style={`height: ${px(84)}`}>
+  <span class={`body look-${look}`} style={`width: ${px(s.w)}; height: ${px(s.h)}; border-radius: ${px(s.r)}; padding: ${px(s.pad)} ${px(s.pad)} 0; gap: ${px(s.gap)}`}>
+    <span class="screen" style={`width: ${px(s.screen[0])}; height: ${px(s.screen[1])}`}></span>
+    {s.wheel > 0 && <span class="wheel" style={`width: ${px(s.wheel)}; height: ${px(s.wheel)}`}><i></i></span>}
+    {s.home && <span class="home" style={`width: ${px(s.home)}; height: ${px(s.home)}`}></span>}
+  </span>
+</span>

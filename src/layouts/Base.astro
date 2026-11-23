@@ -11,11 +11,11 @@ const pageTitle = title ? `${title} · ${SITE.name}` : `${SITE.name}: ${SITE.tag
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 const nav = [
   { id: "firmware", label: "Firmware", path: "/" },
-  { id: "apps", label: "Apps", path: "/#library-apps" },
-  { id: "mods", label: "Mods", path: "/mods/" },
+  { id: "apps", label: "Apps", path: "/apps/" },
   { id: "themes", label: "Themes", path: "/themes/" },
+  { id: "mods", label: "Mods", path: "/mods/" },
+  { id: "guides", label: "Guides", path: "/start/" },
   { id: "blog", label: "Blog", path: "/blog/" },
-  { id: "about", label: "About", path: "/about/" },
 ];
 ---
 <!doctype html>
@@ -39,7 +39,7 @@ const nav = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;700;800&family=Silkscreen&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;800;900&family=Silkscreen&display=swap"
     />
   </head>
   <body>
@@ -47,22 +47,25 @@ const nav = [
       <div class="wrap head-inner">
         <a class="brand" href={href("/")} aria-label={`${SITE.name} home`}>
           <Mark />
-          <span class="brand-text">
-            <span class="brand-name">{SITE.name}</span>
-            <span class="brand-kicker">Fresh for your iPod</span>
-          </span>
+          <span class="brand-name">{SITE.name}</span>
         </a>
         <nav class="head-nav" aria-label="Sections">
           {nav.map((n) => (
             <a href={href(n.path)} aria-current={section === n.id ? "page" : undefined}>{n.label}</a>
           ))}
         </nav>
-        <div class="account" id="account">
-          <button type="button" class="account-btn" data-signed-out data-open>Sign in</button>
-          <a class="account-btn account-me" href={href("/account/")} data-signed-in hidden>
-            <img alt="" width="22" height="22" referrerpolicy="no-referrer" hidden />
-            <span data-name>Account</span>
-          </a>
+        <div class="head-tools">
+          <form class="head-search" action={href("/")} method="get" role="search">
+            <label class="sr-text" for="site-q">Search the shop</label>
+            <input id="site-q" name="q" type="search" placeholder="Search the shop" autocomplete="off" />
+          </form>
+          <div class="account" id="account">
+            <button type="button" class="account-btn" data-signed-out data-open>Sign in</button>
+            <a class="account-btn account-me" href={href("/account/")} data-signed-in hidden>
+              <img alt="" width="30" height="30" referrerpolicy="no-referrer" hidden />
+              <span data-name>Account</span>
+            </a>
+          </div>
         </div>
       </div>
     </header>
@@ -73,7 +76,7 @@ const nav = [
       <p>Signing in lets you share themes and tell others what works on your iPod. Browsing and downloading never need an account.</p>
       <div class="signin-buttons">
         {providers.map((p) => (
-          <button type="button" class="btn btn-quiet" data-provider={p}>Continue with {PROVIDER_NAMES[p] || p}</button>
+          <button type="button" class="btn" data-provider={p}>Continue with {PROVIDER_NAMES[p] || p}</button>
         ))}
       </div>
       <p class="signin-error" data-error role="alert" hidden></p>
@@ -90,7 +93,8 @@ const nav = [
         </p>
         <p class="foot-links">
           <a href={href("/about/")}>About</a>
-          <a href={href("/welcome/")}>Start here</a>
+          <a href={href("/start/")}>Start here</a>
+          <a href={href("/compatibility/")}>Compatibility</a>
           <a href={href("/blog/")}>Blog</a>
           <a href={href("/rss.xml")}>RSS</a>
           <a href={href("/privacy/")}>Privacy</a>

@@ -1,0 +1,10 @@
+---
+// The status chip: fruit word, plain word, and a three-dot meter.
+import { STATUS } from "../lib/catalog.js";
+const { status } = Astro.props;
+const s = STATUS[status] || { ripeness: status, plain: status, dots: 0 };
+---
+<span class={`pill pill-${status}`}>
+  <span class="dots" aria-hidden="true">{[1, 2, 3].map((n) => <i class={n <= s.dots ? "on" : ""}></i>)}</span>
+  {s.ripeness} · {s.plain}
+</span>

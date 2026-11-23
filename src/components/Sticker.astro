@@ -1,0 +1,12 @@
+---
+// The version, on a fruit sticker. Only short labels fit on one.
+const { version, large = false } = Astro.props;
+const label = String(version || "").replace(/^v/i, "");
+const fits = label && label.length <= 5 && !/\s/.test(label);
+---
+{fits && (
+  <span class:list={["sticker", { "sticker-lg": large }]} role="img" aria-label={`Version ${label}`}>
+    <small aria-hidden="true">Version</small>
+    <b aria-hidden="true">{label}</b>
+  </span>
+)}

@@ -1,6 +1,8 @@
 ---
 title: The shop is open
 date: 2026-11-18
+kind: News
+art: mark
 summary: Quitanda is a new home for custom iPod firmware, library apps and hardware mods. Here is what's on the shelves and what arrives next.
 ---
 

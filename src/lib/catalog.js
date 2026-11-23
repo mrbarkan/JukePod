@@ -43,11 +43,24 @@ export const recentChanges = ((stats && stats.changes) || [])
 
 /** Ripeness is the shop's word for status; the plain word always sits beside it. */
 export const STATUS = {
-  stable: { ripeness: "Ripe", plain: "Stable" },
-  beta: { ripeness: "Ripening", plain: "Beta" },
-  experimental: { ripeness: "Unripe", plain: "Experimental" },
-  archived: { ripeness: "Preserved", plain: "Archived" },
+  stable: { ripeness: "Ripe", plain: "Stable", dots: 3 },
+  beta: { ripeness: "Ripening", plain: "Beta", dots: 2 },
+  experimental: { ripeness: "Unripe", plain: "Experimental", dots: 1 },
+  archived: { ripeness: "Preserved", plain: "Archived", dots: 0 },
 };
+
+/** Firmware that runs on a device, fully or partly. */
+export function runsOn(deviceId) {
+  return firmwares.filter((f) => f.devices.includes(deviceId) || (f.partial || []).includes(deviceId));
+}
+
+/** The short count shown on a picker tile: "7 flavors", "Tools only", "None yet". */
+export function flavorLabel(deviceId) {
+  const list = runsOn(deviceId);
+  if (!list.length) return "None yet";
+  if (list.every((f) => (f.categories || []).every((c) => c === "tools"))) return "Tools only";
+  return `${list.length} ${list.length === 1 ? "flavor" : "flavors"}`;
+}
 
 /** Everything the home page script needs, with stats already merged in. */
 export const clientData = {

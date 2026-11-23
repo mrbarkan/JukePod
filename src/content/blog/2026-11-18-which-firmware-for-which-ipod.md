@@ -1,6 +1,8 @@
 ---
 title: Which firmware for which iPod
 date: 2026-11-18
+kind: Guide
+art: ipods
 summary: A short guide to choosing custom firmware by iPod model, from the 3rd generation to the Classic.
 ---
 

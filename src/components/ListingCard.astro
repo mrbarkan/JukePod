@@ -1,0 +1,47 @@
+---
+// One listing on a shelf: firmware on the home page, apps on the apps page.
+import ScreenArt from "./ScreenArt.astro";
+import Ripeness from "./Ripeness.astro";
+import Sticker from "./Sticker.astro";
+import { href, plain, deviceById, categoryById } from "../lib/catalog.js";
+const { item } = Astro.props;
+const isApp = item.type === "app";
+const all = [...item.devices, ...(item.partial || [])];
+const words = [
+  item.name, item.maker, plain(item.blurb), (item.features || []).join(" "),
+  all.map((d) => deviceById[d]?.name).join(" "),
+  (item.categories || []).map((c) => categoryById[c]?.name).join(" "),
+  (item.platforms || []).join(" "), item.price || "",
+].join(" ").toLowerCase();
+const fit = isApp
+  ? [(item.platforms || []).join(" · "), item.price].filter(Boolean).join(" · ")
+  : `Runs on ${all.length} ${all.length === 1 ? "iPod" : "iPods"}`;
+---
+<article
+  class="fw-card"
+  data-card
+  data-name={item.name.toLowerCase()}
+  data-devices={item.devices.join(" ")}
+  data-partial={(item.partial || []).join(" ")}
+  data-open={isApp && !all.length ? "" : undefined}
+  data-kinds={(item.categories || []).join(" ")}
+  data-platforms={(item.platforms || []).join("|")}
+  data-stars={item.stars ?? -1}
+  data-updated={item.updated || ""}
+  data-search={words}
+>
+  <div class="fw-art">
+    <ScreenArt item={item} />
+    <Sticker version={item.version} />
+  </div>
+  <div class="fw-body">
+    <div class="fw-top">
+      <span class="kicker">{item.maker}</span>
+      <Ripeness status={item.status} />
+    </div>
+    <h3><a href={href(item.path)}>{item.name}</a></h3>
+    <p class="blurb">{plain(item.blurb)}</p>
+    <p class="fw-fit" data-fit data-default={fit}>{fit}</p>
+    <a class="btn" href={href(item.path)}>See {item.name}<span aria-hidden="true">→</span></a>
+  </div>
+</article>

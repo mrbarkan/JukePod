@@ -11,15 +11,40 @@ import { href } from "../../lib/catalog.js";
   <main class="wrap page">
     <header class="intro intro-row">
       <div>
-        <h1>Themes</h1>
+        <p class="lcd-kicker">The themes shelf</p>
+        <h1>Dress it up.</h1>
         <p>Looks people have made for Rockbox and its forks, and for CrateDigger. Download one, or share your own with screenshots.</p>
       </div>
-      <a class="btn" href={href("/themes/submit/")}>Share a theme</a>
+      <div class="intro-side">
+        <a class="btn btn-lg" href={href("/themes/submit/")}>Share a theme <span aria-hidden="true">↑</span></a>
+        <span>A person checks every theme before it appears.</span>
+      </div>
     </header>
 
     <div class="segs" id="theme-filter" role="group" aria-label="Made for"></div>
     <p class="aside-note" id="theme-status" role="status">Loading themes…</p>
     <div class="theme-grid" id="theme-grid"></div>
+
+    <section class="section">
+      <div class="section-head"><h2>How sharing works</h2></div>
+      <ol class="how">
+        <li><b aria-hidden="true">1</b><strong>Sign in and upload</strong><span>The page checks your file before it leaves your computer. For CrateDigger it reads the name and draws a preview in the theme’s own colors.</span></li>
+        <li><b aria-hidden="true">2</b><strong>A person looks at it</strong><span>Every theme is reviewed before it appears. If something needs fixing, you get a note saying what.</span></li>
+        <li><b aria-hidden="true">3</b><strong>It gets a page and a link</strong><span>Your theme goes on the shelf with its screenshots, install steps and a link you can share.</span></li>
+      </ol>
+    </section>
+
+    <section class="band">
+      <div>
+        <h2>Four rules that save you a rejection</h2>
+        <ul>
+          <li>Only what you made or may share</li>
+          <li>Fonts come with their license</li>
+          <li>Nothing from Apple: no fonts, icons or artwork</li>
+          <li>Say which version it was made for</li>
+        </ul>
+      </div>
+    </section>
   </main>
   <ThemeData />
 </Base>
@@ -53,16 +78,11 @@ import { href } from "../../lib/catalog.js";
     try {
       const themes = await listApproved({ target: id || undefined });
       if (id !== current) return; // a newer choice is already loading
-      grid.replaceChildren(...themes.map((t) => themeCard(t, targets)));
-      status.hidden = themes.length > 0;
-      if (!themes.length) {
-        const name = id ? targets.find((t) => t.id === id).name : null;
-        status.replaceChildren(
-          name ? `No themes for ${name} yet. ` : "No themes yet. ",
-          h("a", { href: link("/themes/submit/") }, "Share the first one"),
-          "."
-        );
-      }
+      const yours = h("a", { class: "theme-yours", href: link("/themes/submit/") },
+        h("i", { "aria-hidden": "true" }, "+"), h("strong", {}, "Yours goes here"),
+        h("span", {}, "Made a look for your iPod or for CrateDigger? Put it on the shelf."));
+      grid.replaceChildren(...themes.map((t) => themeCard(t, targets)), yours);
+      status.hidden = true;
     } catch (err) {
       status.textContent = `${err.message} Reload the page to try again.`;
     }

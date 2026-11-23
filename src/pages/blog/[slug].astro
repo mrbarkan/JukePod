@@ -16,7 +16,7 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
     <a class="back" href={href("/blog/")}><Icon name="back" />All posts</a>
     <article class="prose">
       <header>
-        <time datetime={post.date}>{fmtDate(post.date, true)}</time>
+        <time datetime={post.date}>{post.kind} · {fmtDate(post.date, true)}</time>
         <h1>{post.title}</h1>
       </header>
       <Fragment set:html={html} />

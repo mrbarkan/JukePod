@@ -1,6 +1,8 @@
 ---
 title: The themes shelf is open
 date: 2026-11-22
+kind: News
+art: themes
 summary: You can now sign in and share themes for Rockbox, its forks and CrateDigger, with screenshots.
 ---
 

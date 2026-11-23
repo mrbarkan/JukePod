@@ -1,22 +1,58 @@
 ---
 import Base from "../../layouts/Base.astro";
+import PostArt from "../../components/PostArt.astro";
 import { posts } from "../../lib/blog.js";
 import { fmtDate, href } from "../../lib/catalog.js";
+const [latest, ...rest] = posts;
 ---
-<Base title="Blog" description="News, release notes and guides from Quitanda, the corner shop for click-wheel iPods." section="blog">
-  <main class="wrap page narrow">
-    <header class="intro">
-      <h1>Blog</h1>
-      <p>News from the shop, new arrivals, and guides for getting more out of your iPod. <a href={href("/rss.xml")}>Subscribe by RSS</a>.</p>
+<Base title="Blog" description="News, release notes and guides from Quitanda, the fruit shop for iPods." section="blog">
+  <main class="wrap page">
+    <header class="intro intro-row">
+      <div>
+        <p class="lcd-kicker">News from the shop</p>
+        <h1>What’s fresh.</h1>
+        <p>New arrivals, release news, and guides for getting more out of your iPod.</p>
+      </div>
+      <div class="intro-side" style="flex-direction: row; flex-wrap: wrap">
+        <a class="btn btn-lg" href={href("/account/#newsletter")}>Get it by email</a>
+        <a class="btn btn-lg btn-quiet" href={href("/rss.xml")}>RSS</a>
+      </div>
     </header>
-    <ul class="post-list">
-      {posts.map((p) => (
-        <li>
-          <time datetime={p.date}>{fmtDate(p.date, true)}</time>
-          <h2><a href={href(`/blog/${p.slug}/`)}>{p.title}</a></h2>
-          <p>{p.summary}</p>
-        </li>
-      ))}
-    </ul>
+
+    {latest && (
+      <a class="post-feature" href={href(`/blog/${latest.slug}/`)}>
+        <PostArt art={latest.art} />
+        <span class="post-text">
+          <span class="post-meta"><span class="latest">Latest</span><span>{latest.kind} · <time datetime={latest.date}>{fmtDate(latest.date)}</time></span></span>
+          <strong>{latest.title}</strong>
+          <span class="sum">{latest.summary}</span>
+          <span class="post-read">Read it →</span>
+        </span>
+      </a>
+    )}
+
+    {rest.length > 0 && (
+      <div class="post-cards">
+        {rest.map((p) => (
+          <a class="post-card" href={href(`/blog/${p.slug}/`)}>
+            <PostArt art={p.art} />
+            <span class="post-text">
+              <span class="post-meta">{p.kind} · <time datetime={p.date}>{fmtDate(p.date)}</time></span>
+              <strong>{p.title}</strong>
+              <span class="sum">{p.summary}</span>
+              <span class="post-read">Read it →</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    )}
+
+    <section class="section">
+      <div class="section-head"><h2>Guides that don’t go stale</h2></div>
+      <ul class="guide-links compact">
+        <li><a href={href("/start/ipod-users/")}><strong>Start here: iPod owners</strong><span>Seven steps from an iPod in a drawer to one running new firmware.</span></a></li>
+        <li><a href={href("/start/makers/")}><strong>Start here: makers and modders</strong><span>Get listed, keep your version current, share themes.</span></a></li>
+      </ul>
+    </section>
   </main>
 </Base>

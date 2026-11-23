@@ -1,50 +1,104 @@
 ---
 import Base from "../layouts/Base.astro";
-import Icon from "../components/Icon.astro";
-import { SITE, clientData, firmwares, apps, mods, href, plain } from "../lib/catalog.js";
+import IpodShape from "../components/IpodShape.astro";
+import ListingCard from "../components/ListingCard.astro";
+import { posts } from "../lib/blog.js";
+import {
+  firmwares, apps, mods, devices, categories, watchlist, latest, recentChanges, updatedOn,
+  byId, flavorLabel, fmtDate, isNumbered, plain, href,
+} from "../lib/catalog.js";
 
-// Safe to inline: "<" is escaped so nothing in the data can close the script.
-const payload = JSON.stringify({ ...clientData, base: import.meta.env.BASE_URL.replace(/\/$/, "") }).replace(/</g, "\\u003c");
+const shelf = [...firmwares].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name));
+const freshDate = updatedOn > latest.date ? updatedOn : latest.date;
+const freshItems = [
+  ...recentChanges.map((c) => ({ text: `${byId[c.id].name} ${c.version}`, path: byId[c.id].path })),
+  ...latest.lines.flatMap((line) => line.ids.map((id) => byId[id]).filter(Boolean))
+    .filter((it) => isNumbered(it.version))
+    .map((it) => ({ text: `${it.name} ${it.version}`, path: it.path })),
+].filter((x, i, all) => all.findIndex((y) => y.path === x.path) === i).slice(0, 5);
+const recentApps = [...apps].sort((a, b) => (b.updated || "").localeCompare(a.updated || "") || a.name.localeCompare(b.name)).slice(0, 4);
+const searchable = [
+  ...firmwares.map((x) => ({ kind: "Firmware", name: x.name, text: plain(x.blurb), path: x.path, words: `${x.maker} ${(x.features || []).join(" ")}` })),
+  ...apps.map((x) => ({ kind: "App", name: x.name, text: plain(x.blurb), path: x.path, words: `${x.maker} ${(x.platforms || []).join(" ")} ${(x.features || []).join(" ")}` })),
+  ...mods.map((x) => ({ kind: "Mod", name: x.name, text: plain(x.blurb), path: x.path, words: `${x.maker} ${x.kind} ${x.skill}` })),
+  { kind: "Guide", name: "Start here: iPod owners", text: "Find your model, back up, install your first firmware, load music, and recover.", path: "/start/ipod-users/", words: "model number reset disk mode restore" },
+  { kind: "Guide", name: "Start here: makers and modders", text: "Get listed, keep your version current, and share themes.", path: "/start/makers/", words: "listing release screenshots" },
+  { kind: "Page", name: "Themes", text: "Looks people have made for Rockbox, its forks and CrateDigger.", path: "/themes/", words: "theme skin share upload" },
+  { kind: "Page", name: "Compatibility", text: "Which firmware runs on which iPod.", path: "/compatibility/", words: "table matrix supported" },
+  ...posts.map((p) => ({ kind: "Blog", name: p.title, text: p.summary, path: `/blog/${p.slug}/`, words: p.kind })),
+];
 ---
 <Base section="firmware">
-  <main class="wrap page" id="top">
-    <div class="top">
-      <div class="top-main">
-        <header class="intro">
-          <h1>Pick your flavor.</h1>
-          <p>Your iPod doesn’t have to run what it shipped with. Quitanda stocks every firmware worth trying, the apps that fill it with music, and the parts that keep it going.</p>
-          <p class="intro-start">New here? Start with the guide for <a href={href("/start/ipod-users/")}>iPod owners</a> or for <a href={href("/start/makers/")}>makers and modders</a>.</p>
-        </header>
-        <section class="latest" aria-labelledby="latest-title">
-          <div class="latest-head">
-            <h2 class="latest-title" id="latest-title">Fresh in · <time id="latest-date"></time></h2>
-            <button type="button" class="latest-toggle" id="latest-toggle" aria-controls="latest-list" aria-expanded="true">Hide</button>
-          </div>
-          <ul class="latest-list" id="latest-list"></ul>
-        </section>
+  <main class="wrap page" id="home">
+    <section class="section" id="search" hidden>
+      <div class="section-head">
+        <h2 id="search-title">Search</h2>
+        <p><button type="button" class="share-btn" id="search-clear">Clear search</button></p>
+      </div>
+      <ul class="search-list" id="search-list">
+        {searchable.map((r) => (
+          <li data-result data-search={`${r.name} ${r.text} ${r.words} ${r.kind}`.toLowerCase()}>
+            <a href={href(r.path)}><em>{r.kind}</em><strong>{r.name}</strong><span>{r.text}</span></a>
+          </li>
+        ))}
+      </ul>
+      <p class="empty" id="search-empty" hidden>Nothing matches. Try a firmware name, an iPod model, or a feature such as “Cover Flow”.</p>
+    </section>
 
-        <div class="controls" role="search">
-          <div class="control">
-            <span class="control-label" id="show-label">Show</span>
-            <details class="menu" id="show-menu">
-              <summary class="field menu-toggle" aria-labelledby="show-label show-current">
-                <span id="show-current">All</span>
-                <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
-              </summary>
-              <div class="menu-panel" id="show-options" role="group" aria-labelledby="show-label"></div>
-            </details>
+    <div id="shop-all" class="page" style="padding-block: 0">
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <p class="lcd-kicker">A quitanda is a fruit shop. This one is for iPods.</p>
+            <h1>Pick your flavor.</h1>
           </div>
-          <label class="control">
-            <span class="control-label">My iPod</span>
-            <span class="select">
-              <select class="field" id="filter-device"><option value="all">Any iPod</option></select>
-              <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
-            </span>
-          </label>
-          <label class="control">
+          <p>Your iPod doesn’t have to run what it shipped with. Tell us which one you have and the whole shop rearranges around it.</p>
+        </div>
+
+        <div class="picker">
+          <div class="picker-head">
+            <h2>Which iPod is yours?</h2>
+            <div>
+              <a href={href("/start/ipod-users/#which")}>Not sure? Check the number on the back</a>
+              <button type="button" class="seg" data-device="all" aria-pressed="true">Show every iPod</button>
+            </div>
+          </div>
+          <div class="picker-row" id="picker">
+            {devices.map((d) => (
+              <button type="button" class="ipod-tile" data-device={d.id} data-short={d.short} data-name={d.name} data-tools={flavorLabel(d.id) === "Tools only" ? "" : undefined} aria-pressed="false">
+                <IpodShape look={d.look} />
+                <strong>{d.short}</strong>
+                <span class="when">{d.years} · {d.model.split(/[ ,]/)[0]}</span>
+                <span class="count">{flavorLabel(d.id)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="shop">
+        <div class="result-head">
+          <div>
+            <h2 id="result-title">{firmwares.length} flavors on the shelves</h2>
+            <p id="result-note">Every firmware in the shop. Pick your iPod above to see only what runs on it.</p>
+          </div>
+          <ul class="legend" aria-label="What the ripeness labels mean">
+            <li class="pill pill-stable">Ripe · Stable</li>
+            <li class="pill pill-beta">Ripening · Beta</li>
+            <li class="pill pill-experimental">Unripe · Experimental</li>
+            <li class="pill pill-archived">Preserved · Archived</li>
+          </ul>
+        </div>
+        <div class="toolbar">
+          <div class="segs" id="kinds" role="group" aria-label="Kind of firmware">
+            <button type="button" class="seg" data-kind="all" aria-pressed="true">All</button>
+            {categories.map((c) => <button type="button" class="seg" data-kind={c.id} aria-pressed="false">{c.name}</button>)}
+          </div>
+          <label class="order">
             <span class="control-label">Order</span>
             <span class="select">
-              <select class="field" id="filter-order">
+              <select class="field" id="order">
+                <option value="shelf">Start with Rockbox</option>
                 <option value="name">A–Z</option>
                 <option value="stars">Most starred</option>
                 <option value="updated">Recently updated</option>
@@ -52,129 +106,106 @@ const payload = JSON.stringify({ ...clientData, base: import.meta.env.BASE_URL.r
               <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
             </span>
           </label>
-          <input class="field search" id="filter-q" type="search" placeholder="Search…" aria-label="Search the shop" autocomplete="off" />
-          <p class="count" id="count" aria-live="polite"></p>
         </div>
-      </div>
+        <div class="fw-grid" id="grid">
+          {shelf.map((item, i) => <div data-slot style="display: contents" data-shelf={i}><ListingCard item={item} /></div>)}
+        </div>
+        <p class="empty" id="empty" hidden>Nothing on the shelves runs on this iPod yet. A <a href={href("/apps/")}>library app</a> can still manage its music without iTunes.</p>
+        <p><a class="more-link" href={href("/compatibility/")}>See the full compatibility table →</a></p>
+      </section>
 
-      <figure class="showcase">
-        <div class="ipod" id="ipod">
-          <div class="screen">
-            <div class="screen-bar">
-              <span>Firmware</span>
-              <span class="batt" aria-hidden="true"><i></i></span>
-            </div>
-            <ul class="screen-list" id="screen-list" aria-label="Firmware on this page"></ul>
+      <section class="fresh" aria-label="Fresh in">
+        <div>
+          <strong>Fresh in · {fmtDate(freshDate)}</strong>
+          {freshItems.map((f) => <a href={href(f.path)}>{f.text}</a>)}
+          <a href={href("/themes/")}>The themes shelf is open</a>
+        </div>
+      </section>
+
+      <section class="shelves">
+        <div class="shelf" id="apps">
+          <h2>Library apps</h2>
+          <p>Put music on it without iTunes. Recently updated:</p>
+          <ul class="shelf-list">
+            {recentApps.map((a) => (
+              <li><a href={href(a.path)}><span class="txt"><strong>{a.name}</strong><span>{[(a.platforms || []).join(" · "), a.price].filter(Boolean).join(" · ")}</span></span></a></li>
+            ))}
+          </ul>
+          <a class="more-link" href={href("/apps/")}>All {apps.length} apps →</a>
+        </div>
+        <div class="shelf">
+          <h2>Themes</h2>
+          <p>Looks people made, with screenshots.</p>
+          <ul class="shelf-list" id="theme-shelf">
+            <li><a href={href("/themes/submit/")}><span class="txt"><strong>Share the first one</strong><span>For Rockbox, its forks or CrateDigger.</span></span></a></li>
+          </ul>
+          <a class="more-link" href={href("/themes/")}>The themes shelf →</a>
+        </div>
+        <div class="shelf" id="mods">
+          <h2>Hardware mods</h2>
+          <p>Parts that keep it going.</p>
+          <ul class="shelf-list">
+            {mods.slice(0, 4).map((m) => (
+              <li><a href={href(m.path)}><span class="txt"><strong>{m.name}</strong><span>{m.skill}</span></span></a></li>
+            ))}
+          </ul>
+          <a class="more-link" href={href("/mods/")}>All {mods.length} mods →</a>
+        </div>
+      </section>
+
+      {watchlist.length > 0 && (
+        <section class="section" id="watch-list">
+          <div class="section-head">
+            <h2>Still on the tree</h2>
+            <p>Projects that can’t be installed yet. Each moves onto the shelves once it ships.</p>
           </div>
-          <div class="wheel" id="wheel" title="Scroll here to move through the list">
-            <button type="button" class="wheel-btn w-menu" data-act="menu" aria-label="Back to the top">MENU</button>
-            <button type="button" class="wheel-btn w-prev" data-act="prev" aria-label="Previous firmware">
-              <svg viewBox="0 0 20 10" aria-hidden="true"><path d="M10 0v10L3 5zM17 0v10l-7-5z" /></svg>
-            </button>
-            <button type="button" class="wheel-btn w-next" data-act="next" aria-label="Next firmware">
-              <svg viewBox="0 0 20 10" aria-hidden="true"><path d="M3 0v10l7-5zM10 0v10l7-5z" /></svg>
-            </button>
-            <button type="button" class="wheel-btn w-play" data-act="select" aria-label="Open the selected firmware">
-              <svg viewBox="0 0 20 10" aria-hidden="true"><path d="M3 0v10l7-5zM12 0h2v10h-2zM16 0h2v10h-2z" /></svg>
-            </button>
-            <button type="button" class="wheel-center" data-act="select" aria-label="Open the selected firmware"></button>
-          </div>
-        </div>
-        <figcaption>Scroll on the wheel, then press the center.</figcaption>
-      </figure>
-    </div>
+          <ul class="watch-list">
+            {watchlist.map((w) => (
+              <li class="watch-item" id={`watch-${w.id}`}>
+                <div class="watch-top"><a href={w.url} target="_blank" rel="noopener">{w.name} ↗</a><span class="maker">{w.maker}</span></div>
+                <p>{plain(w.blurb)}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-    <div class="pinned" id="pinned"></div>
-    <div class="grid" id="grid">
-      {/* Shown until the script takes over, and to anything that doesn't run scripts. */}
-      <ul class="plain-list">
-        {firmwares.map((f) => (<li><a href={href(f.path)}>{f.name}</a> <span>{plain(f.blurb)}</span></li>))}
-      </ul>
-    </div>
-    <p class="empty" id="empty" hidden>Nothing matches. Try another iPod, a different kind, or clear the search.</p>
-
-    <section class="section" id="library-apps" aria-labelledby="apps-title">
-      <div class="section-head">
-        <h2 id="apps-title">Library apps</h2>
-        <p>Software for your computer or phone that puts music on the iPod, edits playlists and backs it up. The iPod and search filters above apply here too.</p>
-      </div>
-      <div class="apps-controls">
-        <div class="segs" id="app-platforms" role="group" aria-label="Platform"></div>
-        <p class="count" id="app-count" aria-live="polite"></p>
-      </div>
-      <div class="grid" id="app-grid">
-        <ul class="plain-list">
-          {apps.map((a) => (<li><a href={href(a.path)}>{a.name}</a> <span>{plain(a.blurb)}</span></li>))}
+      <section class="section" id="guides">
+        <div class="section-head"><h2>New here? Start with a guide.</h2></div>
+        <ul class="guide-links">
+          <li><a href={href("/start/ipod-users/")}><em>Seven steps · about an hour</em><strong>I use an iPod</strong><span>Find your model, back up, install your first firmware, load music, and get it back if something goes wrong.</span></a></li>
+          <li><a href={href("/start/makers/")}><em>For firmware, themes, apps and mods</em><strong>I make things for iPods</strong><span>Get listed, keep your version current automatically, and share themes with screenshots.</span></a></li>
         </ul>
-      </div>
-      <p class="empty" id="app-empty" hidden>No app matches. Try another platform or iPod, or clear the search.</p>
-    </section>
+      </section>
 
-    <section class="section" id="mods" aria-labelledby="mods-title">
-      <div class="section-head">
-        <h2 id="mods-title">Hardware mods</h2>
-        <p>Parts you fit inside the iPod: flash storage, bigger batteries, Bluetooth and USB-C. Each one notes how it gets along with the firmware above.</p>
-      </div>
-      <ul class="mod-teasers">
-        {mods.map((m) => (
-          <li>
-            <a href={href(m.path)}>
-              <span class="mod-kind">{m.kind}</span>
-              <strong>{m.name}</strong>
-              <span>{m.skill}</span>
-            </a>
-          </li>
-        ))}
-      </ul>
-      <p><a class="more-link" href={href("/mods/")}>All hardware mods <Icon name="ext" /></a></p>
-    </section>
-
-    <section class="section" id="compatibility" aria-labelledby="compat-title">
-      <div class="section-head">
-        <h2 id="compat-title">Compatibility</h2>
-        <p>Which firmware runs on which iPod. Partial means it boots, with known gaps.</p>
-      </div>
-      <div class="table-scroll">
-        <table class="matrix" id="matrix"></table>
-      </div>
-      <p class="legend">
-        <span><i class="dot dot-full"></i>Supported</span>
-        <span><i class="dot dot-partial"></i>Partial</span>
-        <span><i class="dot dot-none"></i>Not supported</span>
-      </p>
-    </section>
-
-    <section class="section watch" id="watch-list" aria-labelledby="watch-title">
-      <div class="section-head">
-        <h2 id="watch-title">Still on the tree <span class="badge-count" id="watch-count"></span></h2>
-        <p>The watch list: projects that can’t be installed yet. Each moves onto the shelves once it ships.</p>
-      </div>
-      <ul class="watch-list" id="watch"></ul>
-    </section>
-
-    <section class="section submit" id="submit" aria-labelledby="submit-title">
-      <div class="submit-copy">
-        <h2 id="submit-title">Something missing from the shelves?</h2>
-        <p>Send the details and it goes on the page. A listing needs:</p>
-        <ul class="checklist">
-          <li>Name, maker and a sentence on what it does</li>
-          <li>The iPods it fits, and any it only partly supports</li>
-          <li>A public download link and the source repository</li>
-          <li>Install steps, the license, and checksums if you publish them</li>
-        </ul>
-      </div>
-      <div class="submit-card">
-        <p class="submit-label">Every listing lives in one file</p>
-        <pre class="code"><code>src/data/catalog.js</code></pre>
-        <p>Open a pull request that adds your entry, or open an issue with the details and it will be added for you.</p>
-        <div class="submit-actions">
-          <a class="btn" href={`${SITE.repo}/issues/new`} target="_blank" rel="noopener">Open an issue</a>
-          <a class="btn-plain" href={`${SITE.repo}/edit/main/src/data/catalog.js`} target="_blank" rel="noopener">Edit the file on GitHub ↗</a>
+      <section class="band">
+        <div>
+          <h2>Fresh arrivals, by email.</h2>
+          <p>Occasional news about new firmware, themes and guides. We use your name and email address for this and nothing else, and you can unsubscribe at any time.</p>
         </div>
-      </div>
-    </section>
+        <a class="btn btn-accent btn-lg" href={href("/account/#newsletter")}>Subscribe by email</a>
+      </section>
+    </div>
   </main>
-
-  <script is:inline set:html={`window.QUITANDA_DATA = ${payload};`} />
-  <script is:inline src={href("/assets/app.js")}></script>
 </Base>
+
+<script>
+  import "../scripts/home.js";
+</script>
+<script>
+  // The themes shelf shows the three newest approved themes, if there are any.
+  import { listApproved } from "../lib/themes-read.js";
+  import { h, link, preview } from "../scripts/theme-ui.js";
+  listApproved({ limit: 3 })
+    .then((themes) => {
+      if (!themes.length) return;
+      document.getElementById("theme-shelf").replaceChildren(
+        ...themes.map((t) =>
+          h("li", {}, h("a", { href: link(`/themes/view/?id=${encodeURIComponent(t.id)}`) },
+            h("span", { class: "thumb" }, preview(t)),
+            h("span", { class: "txt" }, h("strong", {}, t.name), h("span", {}, `by ${t.ownerName || "someone"}`))))
+        )
+      );
+    })
+    .catch(() => {});
+</script>
