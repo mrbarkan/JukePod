@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-22",
+  "date": "2026-11-23",
   "repos": {
     "rockpod": {
-      "stars": 269,
+      "stars": 271,
       "updated": "2026-08-01",
       "version": "5.5"
     },
@@ -15,7 +15,7 @@
       "updated": "2026-10-28"
     },
     "podbox": {
-      "stars": 72,
+      "stars": 74,
       "updated": "2026-11-22"
     },
     "rodbox": {
@@ -31,12 +31,12 @@
       "updated": "2026-05-19"
     },
     "iopenpod": {
-      "stars": 534,
+      "stars": 540,
       "updated": "2026-11-16",
       "version": "2.1.4"
     },
     "foo-dop": {
-      "stars": 112,
+      "stars": 113,
       "updated": "2020-02-02",
       "version": "0.7.2"
     },
