@@ -45,9 +45,10 @@ const nav = [
   <body>
     <header class="site-head">
       <div class="wrap head-inner">
-        <a class="brand" href={href("/")} aria-label={`${SITE.name} home`}>
+        <a class="brand" href={href("/")} aria-label={`${SITE.name} (beta) home`}>
           <Mark />
           <span class="brand-name">{SITE.name}</span>
+          <span class="brand-tag">Beta</span>
         </a>
         <nav class="head-nav" aria-label="Sections">
           {nav.map((n) => (

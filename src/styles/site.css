@@ -102,6 +102,7 @@ code { font-family: var(--f-mono); font-size: 0.86em; background: var(--well); b
 .mark { flex: none; display: block; transition: rotate 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .brand:hover .mark { rotate: 45deg; }
 .brand-name { font: 900 24px/1 var(--f-display); letter-spacing: -0.03em; }
+.brand-tag { align-self: center; margin-left: -2px; padding: 4px 6px 3px; font: 400 10px/1 var(--f-lcd); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-text); background: var(--accent-tint); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 6px; }
 .head-nav { display: flex; flex-wrap: wrap; gap: 2px; flex: 1 1 auto; }
 .head-nav a { padding: 11px 12px; font-weight: 500; font-size: 15px; text-decoration: none; color: var(--ink-2); border-radius: 8px 8px 0 0; }
 .head-nav a:hover { color: var(--ink); }
@@ -122,6 +123,19 @@ code { font-family: var(--f-mono); font-size: 0.86em; background: var(--well); b
   .head-search { flex: 1 1 0; min-width: 0; max-width: 180px; }
   .head-search input { width: 100%; padding: 0 14px; }
   .account-btn { padding: 0 14px; }
+}
+/* Narrow phones: the search box is a magnifier button that opens across the header row. */
+@media (max-width: 480px) {
+  .head-inner { position: relative; }
+  .head-search { flex: none; width: 44px; }
+  .head-search input { width: 44px; padding: 0; color: transparent; cursor: pointer;
+    background: var(--well) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237d868f' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='m15.5 15.5 5 5'/%3E%3C/svg%3E") center / 20px no-repeat; }
+  .head-search input::placeholder { color: transparent; }
+  .head-search input::-webkit-search-cancel-button { display: none; }
+  .head-search input:not(:placeholder-shown) { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .head-search input:focus { position: absolute; z-index: 5; top: 10px; left: 20px; right: 20px; width: auto; padding: 0 16px 0 44px; color: var(--ink); cursor: text; background-position: 14px center; background-color: var(--panel); }
+  .head-search input:focus::placeholder { color: var(--muted); }
+  .head-search input:focus::-webkit-search-cancel-button { display: revert; }
 }
 
 .site-foot { border-top: 1px solid var(--line); background: var(--panel); }
