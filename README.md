@@ -157,7 +157,7 @@ It needs one setting: **Settings › Pages › Source: GitHub Actions**. The wor
 
 The listings were compiled from each project's public pages in November 2026. These need a second look:
 
-- Rockbox 4.0: the release date (listed as April 2025) and the exact device list.
+- Rockbox 4.0: the April 2025 release date is confirmed (1 April 2025). The device list still needs checking against rockbox.org.
 - iPodLinux: the device list is from memory of the old project, so treat it as approximate.
 - Library apps: the device lists for Swinsian, CopyTrans Manager, MusicBee and foo_dop come from secondary sources. Also check Swinsian's price, and whether foo_dop works on the nano 6G and 7G.
 - Stonepod: details come from its TestFlight page and search results.
