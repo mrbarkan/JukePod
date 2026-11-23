@@ -128,7 +128,7 @@ A shared theme is hidden until an admin approves it. Its files can only be fetch
 
 `/privacy/` and `/gdpr/` describe what the site does today. If you change what is collected, who processes it, or how deletion works, change those pages in the same commit. Before the first newsletter goes out, name the email service on `/privacy/`.
 
-The site shows Google AdSense ads, and `/privacy/#ads` describes them. Before the ads go live, turn on Google's consent message for the EU, UK and Switzerland in AdSense › Privacy & messaging (with the "Privacy and cookie settings" link the pages mention). If the ads change, for example another ad network is added, update `/privacy/` and `/gdpr/` in the same commit.
+The site shows Google AdSense ads, and `/privacy/#ads` describes them. `src/lib/ads.js` holds the publisher ID and the ad unit IDs. While the publisher ID is empty, nothing loads from AdSense. With it set, every page loads the AdSense script and the footer gets a "Privacy and cookie settings" link, and `/ads.txt` names the publisher. `src/components/Ad.astro` draws one labeled ad. It's placed at the bottom of listing pages and the end of blog posts. Before the ads go live, turn on Google's consent message for the EU, UK and Switzerland in AdSense › Privacy & messaging (with the "Privacy and cookie settings" link the pages mention). If the ads change, for example another ad network is added, update `/privacy/` and `/gdpr/` in the same commit.
 
 `contactEmail` in `SITE` (`src/lib/catalog.js`) is the address people write to about their data. It appears on both pages.
 

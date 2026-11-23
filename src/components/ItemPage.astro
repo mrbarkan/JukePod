@@ -1,4 +1,5 @@
 ---
+import Ad from "./Ad.astro";
 import Base from "../layouts/Base.astro";
 import Icon from "./Icon.astro";
 import ShareRow from "./ShareRow.astro";
@@ -195,6 +196,8 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             </ul>
           </section>
         )}
+
+        <Ad slot="listing" />
       </div>
     </div>
   </main>

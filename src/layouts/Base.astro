@@ -3,6 +3,7 @@ import "../styles/site.css";
 import Mark from "../components/Mark.astro";
 import { SITE, href, absolute, fmtDate, updatedOn } from "../lib/catalog.js";
 import { providers } from "../lib/firebase-config.js";
+import { ADS, adsOn } from "../lib/ads.js";
 
 const PROVIDER_NAMES = { google: "Google", github: "GitHub" };
 
@@ -41,6 +42,12 @@ const nav = [
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;800;900&family=Silkscreen&display=swap"
     />
+    {adsOn && (
+      <>
+        <meta name="google-adsense-account" content={ADS.client} />
+        <script async is:inline src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS.client}`} crossorigin="anonymous"></script>
+      </>
+    )}
   </head>
   <body>
     <header class="site-head">
@@ -101,11 +108,22 @@ const nav = [
           <a href={href("/privacy/")}>Privacy</a>
           <a href={href("/gdpr/")}>Your data rights</a>
           <a href={SITE.repo}>Source on GitHub</a>
+          {adsOn && <button type="button" class="foot-link" id="ad-privacy">Privacy and cookie settings</button>}
         </p>
       </div>
     </footer>
     <script>
       import "../scripts/account.js";
     </script>
+    {adsOn && (
+      <script is:inline>
+        // Reopens Google's consent message so visitors can change their ad choices.
+        document.getElementById("ad-privacy").addEventListener("click", function () {
+          window.googlefc = window.googlefc || {};
+          googlefc.callbackQueue = googlefc.callbackQueue || [];
+          googlefc.callbackQueue.push({ CONSENT_DATA_READY: function () { googlefc.showRevocationMessage(); } });
+        });
+      </script>
+    )}
   </body>
 </html>

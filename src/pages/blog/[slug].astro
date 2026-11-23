@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
 import ShareRow from "../../components/ShareRow.astro";
+import Ad from "../../components/Ad.astro";
 import { posts, renderPost } from "../../lib/blog.js";
 import { fmtDate, href } from "../../lib/catalog.js";
 export function getStaticPaths() {
@@ -22,5 +23,6 @@ const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
       <Fragment set:html={html} />
     </article>
     <ShareRow url={pageUrl} title={post.title} />
+    <Ad slot="post" />
   </main>
 </Base>

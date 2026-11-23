@@ -142,6 +142,11 @@ code { font-family: var(--f-mono); font-size: 0.86em; background: var(--well); b
 .foot-inner { padding-block: 24px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ink-2); }
 .foot-links { display: flex; flex-wrap: wrap; gap: 2px 20px; }
 .foot-links a { padding: 9px 0; }
+.foot-link { padding: 9px 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; cursor: pointer; }
+
+/* A labeled AdSense unit. It sits apart from the content and never inside it. */
+.ad-slot { margin-top: 32px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--panel); }
+.ad-label { display: block; margin-bottom: 8px; font: 500 11px/1 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
 /* ---------- buttons, fields, small parts ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px; cursor: pointer; text-decoration: none; font: 600 15px/1.1 var(--f-body); color: var(--btn-ink); background: var(--btn-bg); border: 1.5px solid var(--btn-bg); border-radius: 999px; }
