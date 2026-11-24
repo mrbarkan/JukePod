@@ -73,10 +73,10 @@ export default {
     { id: "ipod-classic", name: "iPod Classic 6G / 7G", short: "Classic", years: "2007–14", model: "A1238", look: "classic" },
     { id: "ipod-mini",    name: "iPod mini 1G / 2G",    short: "mini",    years: "2004–05", model: "A1051", look: "mini" },
     { id: "ipod-nano-1g", name: "iPod nano 1st gen",    short: "nano 1G", years: "2005", model: "A1137", look: "nano" },
-    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006", model: "A1199", look: "nano" },
+    { id: "ipod-nano-2g", name: "iPod nano 2nd gen",    short: "nano 2G", years: "2006", model: "A1199", look: "nano2" },
     { id: "ipod-nano-3g", name: "iPod nano 3rd gen",    short: "nano 3G", years: "2007", model: "A1236", look: "squat" },
     { id: "ipod-nano-4g", name: "iPod nano 4th gen",    short: "nano 4G", years: "2008", model: "A1285", look: "tall" },
-    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009", model: "A1320", look: "tall" },
+    { id: "ipod-nano-5g", name: "iPod nano 5th gen",    short: "nano 5G", years: "2009", model: "A1320", look: "nano5" },
     { id: "ipod-nano-6g", name: "iPod nano 6th gen",    short: "nano 6G", years: "2010", model: "A1366", look: "clip" },
     { id: "ipod-nano-7g", name: "iPod nano 7th gen",    short: "nano 7G", years: "2012–15", model: "A1446", look: "touch" }
   ],
