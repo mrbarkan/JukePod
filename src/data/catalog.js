@@ -66,7 +66,7 @@ export default {
   // little drawing used in the "Which iPod is yours?" picker.
   devices: [
     { id: "ipod-1g2g",    name: "iPod 1st / 2nd gen",   short: "1G/2G",   years: "2001–02", model: "M8541 (1st gen), A1019 (2nd gen)", look: "full" },
-    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003", model: "A1040", look: "full" },
+    { id: "ipod-3g",      name: "iPod 3rd gen",         short: "3G",      years: "2003", model: "A1040", look: "third" },
     { id: "ipod-4g",      name: "iPod 4th gen",         short: "4G",      years: "2004", model: "A1059", look: "full" },
     { id: "ipod-photo",   name: "iPod Photo / Color",   short: "Photo",   years: "2004–05", model: "A1099", look: "full" },
     { id: "ipod-video",   name: "iPod Video 5G / 5.5G", short: "Video",   years: "2005–07", model: "A1136", look: "video" },

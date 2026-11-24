@@ -280,6 +280,9 @@ textarea.field { resize: vertical; line-height: 1.5; }
 .ipod-draw .look-mini { background: #b9dda9; } .ipod-draw .look-mini .wheel i { background: #b9dda9; }
 .ipod-draw .look-full .wheel { background: #c9cdd0; } .ipod-draw .look-full .wheel i { background: #ffffff; }
 .ipod-draw .look-nano2 { background: #9fc3e6; } .ipod-draw .look-nano2 .wheel i { background: #9fc3e6; }
+.ipod-draw .buttons { display: flex; gap: 4px; flex: none; }
+.ipod-draw .buttons span { border: 1.5px solid var(--sticker-ink); border-radius: 50%; background: #f7c3a6; }
+.ipod-draw .look-third .wheel { background: #ffffff; } .ipod-draw .look-third .wheel i { background: #ffffff; }
 .ipod-draw .look-squat { background: #c9cdd0; }
 .ipod-draw .look-tall { background: #f2b8c6; } .ipod-draw .look-tall .wheel i { background: #f2b8c6; }
 .ipod-draw .look-nano5 { background: #f5b06b; } .ipod-draw .look-nano5 .wheel i { background: #f5b06b; }
