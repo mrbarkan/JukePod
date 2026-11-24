@@ -149,7 +149,9 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
                 <li><label><input type="checkbox" data-step={i} /><b aria-hidden="true">{i + 1}</b><span set:html={fmt(s)} /></label></li>
               ))}
             </ol>
-            {parent && !isApp && (
+            {item.wayBack ? (
+              <p class="tip"><strong>Keep a way back.</strong> {item.wayBack}</p>
+            ) : parent && !isApp && (
               <p class="tip"><strong>Keep a way back.</strong> Before you switch, copy the iPod’s <code>.rockbox</code> folder to your computer. To return, delete the folder on the iPod and copy yours back.</p>
             )}
           </section>

@@ -86,7 +86,7 @@ function inRockboxFamily(item) {
 export const themeTargets = [
   ...apps.filter((a) => a.id === "cratedigger").map((a) => ({ id: a.id, name: a.name, kind: "app", path: a.path, devices: [] })),
   ...firmwares
-    .filter(inRockboxFamily)
+    .filter((f) => inRockboxFamily(f) && f.rockboxThemes !== false)
     .map((f) => ({ id: f.id, name: f.name, kind: "firmware", path: f.path, devices: [...f.devices, ...(f.partial || [])] })),
 ];
 

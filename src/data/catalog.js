@@ -24,6 +24,10 @@
  *   devices      device ids it fully supports; `partial` for ones with gaps
  *   requires     what must be in place first (optional)
  *   install      ordered steps. Wrap file names and paths in `backticks`.
+ *   wayBack      how to get back to what was there before, when it isn't
+ *                "copy the .rockbox folder back" (optional)
+ *   rockboxThemes  false for a Rockbox fork with its own interface that
+ *                can't load Rockbox themes; it is then left off the themes pages
  *   files        file names per device: { label, file, device }. `device` is
  *                a device id; with it, the listing offers that file to
  *                people who picked that iPod.
@@ -36,14 +40,15 @@
  * November 2026. Check versions and dates before you launch.
  */
 export default {
-  updatedOn: "2026-11-18",
+  updatedOn: "2026-11-24",
 
   latest: {
-    date: "2026-11-18",
+    date: "2026-11-24",
     lines: [
+      { label: "Added firmware", ids: ["rockwheel", "prokbox5g"] },
       { label: "Added library apps", ids: ["iopenpod", "stonepod", "swinsian", "foo-dop", "copytrans-manager", "musicbee", "rhythmbox", "finder-itunes", "cratedigger"] },
       { label: "Watching", ids: ["helikon-os"], suffix: "on the watch list, with its launcher and music player beta due this month" },
-      { label: "Added firmware", ids: ["podbox", "rodbox", "skvm-podbox", "rockbox", "rockpod", "rockpod-apple2026", "rpod", "ipod-sun", "ipodlinux"] }
+      { label: "Added firmware", ids: ["podbox", "rodbox", "rockbox", "rockpod", "rockpod-apple2026", "rpod", "ipod-sun", "ipodlinux"] }
     ]
   },
 
@@ -342,47 +347,101 @@ export default {
     },
 
     {
-      id: "skvm-podbox",
-      menu: ["Cover Flow", "Database", "Now Playing", "Settings"],
-      name: "SKVM PodBox",
-      maker: "JL2030",
-      categories: ["players", "audio", "interfaces"],
+      id: "rockwheel",
+      name: "RockWheel",
+      maker: "ssarkisy",
+      categories: ["players", "interfaces", "games"],
       status: "beta",
-      version: "Source only",
-      updated: null,
-      github: "JL2030/skvm-podbox",
-      stars: 0,
-      license: "GPL-2.0",
+      version: "2.0.1",
+      updated: "2026-11-18",
+      github: "ssarkisy/RockWheel",
+      stars: null,
+      license: "GPL-2.0-or-later",
       basedOn: "rockbox",
-      blurb: "A Rockbox build for the Classic and Video with bit-perfect digital audio to MFi accessories, a rewritten Cover Flow and colors drawn from album art.",
+      rockboxThemes: false,
+      blurb: "Rockbox rebuilt to feel like Apple\u2019s iPod on the Video and Photo, and you keep syncing with Finder or iTunes. Adds Cover Flow, lyrics that follow the song, dark themes and FLAC.",
       more: [
-        "Despite the name, its feature list matches Rockpod\u2019s more than PodBox\u2019s: MFi digital audio, the seven-slide Cover Flow, dynamic colors and SSD-aware power management. Digital audio keeps the EQ, crossfeed and replay gain, and was tested mainly with the OPPO HA-2SE. It\u2019s limited to 16-bit PCM at 44.1 or 48 kHz.",
-        "The project calls both ports stable, but it hasn\u2019t published a release yet, so for now you build it from source. MFi audio on the iPod Video, and generic USB DACs through host mode, are on its roadmap."
+        "RockWheel keeps Rockbox\u2019s formats and EQ but swaps its interface for Apple-style menus and four themes of its own (Classic, Modern, Neo and Dieter, each with a dark version), so Rockbox themes don\u2019t apply. Music synced from Finder or iTunes and music you copy yourself share one library, and ratings and play counts for synced songs go back to your computer.",
+        "A free app for Mac and Windows installs it and keeps it up to date, and can send your plays to Last.fm. The iPod Video is the main target; the iPod Photo and color 4th gen are in beta. It needs a FAT32 iPod: converting a Mac-formatted one erases it. It doesn\u2019t play videos, but Apple\u2019s firmware stays on the iPod for that."
       ],
       features: [
-        "Bit-perfect MFi digital audio over USB (Classic)",
-        "Cover Flow with seven slides and a crossfade",
-        "Album-art colors with contrast enforcement, on by default",
-        "HDD and SSD detection with a lighter sleep for flash",
-        "Codec power-down and charger detection",
-        "Bundled adwaitapod and Themify 2 themes"
+        "Sync with Finder or iTunes, with ratings and play counts going back",
+        "Cover Flow across synced and copied albums",
+        "Live Lyrics, Up Next, Play Next and Play Last",
+        "Podcast speeds, audiobook resume and chapters",
+        "Four themes with dark versions, and Night Mode",
+        "Menus in more than forty languages",
+        "Installer app for Mac and Windows, with Last.fm scrobbling"
       ],
-      devices: ["ipod-classic", "ipod-video"],
-      partial: [],
-      requires: "Rockbox bootloader already installed",
+      devices: ["ipod-video"],
+      partial: ["ipod-photo"],
+      requires: "A FAT32-formatted iPod, and Apple\u2019s iPod software 1.3 (Video) or 1.2.1 (Photo)",
       install: [
-        "Install the Rockbox bootloader if you haven\u2019t, using Rockbox Utility.",
-        "Build it from source, or download the zip for your model once a release appears.",
-        "Connect the iPod in disk mode and extract the zip to its root. It creates or updates `.rockbox`.",
-        "Eject and reboot. The album art cache rebuilds on first launch."
+        "Sync once to save your ratings and play counts, and back up anything you copied by hand.",
+        "Download the RockWheel app for Mac or Windows and choose Install. It backs up what it replaces, and keeps an existing Rockbox folder as `.rockbox-old-` plus the date.",
+        "On a Mac-formatted iPod, the app can convert it to FAT32 after you type `ERASE`. That erases the iPod.",
+        "When the app has ejected the iPod, unplug it, connect it again and Sync in Finder or iTunes. Don\u2019t choose Restore: it removes RockWheel.",
+        "To update later, connect the iPod and choose Update in the app."
       ],
+      wayBack: "Apple\u2019s firmware stays on the iPod: slide Hold on while it starts to use it. To remove RockWheel for good, use the command in the advanced guide. Restoring in Finder or iTunes removes it too, but erases the iPod.",
       files: [
-        { label: "iPod Classic 6G / 7G", file: "skvm-podbox-ipod6g.zip", device: "ipod-classic" },
-        { label: "iPod Video 5G / 5.5G", file: "skvm-podbox-ipodvideo-5g.zip", device: "ipod-video" }
+        { label: "Mac app (macOS 11 or later)", file: "RockWheel-mac.dmg" },
+        { label: "Windows app (10 or 11, 64-bit)", file: "RockWheel-windows-setup.exe" }
       ],
       links: [
-        { label: "Source", url: "https://github.com/JL2030/skvm-podbox", icon: "source" },
-        { label: "Releases", url: "https://github.com/JL2030/skvm-podbox/releases", icon: "release" }
+        { label: "Download", url: "https://github.com/ssarkisy/RockWheel/releases/latest", icon: "download" },
+        { label: "What\u2019s new in 2.0", url: "https://github.com/ssarkisy/RockWheel/releases/tag/v2.0.0", icon: "release" },
+        { label: "Advanced guide", url: "https://github.com/ssarkisy/RockWheel/blob/main/docs/advanced.md", icon: "docs" },
+        { label: "Source", url: "https://github.com/ssarkisy/RockWheel", icon: "source" },
+        { label: "Installer source", url: "https://github.com/ssarkisy/RockWheel-Installer", icon: "source" }
+      ]
+    },
+
+    {
+      id: "prokbox5g",
+      name: "ProkBox5g",
+      maker: "prokopto-dev",
+      categories: ["players", "interfaces"],
+      status: "experimental",
+      version: "0.9.0",
+      updated: "2026-11-17",
+      github: "prokbox/prokbox5g",
+      stars: null,
+      license: "GPL-2.0-or-later",
+      basedOn: "rockbox",
+      rockboxThemes: false,
+      blurb: "A Rockbox fork for the iPod Video only, styled after the iPod classic\u2019s last software. Drag music on and off with no sync app, with audiobooks, podcasts and video.",
+      more: [
+        "ProkBox5g swaps Rockbox\u2019s hundreds of options for a short settings list and its own interface, so Rockbox themes don\u2019t apply. It plays almost every format through a 24-bit output, keeps your place in every audiobook with a choice of speed, and plays H.264 video once converted with the free converter that comes with it.",
+        "0.9.0 is a pre-release. It\u2019s in daily use on one modded player (flash, 64 MB, 3,000 mAh battery, USB-C), and hard-drive and 32 MB players should work but haven\u2019t been tested. One zip fits every iPod Video, and the first start asks which battery is fitted. The project says it\u2019s developed with the help of AI coding assistants, with a person reviewing and testing every change."
+      ],
+      features: [
+        "Drag-and-drop music over USB, no sync app",
+        "Reads music a computer sync already put on the iPod",
+        "Audiobooks with chapters, saved places and speeds",
+        "H.264 video at 320 \u00d7 240, with a converter",
+        "Sound Check, 22 EQ presets and 24-bit output",
+        "Menus in English, German, Dutch and Japanese"
+      ],
+      devices: ["ipod-video"],
+      partial: [],
+      requires: "A computer to run `ipodpatcher` once, from the release",
+      install: [
+        "Back up your music. Only one kind of modded player has been tested so far.",
+        "Download `ProkBox5g-0.9.0.zip` and check it against the release\u2019s `SHA256SUMS`.",
+        "Follow the project\u2019s Getting started guide, which installs it with the bundled `ipodpatcher`. It takes about 20 minutes, once.",
+        "On first start, tell it which battery is fitted. Later updates are a matter of copying files."
+      ],
+      wayBack: "Apple\u2019s firmware stays on the iPod: slide Hold on and restart, or hold Menu as it starts. The project\u2019s Going back guide covers every way back, up to a full restore.",
+      files: [
+        { label: "Every iPod Video", file: "ProkBox5g-0.9.0.zip", device: "ipod-video" }
+      ],
+      links: [
+        { label: "Download", url: "https://github.com/prokbox/prokbox5g/releases", icon: "download" },
+        { label: "Getting started", url: "https://prokbox.github.io/prokbox5g/guide/getting-started/", icon: "install" },
+        { label: "Features", url: "https://prokbox.github.io/prokbox5g/features/", icon: "info" },
+        { label: "Going back to Apple\u2019s firmware", url: "https://prokbox.github.io/prokbox5g/guide/going-back/", icon: "docs" },
+        { label: "Source", url: "https://github.com/prokbox/prokbox5g", icon: "source" }
       ]
     },
 

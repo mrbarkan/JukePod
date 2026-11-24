@@ -21,11 +21,16 @@ From Rockbox you can move to a fork by unzipping it over the top, with no reform
 - **[Apple2026 UI](/firmware/rockpod-apple2026/)** if you want a modern Apple-style look and don't mind an experimental beta. It's for the Classic, with partial support for the Video.
 - **[RPod](/firmware/rpod/)** for a modernized Rockbox with its own theme on the Classic.
 
-[RodBox](/firmware/rodbox/) and [SKVM PodBox](/firmware/skvm-podbox/) are for people comfortable building from source. Neither has a download yet.
+[RodBox](/firmware/rodbox/) is for people comfortable building from source. It has no download yet.
+
+Two newer projects for the iPod Video install their own way instead of over Rockbox, and replace its interface with one modeled on Apple's:
+
+- **[RockWheel](/firmware/rockwheel/)** if you want to keep syncing with Finder or iTunes. A Mac and Windows app installs and updates it, and it adds Cover Flow, lyrics and dark themes. The iPod Photo is in beta.
+- **[ProkBox5g](/firmware/prokbox5g/)** if you'd rather drag music on and off with no sync app. It also plays audiobooks and converted video. It's an early pre-release, tested on one modded iPod so far.
 
 ## iPod 3rd gen, 4th gen, Photo, mini, nano 1st and 2nd gen
 
-[Rockbox](/firmware/rockbox/) is the one to install. It supports all of these, and it's stable.
+[Rockbox](/firmware/rockbox/) is the one to install. It supports all of these, and it's stable. On the iPod Photo, [RockWheel](/firmware/rockwheel/) is a newer option in beta.
 
 [iPodLinux](/firmware/ipodlinux/) also ran on several of them, but it's no longer developed. It's listed for collectors.
 

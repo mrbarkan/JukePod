@@ -171,5 +171,79 @@
       "h": 920,
       "pixel": false
     }
+  ],
+  "rockwheel": [
+    {
+      "src": "screenshots/rockwheel/1.png",
+      "alt": "Main menu, with the playing album beside it",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockwheel/2.png",
+      "alt": "Cover Flow",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockwheel/3.png",
+      "alt": "Now Playing",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockwheel/4.png",
+      "alt": "Live Lyrics, with the line being sung in bold",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockwheel/5.png",
+      "alt": "Now Playing in the Dieter theme",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/rockwheel/6.png",
+      "alt": "Albums in Classic dark",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    }
+  ],
+  "prokbox5g": [
+    {
+      "src": "screenshots/prokbox5g/1.png",
+      "alt": "Main menu, with album art beside it",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/prokbox5g/2.png",
+      "alt": "Now Playing",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/prokbox5g/3.png",
+      "alt": "Albums, each with its cover",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    },
+    {
+      "src": "screenshots/prokbox5g/4.png",
+      "alt": "Videos, with posters from your films",
+      "w": 320,
+      "h": 240,
+      "pixel": true
+    }
   ]
 }
