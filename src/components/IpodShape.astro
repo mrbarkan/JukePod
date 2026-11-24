@@ -1,15 +1,19 @@
 ---
 // A small drawn iPod for the picker. `look` comes from the device list.
+// Nanos and the mini are drawn from the real dimensions at about 0.8px per mm,
+// so a short square 3rd gen sits next to a tall thin 4th gen the way it does in a drawer.
 const SHAPES = {
   classic: { w: 48, h: 80, r: 8, pad: 6, gap: 7, screen: [34, 26], wheel: 30 },
   video: { w: 48, h: 80, r: 8, pad: 6, gap: 7, screen: [36, 28], wheel: 28 },
-  mini: { w: 38, h: 68, r: 7, pad: 6, gap: 8, screen: [26, 16], wheel: 26 },
-  nano: { w: 30, h: 70, r: 6, pad: 6, gap: 9, screen: [20, 16], wheel: 20 },
+  mini: { w: 41, h: 73, r: 8, pad: 7, gap: 10, screen: [27, 19], wheel: 28 },
+  nano: { w: 31, h: 70, r: 5, pad: 6, gap: 11, screen: [22, 17], wheel: 25 },
+  nano2: { w: 31, h: 70, r: 5, pad: 6, gap: 11, screen: [22, 17], wheel: 25 },
   full: { w: 50, h: 82, r: 9, pad: 7, gap: 9, screen: [34, 24], wheel: 30 },
-  squat: { w: 52, h: 54, r: 8, pad: 5, gap: 4, screen: [40, 24], wheel: 17 },
-  tall: { w: 28, h: 76, r: 10, pad: 6, gap: 10, screen: [18, 24], wheel: 18 },
-  clip: { w: 36, h: 36, r: 8, pad: 4, gap: 0, screen: [26, 26], wheel: 0 },
-  touch: { w: 32, h: 74, r: 7, pad: 5, gap: 5, screen: [22, 50], wheel: 0, home: 8 },
+  squat: { w: 42, h: 57, r: 7, pad: 4, gap: 3, screen: [32, 23], wheel: 24 },
+  tall: { w: 30, h: 71, r: 12, pad: 5, gap: 5, screen: [21, 29], wheel: 23 },
+  nano5: { w: 30, h: 71, r: 6, pad: 5, gap: 3, screen: [22, 35], wheel: 21 },
+  clip: { w: 34, h: 37, r: 5, pad: 5, gap: 0, screen: [26, 26], wheel: 0 },
+  touch: { w: 32, h: 62, r: 6, pad: 6, gap: 3, screen: [25, 44], wheel: 0, home: 6 },
 };
 const { look = "classic", scale = 1 } = Astro.props;
 const s = SHAPES[look] || SHAPES.classic;
