@@ -193,6 +193,37 @@ test("reports: one per person, listing and iPod", async () => {
   assert.equal(await get(null, `reports/${ana.uid}_rockpod_ipod-classic`), 200);
 });
 
+test("ipods: each person keeps a private list, two of a model allowed", async () => {
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/pclassic1`, { model: "ipod-classic", label: "Black 160GB" }), 200);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/pclassic2`, { model: "ipod-classic" }), 200);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/pnanoaaa1`, { model: "ipod-nano-2g" }), 200);
+  assert.equal(await put(bo, `members/${ana.uid}/ipods/pboooooo1`, { model: "ipod-classic" }), 403);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/ipod-classic`, { model: "ipod-classic" }), 403);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/pbadmodel`, { model: "Not A Slug" }), 403);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/plongname`, { model: "ipod-classic", label: "x".repeat(41) }), 403);
+  assert.equal(await put(ana, `members/${ana.uid}/ipods/pextrakey`, { model: "ipod-classic", serial: "123" }), 403);
+  assert.equal(await get(ana, `members/${ana.uid}/ipods/pclassic1`), 200);
+  assert.equal(await get(bo, `members/${ana.uid}/ipods/pclassic1`), 403);
+  assert.equal(await get(null, `members/${ana.uid}/ipods/pclassic1`), 403);
+});
+
+test("reports: tagged with one of the sender's own iPods of that model", async () => {
+  const good = { uid: ana.uid, itemId: "rockpod", deviceId: "ipod-classic", ipodId: "pclassic1", works: true };
+  assert.equal(await put(ana, `reports/${ana.uid}_rockpod_pclassic1`, good), 200);
+  // The second Classic gets its own report.
+  assert.equal(await put(ana, `reports/${ana.uid}_rockpod_pclassic2`, { ...good, ipodId: "pclassic2", works: false }), 200);
+  // The ID must name the iPod, not the model.
+  assert.equal(await put(ana, `reports/${ana.uid}_rockpod_ipod-classic`, good), 403);
+  // The model must be the one that iPod is listed as.
+  assert.equal(await put(ana, `reports/${ana.uid}_rockpod_pnanoaaa1`, { ...good, ipodId: "pnanoaaa1" }), 403);
+  // An iPod that isn't on the list, or is someone else's.
+  assert.equal(await put(ana, `reports/${ana.uid}_rockpod_pmissing1`, { ...good, ipodId: "pmissing1" }), 403);
+  assert.equal(await put(bo, `reports/${bo.uid}_rockpod_pclassic1`, { ...good, uid: bo.uid }), 403);
+  assert.equal(await get(null, `reports/${ana.uid}_rockpod_pclassic1`), 200);
+  // The older report for the bare model can be removed by its sender.
+  assert.equal(await del(ana, `reports/${ana.uid}_rockpod_ipod-classic`), 200);
+});
+
 test("flags: members create them; only admins and the sender read or remove them", async () => {
   assert.equal(await put(bo, "flags/f1", { uid: bo.uid, themeId: "t1", reason: "Contains Apple fonts" }), 200);
   assert.equal(await put(null, "flags/f2", { uid: "x", themeId: "t1", reason: "spam" }), 403);

@@ -443,6 +443,19 @@ textarea.field { resize: vertical; line-height: 1.5; }
 .report-buttons .yes { color: var(--ripe-ink); background: var(--ripe-bg); border-color: var(--ripe-bg); }
 .report-buttons .no { color: var(--unripe-ink); background: var(--unripe-bg); border-color: var(--unripe-bg); }
 .report-buttons [aria-pressed="true"] { border-color: var(--ink); }
+.report-buttons [aria-pressed="true"]::before { content: "✓ "; }
+.report-for { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.report-for .more-link { padding: 2px 0; font-size: 14px; }
+.report-ipods { display: flex; flex-wrap: wrap; gap: 6px; }
+.report-ipod { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--well); cursor: pointer; font-size: 14.5px; }
+.report-ipod:hover { border-color: var(--line-strong); }
+.report-ipod:has(input:checked) { border-color: var(--ink); background: var(--panel); }
+.report-ipod input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); flex: none; }
+.report-ipod span { font: 400 12px/1 var(--f-lcd); color: var(--ink-2); }
+.report-add { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 16px; background: var(--accent-tint); }
+.report-add p { font-size: 15px; }
+.report-add .select, .report-add .field { width: 100%; }
+.report-add .btn { align-self: flex-start; }
 
 /* ---------- hardware mods ---------- */
 .mod-list { display: flex; flex-direction: column; gap: 16px; }
@@ -655,6 +668,20 @@ textarea.field { resize: vertical; line-height: 1.5; }
 .acct-danger #acct-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .acct-danger #acct-confirm p { flex-basis: 100%; color: var(--ink); }
 .acct-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ipod-shelf { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.ipod-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.ipod-row:last-child { border-bottom: 1px solid var(--line); }
+.ipod-look { width: 40px; display: flex; justify-content: center; flex: none; }
+.ipod-look .ipod-draw { height: auto !important; }
+.ipod-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ipod-name strong { font: 800 18px/1.25 var(--f-display); overflow-wrap: anywhere; }
+.ipod-name span { color: var(--ink-2); font-size: 14px; }
+.ipod-row .btn { flex: none; }
+.ipod-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.ipod-add label { display: flex; flex-direction: column; gap: 6px; flex: 1 1 220px; min-width: 0; }
+.ipod-add label > span:first-child { font-weight: 600; font-size: 14px; }
+.ipod-add em { font-style: normal; font-weight: 400; color: var(--ink-2); }
+.ipod-add .select, .ipod-add .field { width: 100%; }
 
 /* ---------- blog and prose ---------- */
 .post-feature { display: flex; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-big); overflow: hidden; text-decoration: none; }

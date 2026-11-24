@@ -67,8 +67,9 @@ async function myFlags(uid) {
 export async function exportMyData() {
   const user = me();
   const { myThemes } = await import("./themes-write.js");
-  const [profile, member, newsletter, themes, flags, reports] = await Promise.all([
-    read("users", user.uid), loadMember(), loadSubscription(), myThemes(), myFlags(user.uid), myReports(user.uid),
+  const { loadMyIpods } = await import("./my-ipods.js");
+  const [profile, member, newsletter, ipods, themes, flags, reports] = await Promise.all([
+    read("users", user.uid), loadMember(), loadSubscription(), loadMyIpods(user.uid), myThemes(), myFlags(user.uid), myReports(user.uid),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -83,6 +84,7 @@ export async function exportMyData() {
     },
     publicProfile: profile,
     settings: member,
+    yourIpods: ipods,
     newsletter,
     themes,
     problemsYouReported: flags,
@@ -92,8 +94,8 @@ export async function exportMyData() {
 
 /**
  * Deletes the account and everything attached to it: shared themes and
- * their files, reports sent, the newsletter record, settings, the public
- * profile, and finally the sign-in itself.
+ * their files, reports sent, the iPods listed, the newsletter record,
+ * settings, the public profile, and finally the sign-in itself.
  */
 export async function deleteEverything() {
   const user = me();
@@ -106,6 +108,8 @@ export async function deleteEverything() {
   for (const theme of await myThemes()) await deleteTheme(theme);
   for (const flag of await myFlags(user.uid)) await deleteDoc(doc(db, "flags", flag.id));
   for (const report of await myReports(user.uid)) await deleteDoc(doc(db, "reports", report.id));
+  const { loadMyIpods, removeIpod } = await import("./my-ipods.js");
+  for (const ipod of await loadMyIpods(user.uid)) await removeIpod(ipod.id);
   await Promise.all(["subscribers", "members", "users"].map((path) => deleteDoc(doc(db, path, user.uid))));
   await deleteUser(user);
 }
