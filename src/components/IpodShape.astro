@@ -9,6 +9,8 @@ const SHAPES = {
   nano: { w: 31, h: 70, r: 5, pad: 6, gap: 11, screen: [22, 17], wheel: 25 },
   nano2: { w: 31, h: 70, r: 5, pad: 6, gap: 11, screen: [22, 17], wheel: 25 },
   full: { w: 50, h: 82, r: 9, pad: 7, gap: 9, screen: [34, 24], wheel: 30 },
+  // 3rd gen: touch wheel with the row of four backlit buttons above it.
+  third: { w: 49, h: 83, r: 8, pad: 7, gap: 5, screen: [34, 25], wheel: 31, buttons: 4, button: 7 },
   squat: { w: 42, h: 57, r: 7, pad: 4, gap: 3, screen: [32, 23], wheel: 24 },
   tall: { w: 30, h: 71, r: 12, pad: 5, gap: 5, screen: [21, 29], wheel: 23 },
   nano5: { w: 30, h: 71, r: 6, pad: 5, gap: 3, screen: [22, 35], wheel: 21 },
@@ -22,6 +24,7 @@ const px = (n) => `${Math.round(n * scale * 10) / 10}px`;
 <span class="ipod-draw" aria-hidden="true" style={`height: ${px(84)}`}>
   <span class={`body look-${look}`} style={`width: ${px(s.w)}; height: ${px(s.h)}; border-radius: ${px(s.r)}; padding: ${px(s.pad)} ${px(s.pad)} 0; gap: ${px(s.gap)}`}>
     <span class="screen" style={`width: ${px(s.screen[0])}; height: ${px(s.screen[1])}`}></span>
+    {s.buttons && <span class="buttons">{Array.from({ length: s.buttons }, () => <span style={`width: ${px(s.button)}; height: ${px(s.button)}`}></span>)}</span>}
     {s.wheel > 0 && <span class="wheel" style={`width: ${px(s.wheel)}; height: ${px(s.wheel)}`}><i></i></span>}
     {s.home && <span class="home" style={`width: ${px(s.home)}; height: ${px(s.home)}`}></span>}
   </span>
