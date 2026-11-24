@@ -55,7 +55,7 @@ The home page opens with "Which iPod is yours?". Picking one is remembered in th
 - Give a `files` entry a `device` id and the listing offers that file to people with that iPod.
 - The header search box searches firmware, apps, mods, guides and blog posts.
 
-"Does it work on yours?" on each listing counts reports per iPod model. Anyone can read the totals; sending one needs sign-in and a chosen iPod. `src/lib/reports.js` holds it.
+"Does it work on yours?" on each listing counts reports per iPod model. Anyone can read the totals; sending one needs sign-in and an iPod from the person's list. Each signed-in person lists the iPods they own on the account page (several models, or two of the same), and every report names which of those iPods it was for, so two Classics count as two reports. Reports sent before the list existed name only the model and still count; reporting again for a listed iPod of that model replaces them. `src/lib/reports.js` and `src/lib/my-ipods.js` hold it.
 
 ## Add screenshots
 

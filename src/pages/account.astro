@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
-import { href } from "../lib/catalog.js";
+import IpodShape from "../components/IpodShape.astro";
+import { href, devices } from "../lib/catalog.js";
 ---
 <Base title="Your account" description="Your Quitanda profile.">
   <main class="wrap page">
@@ -56,6 +57,32 @@ import { href } from "../lib/catalog.js";
             </form>
           </section>
 
+          <section class="acct-card" id="ipods">
+            <h2>Your iPods <span class="badge-count" id="ipods-count">0</span></h2>
+            <p>Add every iPod you own, even two of the same model. When you say whether something works, you pick which one you tried it on, so the count lands on the right model. Only you see this list and the nicknames.</p>
+            <ul class="ipod-shelf" id="ipod-shelf"><li class="aside-note">Loading…</li></ul>
+            <form id="ipod-add" class="ipod-add" novalidate>
+              <label>
+                <span>Model</span>
+                <span class="select">
+                  <select class="field" id="ipod-model" required>
+                    {devices.map((d) => <option value={d.id}>{d.name} ({d.years})</option>)}
+                  </select>
+                  <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+                </span>
+              </label>
+              <label>
+                <span>Nickname <em>(optional)</em></span>
+                <input class="field" id="ipod-label" maxlength="40" placeholder="Black 256GB, iFlash" />
+              </label>
+              <button type="submit" class="btn">Add iPod</button>
+            </form>
+            <p id="ipod-status" class="aside-note" role="status"></p>
+            <template id="ipod-looks">
+              {devices.map((d) => <span data-model={d.id}><IpodShape look={d.look} scale={0.6} /></span>)}
+            </template>
+          </section>
+
           <section class="acct-themes">
             <h2>Your themes</h2>
             <div id="acct-theme-list" class="acct-theme-list"><p class="aside-note">Loading…</p></div>
@@ -108,7 +135,7 @@ import { href } from "../lib/catalog.js";
 
           <section class="acct-danger">
             <h2>Delete your account</h2>
-            <p>This removes your profile, your settings, your newsletter record, the themes you shared and your sign-in. It can't be undone.</p>
+            <p>This removes your profile, your settings, your iPods, your newsletter record, the themes you shared, the reports you sent and your sign-in. It can't be undone.</p>
             <div class="acct-row">
               <button type="button" class="btn btn-danger" id="acct-delete">Delete my account</button>
               <button type="button" class="btn btn-soft" id="acct-signout">Sign out</button>
@@ -148,6 +175,7 @@ import { href } from "../lib/catalog.js";
     $("acct-admin").hidden = !(await isAdmin(user.uid));
 
     setUpMember(user, await isAdmin(user.uid));
+    setUpIpods();
 
     const { myThemes } = await import("../lib/themes-write.js");
     const themes = await myThemes().catch(() => []);
@@ -246,6 +274,72 @@ import { href } from "../lib/catalog.js";
       }
     })
   );
+
+  // Your iPods: the list reports are tagged with.
+  const DEVICE_NAMES = Object.fromEntries([...$("ipod-model").options].map((o) => [o.value, o.textContent.replace(/ \(.*\)$/, "")]));
+  const myIpods = () => import("../lib/my-ipods.js");
+  let ipods = [];
+
+  function drawIpods() {
+    $("ipods-count").textContent = ipods.length;
+    const look = (model) => $("ipod-looks").content.querySelector(`[data-model="${model}"]`)?.cloneNode(true);
+    $("ipod-shelf").replaceChildren(
+      ...(ipods.length
+        ? ipods.map((p) =>
+            h("li", { class: "ipod-row" },
+              h("span", { class: "ipod-look" }, look(p.model)),
+              h("span", { class: "ipod-name" },
+                h("strong", {}, p.label || DEVICE_NAMES[p.model] || p.model),
+                p.label ? h("span", {}, DEVICE_NAMES[p.model] || p.model) : null
+              ),
+              h("button", { type: "button", class: "btn btn-soft", "data-remove": p.id, "aria-label": `Remove ${p.label || DEVICE_NAMES[p.model]}` }, "Remove")
+            )
+          )
+        : [h("li", { class: "aside-note" }, "No iPods yet. Add the ones you own, and you can say whether firmware and apps work on them.")])
+    );
+  }
+
+  async function setUpIpods() {
+    try {
+      const picked = localStorage.getItem("cwf-device");
+      if (DEVICE_NAMES[picked]) $("ipod-model").value = picked;
+    } catch { /* private window */ }
+    try {
+      ipods = await (await myIpods()).loadMyIpods();
+    } catch {
+      $("ipod-status").textContent = "Couldn’t load your iPods. Reload to try again.";
+    }
+    drawIpods();
+  }
+
+  $("ipod-add").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const m = await myIpods();
+    if (ipods.length >= m.MAX_IPODS) return ($("ipod-status").textContent = `That’s ${m.MAX_IPODS} iPods, the most a list can hold.`);
+    $("ipod-status").textContent = "Adding…";
+    try {
+      ipods.push(await m.addIpod($("ipod-model").value, $("ipod-label").value));
+      $("ipod-label").value = "";
+      $("ipod-status").textContent = "Added";
+      drawIpods();
+    } catch {
+      $("ipod-status").textContent = "Couldn’t add it. Try again in a moment.";
+    }
+  });
+
+  $("ipod-shelf").addEventListener("click", async (e) => {
+    const id = e.target.closest("[data-remove]")?.dataset.remove;
+    if (!id) return;
+    $("ipod-status").textContent = "Removing…";
+    try {
+      await (await myIpods()).removeIpod(id);
+      ipods = ipods.filter((p) => p.id !== id);
+      $("ipod-status").textContent = "Removed. Reports you sent for it still count.";
+      drawIpods();
+    } catch {
+      $("ipod-status").textContent = "Couldn’t remove it. Try again in a moment.";
+    }
+  });
 
   async function newsletter(action) {
     const error = $("news-error");

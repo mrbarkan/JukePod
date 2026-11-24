@@ -3,11 +3,14 @@ rules_version = '2';
 // Quitanda's database rules.
 //   users        public profiles, written only by their owner
 //   members      private settings (iPod user or maker), seen only by their owner
+//     /ipods     the iPods they own, one document each (a model and a nickname),
+//                so reports can say which of their iPods they were for
 //   subscribers  newsletter opt-ins: a name and the email the person signed in with
 //   admins   one document per admin, named by user ID; created in the console only
 //   themes   shared themes; hidden until an admin approves them. worksOn lists the
 //            firmware they run on; remixOf links the themes they remix
-//   reports  "works on my iPod" reports, one per person, listing and iPod
+//   reports  "works on my iPod" reports, one per person, listing and iPod they own.
+//            Older reports name only the model and are still counted
 //   flags    reports of a problem with a theme; read by admins and their sender
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,6 +25,10 @@ service cloud.firestore {
     }
     function isSlug(value) {
       return value is string && value.size() <= 60 && value.matches('^[a-z0-9-]+$');
+    }
+    // "p" and eight letters or digits: never the same as a model ID.
+    function isIpodId(value) {
+      return value is string && value.matches('^p[a-z0-9]{8}$');
     }
     function optionalText(data, field, max) {
       return !(field in data) || (data[field] is string && data[field].size() <= max);
@@ -63,6 +70,16 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['role', 'onboardedAt', 'updatedAt'])
         && request.resource.data.role in ['user', 'creator'];
       allow delete: if isOwner(uid);
+
+      // Each iPod gets its own ID, so two of the same model stay apart.
+      match /ipods/{ipodId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && isIpodId(ipodId)
+          && request.resource.data.keys().hasOnly(['model', 'label', 'addedAt'])
+          && isSlug(request.resource.data.model)
+          && optionalText(request.resource.data, 'label', 40);
+      }
     }
 
     // The newsletter list. A record exists only while someone is opted in:
@@ -153,17 +170,24 @@ service cloud.firestore {
       }
     }
 
+    // A report names one of the sender's own iPods, and its model must match.
+    // Reports sent before iPods were listed name only the model; those can
+    // still be replaced the old way by pages loaded before this change.
     match /reports/{reportId} {
       allow read: if true;
       allow create, update: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && isSlug(request.resource.data.itemId)
         && isSlug(request.resource.data.deviceId)
-        && reportId == request.auth.uid + '_' + request.resource.data.itemId + '_' + request.resource.data.deviceId
-        && request.resource.data.keys().hasOnly(['uid', 'itemId', 'deviceId', 'works', 'version', 'note', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'itemId', 'deviceId', 'ipodId', 'works', 'version', 'note', 'updatedAt'])
         && request.resource.data.works is bool
         && optionalText(request.resource.data, 'version', 40)
-        && optionalText(request.resource.data, 'note', 280);
+        && optionalText(request.resource.data, 'note', 280)
+        && (('ipodId' in request.resource.data)
+          ? (isIpodId(request.resource.data.ipodId)
+            && reportId == request.auth.uid + '_' + request.resource.data.itemId + '_' + request.resource.data.ipodId
+            && get(/databases/$(database)/documents/members/$(request.auth.uid)/ipods/$(request.resource.data.ipodId)).data.model == request.resource.data.deviceId)
+          : reportId == request.auth.uid + '_' + request.resource.data.itemId + '_' + request.resource.data.deviceId);
       allow delete: if isOwner(resource.data.uid) || isAdmin();
     }
 
