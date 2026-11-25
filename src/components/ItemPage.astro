@@ -53,7 +53,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
       <a class="back" href={href(isApp ? "/apps/" : "/")}><Icon name="back" />{isApp ? "All library apps" : "All firmware"}</a>
       <div class="item-top">
         <header class="item-head">
-          <p class="kicker">{[item.maker, ...kinds].join(" · ")}</p>
+          <p class="kicker">{[item.maker, item.familyTag, ...kinds].filter(Boolean).join(" · ")}</p>
           <div class="item-title">
             <h1>{item.name}</h1>
             <Sticker version={item.version} large />
@@ -154,7 +154,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
               ))}
             </ol>
             {item.wayBack ? (
-              <p class="tip"><strong>Keep a way back.</strong> {item.wayBack}</p>
+              <p class="tip"><strong>Keep a way back.</strong> <span set:html={fmt(item.wayBack)} /></p>
             ) : parent && !isApp && (
               <p class="tip"><strong>Keep a way back.</strong> Before you switch, copy the iPod’s <code>.rockbox</code> folder to your computer. To return, delete the folder on the iPod and copy yours back.</p>
             )}
