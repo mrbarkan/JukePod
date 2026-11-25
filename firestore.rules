@@ -249,20 +249,23 @@ service cloud.firestore {
     }
 
     // Published suggestions, public by design: the nightly build reads them
-    // without signing in. Named after the suggestion they came from. Admins
-    // publish anyone's; trusted people publish their own.
+    // without signing in. Named after the suggestion they came from, and
+    // holding no account ID: the suggestion links them to their sender.
+    // Admins publish anyone's; trusted people publish their own, in the same
+    // write as the suggestion. The sender may take theirs down, so deleting
+    // an account takes their credit with it.
     match /community/{suggestionId} {
       allow read: if true;
       allow create: if validCommunity(request.resource.data)
-        && (isAdmin() || (isTrusted() && request.resource.data.uid == request.auth.uid
+        && (isAdmin() || (isTrusted()
           && getAfter(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid));
       allow update: if isAdmin() && validCommunity(request.resource.data);
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (signedIn()
+        && get(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid);
 
       function validCommunity(data) {
-        return data.keys().hasOnly(['uid', 'credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'maker',
+        return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'maker',
             'blurb', 'category', 'publishedAt'])
-          && data.uid is string && data.uid.size() <= 128
           && optionalText(data, 'credit', 40)
           && data.kind in ['firmware', 'app', 'mod', 'other']
           && data.action in ['add', 'fix']

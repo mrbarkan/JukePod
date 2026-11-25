@@ -237,7 +237,7 @@ test("flags: members create them; only admins and the sender read or remove them
   assert.equal(await del(bo, "flags/f1"), 200);
 });
 
-test("suggestions: members send them; the sender and admins read them until added with credit", async () => {
+test("suggestions: private to the sender and admins; community records hold only what is published", async () => {
   const good = { uid: ana.uid, name: "Ana", kind: "mod", action: "add", title: "Bluetooth kit", url: "https://example.com/kit", details: "Fits the Classic.", credit: true, status: "new" };
   assert.equal(await put(ana, "suggestions/s1", good), 200);
   assert.equal(await put(ana, "suggestions/s-fix", { ...good, action: "fix", itemId: "iflash" }), 200);
@@ -263,14 +263,21 @@ test("suggestions: members send them; the sender and admins read them until adde
   assert.equal(await put(admin, "suggestions/s1", { status: "published" }, { update: ["status"] }), 403);
   assert.equal(await put(admin, "suggestions/s1", { status: "added", reviewNote: "Thanks!" }, { update: ["status", "reviewNote"] }), 200);
   assert.equal(await put(admin, "suggestions/s-quiet", { status: "added" }, { update: ["status"] }), 200);
-  assert.equal(await get(null, "suggestions/s1"), 200, "added with credit: on the thank-you list");
-  assert.equal(await get(null, "suggestions/s-quiet"), 403, "added without credit stays private");
+  assert.equal(await get(null, "suggestions/s1"), 403, "an added suggestion stays private");
+  // Community records: public, with no account ID; written by admins (or trusted senders, below).
+  const pub = { kind: "mod", action: "add", itemId: "bluetooth-kit", name: "Bluetooth kit", url: "https://example.com/kit", devices: ["ipod-classic"], credit: "Ana" };
+  assert.equal(await put(ana, "community/s1", pub), 403, "senders can't publish their own");
+  assert.equal(await put(admin, "community/s1", { ...pub, uid: ana.uid }), 403, "no account ID on public records");
+  assert.equal(await put(admin, "community/s1", { ...pub, details: "x" }), 403);
+  assert.equal(await put(admin, "community/s1", { ...pub, itemId: "Not A Slug" }), 403);
+  assert.equal(await put(admin, "community/s1", { ...pub, url: "javascript:alert(1)" }), 403);
+  assert.equal(await put(admin, "community/s1", pub), 200);
+  assert.equal(await get(null, "community/s1"), 200);
+  assert.equal((await fetch(`${DOCS}/community`)).status, 200, "the nightly build lists them without signing in");
+  assert.equal(await del(bo, "community/s1"), 403);
   const query = (filters) => fetch(`${DOCS}:runQuery`, json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
     where: { compositeFilter: { op: "AND", filters: filters.map(([f, v]) => ({ fieldFilter: { field: { fieldPath: f }, op: "EQUAL", value: enc(v) } })) } } } }));
-  const thanks = await query([["status", "added"], ["credit", true]]);
-  assert.equal(thanks.status, 200);
-  assert.equal((await thanks.json()).filter((r) => r.document).length, 1);
-  assert.equal((await query([["status", "added"]])).status, 403, "the public can't list uncredited ones");
+  assert.equal((await query([["status", "added"], ["credit", true]])).status, 403, "the public can't list suggestions");
   const mine = await fetch(`${DOCS}:runQuery`, { ...json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
     where: { fieldFilter: { field: { fieldPath: "uid" }, op: "EQUAL", value: { stringValue: ana.uid } } } } }), headers: { "Content-Type": "application/json", ...bearer(ana) } });
   assert.equal(mine.status, 200, "the sender can list their own");
@@ -278,6 +285,41 @@ test("suggestions: members send them; the sender and admins read them until adde
   assert.equal(await del(bo, "suggestions/s-fix"), 403);
   assert.equal(await del(ana, "suggestions/s-fix"), 200);
   assert.equal(await del(admin, "suggestions/s-quiet"), 200);
+  // Deleting an account removes the sender's credit, then the suggestion.
+  assert.equal(await del(ana, "community/s1"), 200, "the sender can take theirs down");
+  assert.equal(await del(ana, "suggestions/s1"), 200);
+});
+
+/** Several writes at once, all or nothing; returns the HTTP status. */
+async function commit(who, writes) {
+  const base = `projects/${PROJECT}/databases/(default)/documents`;
+  const res = await fetch(`${DOCS.replace(/\/documents$/, "/documents")}:commit`, {
+    method: "POST", headers: { "Content-Type": "application/json", ...bearer(who) },
+    body: JSON.stringify({ writes: writes.map(([path, data]) => ({ update: { name: `${base}/${path}`, fields: fields(data) } })) }),
+  });
+  return res.status;
+}
+
+test("trusted contributors publish their own suggestions without review", async () => {
+  const sugg = (uid, extra = {}) => ({ uid, name: "Bo", kind: "firmware", action: "add", title: "Test OS", url: "https://example.com/os", details: "A firmware.", devices: ["ipod-video"], credit: true, status: "added", ...extra });
+  const pub = { kind: "firmware", action: "add", itemId: "test-os", name: "Test OS", url: "https://example.com/os", devices: ["ipod-video"], credit: "Bo" };
+  assert.equal(await commit(bo, [["suggestions/t1", sugg(bo.uid)], ["community/t1", pub]]), 403, "not trusted yet");
+  assert.equal(await put(bo, `trusted/${bo.uid}`, { name: "Bo" }), 403, "can't trust yourself");
+  assert.equal(await put(admin, `trusted/${bo.uid}`, { name: "Bo", uid: bo.uid }), 403);
+  assert.equal(await put(admin, `trusted/${bo.uid}`, { name: "Bo" }), 200);
+  assert.equal(await get(bo, `trusted/${bo.uid}`), 200, "can check their own standing");
+  assert.equal(await get(ana, `trusted/${bo.uid}`), 403);
+  assert.equal((await fetch(`${DOCS}/trusted`, { headers: bearer(ana) })).status, 403, "members can't list who is trusted");
+  assert.equal(await commit(bo, [["suggestions/t1", sugg(bo.uid)], ["community/t1", pub]]), 200);
+  assert.equal(await put(bo, "community/t2", pub), 403, "only alongside a suggestion of their own");
+  assert.equal(await put(ana, "suggestions/t3", { ...sugg(ana.uid), name: "Ana" }), 403, "untrusted members still wait");
+  assert.equal(await put(bo, "community/t1", { ...pub, name: "Changed" }), 403, "can't edit once published");
+  assert.equal(await put(bo, "suggestions/t4", sugg(bo.uid, { fixes: ["everything"] })), 403);
+  assert.equal(await put(bo, "suggestions/t5", sugg(bo.uid, { action: "fix", itemId: "rockbox", fixes: ["link", "ipods"] })), 200);
+  assert.equal(await del(bo, `trusted/${bo.uid}`), 403);
+  assert.equal(await del(admin, `trusted/${bo.uid}`), 200);
+  assert.equal(await commit(bo, [["suggestions/t6", sugg(bo.uid)], ["community/t6", pub]]), 403, "no longer trusted");
+  assert.equal(await del(admin, "community/t1"), 200, "admins can unpublish");
 });
 
 test("member settings are private to their owner", async () => {

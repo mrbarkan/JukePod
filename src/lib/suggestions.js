@@ -48,7 +48,6 @@ export function communityRecord(s, edits = {}) {
   const pick = (key, max) => clean(edits[key] ?? s[key], max);
   const name = pick("title", 80) || clean(s.title, 80);
   const record = {
-    uid: s.uid,
     kind: KINDS[s.kind] ? s.kind : "other",
     action: s.action === "fix" ? "fix" : "add",
     itemId: s.action === "fix" && isSlug(s.itemId) ? s.itemId : slug(name),
@@ -121,9 +120,10 @@ export async function mySuggestions(uid = auth.currentUser?.uid) {
   return newestFirst(snap.docs.map(plainDoc));
 }
 
-/** Removes a suggestion. A published one stays on the site until an admin unpublishes it. */
-export function deleteSuggestion(id) {
-  return deleteDoc(doc(db, "suggestions", id));
+/** Removes a suggestion, and takes it off the site at the next build if it was published. */
+export async function deleteSuggestion(id) {
+  await deleteDoc(doc(db, "community", id)).catch(() => {});
+  await deleteDoc(doc(db, "suggestions", id));
 }
 
 /** Everything published from suggestions. Public. */

@@ -10,6 +10,7 @@ The site is static. [Astro](https://astro.build) turns the catalog into one page
 src/data/catalog.js         THE CATALOG: firmware, apps, mods, devices and the watch list
 src/data/github-stats.json  versions, dates and stars, refreshed nightly (generated)
 src/data/screenshots.json   which pictures belong to which listing
+src/data/community.json     listings and fixes published from suggestions (generated nightly)
 src/content/blog/           blog posts, one Markdown file each
 src/pages/                  home, listings, apps, mods, themes, guides, blog, account, legal
 src/components/             listing page and card, iPod drawings, sticker, ripeness chip
@@ -56,6 +57,16 @@ The home page opens with "Which iPod is yours?". Picking one is remembered in th
 - The header search box searches firmware, apps, mods, guides and blog posts.
 
 "Does it work on yours?" on each listing counts reports per iPod model. Anyone can read the totals; sending one needs sign-in and an iPod from the person's list. Each signed-in person lists the iPods they own on the account page (several models, or two of the same), and every report names which of those iPods it was for, so two Classics count as two reports. Reports sent before the list existed name only the model and still count; reporting again for a listed iPod of that model replaces them. `src/lib/reports.js` and `src/lib/my-ipods.js` hold it.
+
+## Suggestions from visitors
+
+Signed-in visitors suggest listings at `/suggest/`: something new (name, link, who makes it, which iPods, a description), or a fix to a listing (a broken link, the wrong iPods, or anything else). There's a "Suggest" link in the footer, on empty shelves, on the apps and mods pages, and "Suggest a fix" on every listing. `src/lib/suggestions.js` holds the code.
+
+- **Review.** Suggestions wait in the review queue (`/themes/review/`). "Approve and publish" lets you touch up the name, link, description, kind and iPods first. Approving writes the public side to the `community` collection; the suggestion itself, with the sender's account ID and notes, stays private.
+- **Publishing.** Every night the deploy workflow runs `npm run refresh:community` (`scripts/refresh-community.mjs`), which saves the `community` collection to `src/data/community.json` and commits it. `src/lib/community.js` folds that into the catalog at build time: a new listing gets its own page, marked "From the community, not checked yet"; a fix replaces a listing's main link or its iPods. Wording fixes are credited but made by hand. To publish sooner, run the "Deploy site" workflow from the Actions tab.
+- **Hand-written wins.** To take over a community listing, copy it into `catalog.js` with the same `id`. The hand-written entry then replaces it, and the sender keeps their credit. "Unpublish" in the review queue removes one at the next build.
+- **Credit.** If the sender ticked the box, their display name goes into the listing's `suggestedBy` and onto `/contributors/`. Credited fixes appear there too.
+- **Trusted contributors.** "Trust" on a suggestion adds its sender to the `trusted` collection. What they send is published without review, at the next build. "Stop trusting" removes them. Admins count as trusted.
 
 ## Add screenshots
 

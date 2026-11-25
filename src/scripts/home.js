@@ -60,6 +60,14 @@ function apply() {
       ? "These are developer tools, not players. No player firmware runs on this model yet."
       : "Everything on this page now shows what fits. Your choice is remembered next time.";
   $("empty").hidden = shown > 0;
+  // The empty shelf's "Suggest it" link opens the form with this iPod ticked.
+  const suggest = $("empty-suggest");
+  if (suggest) {
+    const url = new URL(suggest.href);
+    if (tile) url.searchParams.set("ipod", state.device);
+    else url.searchParams.delete("ipod");
+    suggest.href = url.toString();
+  }
 }
 
 function sort() {

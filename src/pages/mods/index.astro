@@ -31,6 +31,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                 <p class="kicker">{m.maker}</p>
                 <h3 class="card-title"><a href={`#${m.id}`}>{m.name}</a></h3>
                 <p class="blurb" set:html={fmt(m.blurb)} />
+                {m.community && <p class="aside-note">Added from a community suggestion and not checked by Quitanda yet.</p>}
                 {(m.more || []).map((p) => <p set:html={fmt(p)} />)}
                 {(m.links || []).length > 0 && (
                   <div class="item-actions">

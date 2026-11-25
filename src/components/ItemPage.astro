@@ -64,6 +64,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             {meta && <span>{meta}</span>}
           </div>
           <p class="item-blurb" set:html={fmt(item.blurb)} />
+          {item.community && <p class="aside-note community-note">Added from a community suggestion and not checked by Quitanda yet. Read the project’s own page before you install anything. <a href={href(`/suggest/?fix=${item.id}`)}>Spotted a problem?</a></p>}
           {(runs.length > 0 || partial.length > 0) && (
             <div class="fit-banner" id="fit" hidden>
               <strong id="fit-text"></strong>
