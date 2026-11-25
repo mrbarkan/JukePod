@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
-import { mods, watchlist, deviceById, fmt, href } from "../../lib/catalog.js";
+import { mods, watchlist, deviceById, fmt, href, suggestedBy, contributorSlug } from "../../lib/catalog.js";
 
 const kinds = [...new Set(mods.map((m) => m.kind))];
 const coming = watchlist.filter((w) => w.kind === "mod");
@@ -46,6 +46,9 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                   <dd><span class="chips">{m.devices.map((d) => <span class="chip">{deviceById[d]?.name}</span>)}</span></dd>
                   {(m.partial || []).length > 0 && (
                     <><dt>With a converter</dt><dd><span class="chips">{m.partial.map((d) => <span class="chip partial">{deviceById[d]?.name}</span>)}</span></dd></>
+                  )}
+                  {suggestedBy(m).length > 0 && (
+                    <><dt>Suggested by</dt><dd class="credit">{suggestedBy(m).map((h, i) => <>{i > 0 && ", "}<a href={href(`/contributors/#${contributorSlug(h)}`)}>{h}</a></>)}</dd></>
                   )}
                 </dl>
                 {(m.firmware || []).length > 0 && (
