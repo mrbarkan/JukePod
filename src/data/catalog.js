@@ -1030,12 +1030,12 @@ export default {
       devices: ["ipod-video", "ipod-classic", "ipod-nano-3g", "ipod-nano-4g", "ipod-nano-5g"],
       partial: [],
       install: [
-        "Download the virtual machine and the game files from the project\u2019s releases.",
+        "Read the project\u2019s guide on its GitHub page.",
         "Start the virtual machine and pass the iPod through to it over USB.",
         "Sync the games from iTunes inside it, a few at a time, following the project\u2019s guide."
       ],
       links: [
-        { label: "Project and downloads", url: "https://github.com/Olsro/ipodclickwheelgamespreservationproject", icon: "download" },
+        { label: "Project page", url: "https://github.com/Olsro/ipodclickwheelgamespreservationproject", icon: "info" },
         { label: "Video: the project (That Nostalgic Nerd)", url: "https://www.youtube.com/watch?v=OM7mdKy3opo", icon: "info" },
         { label: "Video: install on a Mac (iPod for EvEr)", url: "https://www.youtube.com/watch?v=iTb1Fb6UTqI", icon: "install" }
       ]
