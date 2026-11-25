@@ -892,7 +892,9 @@ body { overflow-x: clip; }
 .seg[aria-pressed="true"] { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 .jump a { font-weight: 700; border: 1.5px solid var(--line-strong); }
 .pill { font-weight: 800; border: 1.5px solid currentColor; padding: 5px 11px; }
-.legend .pill { font-weight: 700; }
+.legend .pill { font-weight: 700; padding-left: 7px; gap: 6px; }
+.key-badge { display: block; flex: none; width: 22px; }
+.key-badge .badge path:first-child { stroke-width: 12; }
 .kicker { font-weight: 800; letter-spacing: 0.09em; }
 .chip { border-color: var(--line-strong); }
 .badge-count { font-weight: 800; background: var(--yellow); color: var(--sticker-ink); border: 1.5px solid var(--sticker-ink); border-radius: 999px; }

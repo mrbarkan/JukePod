@@ -1,15 +1,18 @@
 ---
 import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
+import Badge from "../components/Badge.astro";
 import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
 import { COPY } from "../data/copy.js";
 import {
   firmwares, apps, mods, devices, categories, watchlist, latest, recentChanges, updatedOn,
-  byId, flavorLabel, fmtDate, isNumbered, plain, href,
+  byId, flavorLabel, fmtDate, isNumbered, plain, href, STATUS,
 } from "../lib/catalog.js";
 
 const C = COPY.home;
+// The key above the shelves: the same sticker shapes the listings wear.
+const KEY = [["stable", "round", "green"], ["beta", "lemon", "lemon"], ["experimental", "burst", "tomato"], ["archived", "arch", "kraft"]];
 const shelf = [...firmwares].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name));
 const freshDate = updatedOn > latest.date ? updatedOn : latest.date;
 const freshItems = [
@@ -84,11 +87,10 @@ const searchable = [
             <h2 id="result-title">{firmwares.length} flavors on the shelves</h2>
             <p id="result-note">Every firmware in the shop. Pick your iPod above to see only what runs on it.</p>
           </div>
-          <ul class="legend" aria-label="What the ripeness labels mean">
-            <li class="pill pill-stable">Ripe · Stable</li>
-            <li class="pill pill-beta">Ripening · Beta</li>
-            <li class="pill pill-experimental">Unripe · Experimental</li>
-            <li class="pill pill-archived">Preserved · Archived</li>
+          <ul class="legend" aria-label="What the stickers and colors mean">
+            {KEY.map(([status, shape, tone]) => (
+              <li class={`pill pill-${status}`}><span class="key-badge"><Badge shape={shape} tone={tone} /></span>{STATUS[status].ripeness} · {STATUS[status].plain}</li>
+            ))}
           </ul>
         </div>
         <div class="toolbar">
