@@ -983,6 +983,17 @@ body { overflow-x: clip; }
 .foot-cols a, .foot-link { color: var(--cream); font-weight: 600; }
 .foot-cols a:hover { color: var(--yellow); text-decoration-color: var(--yellow); }
 
+/* A short page still ends with the footer at the bottom of the window. */
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; width: 100%; }
+
+/* ---------- every card gets the same ink edge ---------- */
+.person, .post-feature, .post-card, .steps label { border: 1.5px solid var(--edge); }
+.post-feature:hover, .post-card:hover { border-color: var(--edge); box-shadow: 0 4px 0 var(--edge); translate: 0 -2px; }
+.post-feature, .post-card { transition: translate 0.12s, box-shadow 0.12s; }
+.person:target { border-color: var(--edge); box-shadow: 0 0 0 3px var(--yellow); }
+@media (prefers-reduced-motion: reduce) { .post-feature, .post-card { transition: none; } }
+
 /* ---------- phones ---------- */
 @media (max-width: 860px) {
   .hero-top > .hero-stickers { flex: 1 1 100%; min-width: 0; aspect-ratio: auto; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2%; padding: 4px 0; }
