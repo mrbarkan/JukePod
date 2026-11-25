@@ -71,6 +71,12 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
               <a href={href("/")}>Change iPod</a>
             </div>
           )}
+          {(item.features || []).length > 0 && (
+            <section class="gallery head-features">
+              <h2>{isApp ? "What it does" : "What it adds"}</h2>
+              <ul class="feature-grid">{item.features.map((f) => <li><span set:html={fmt(f)} /></li>)}</ul>
+            </section>
+          )}
         </header>
 
         <aside class="get-panel" aria-label={getTitle}>
@@ -129,13 +135,6 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
           </div>
         )}
         <p class="gallery-credit">Pictures from {repoUrl || links[0]?.url ? <a href={repoUrl || links[0].url} target="_blank" rel="noopener">the {item.name} project</a> : `the ${item.name} project`}.</p>
-      </section>
-    )}
-
-    {(item.features || []).length > 0 && (
-      <section class="gallery">
-        <h2>{isApp ? "What it does" : "What it adds"}</h2>
-        <ul class="feature-grid">{item.features.map((f) => <li><span set:html={fmt(f)} /></li>)}</ul>
       </section>
     )}
 

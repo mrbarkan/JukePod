@@ -1,13 +1,22 @@
 ---
 import Base from "../layouts/Base.astro";
 import { href } from "../lib/catalog.js";
+import { COPY } from "../data/copy.js";
+const C = COPY.notFound;
 ---
 <Base title="Page not found">
-  <main class="wrap page narrow">
+  <main class="wrap page narrow lost">
+    <div class="lost-ipod" aria-hidden="true">
+      <div class="lost-screen">
+        <div><span>404</span><span>▮▯▯</span></div>
+        {C.screen.map((row) => <div><span>{row}</span><span>›</span></div>)}
+      </div>
+      <div class="lost-wheel"><i></i></div>
+    </div>
     <header class="intro">
-      <h1>That shelf is empty.</h1>
-      <p>The page you asked for isn’t here. It may have moved when a listing was renamed.</p>
-      <p><a class="btn" href={href("/")}>Back to the shop</a></p>
+      <h1>{C.title}</h1>
+      <p>{C.text}</p>
+      <p><a class="btn" href={href("/")}>{C.button}</a></p>
     </header>
   </main>
 </Base>

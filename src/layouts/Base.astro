@@ -4,6 +4,7 @@ import Mark from "../components/Mark.astro";
 import { SITE, href, absolute, fmtDate, updatedOn } from "../lib/catalog.js";
 import { providers } from "../lib/firebase-config.js";
 import { ADS, adsOn } from "../lib/ads.js";
+import { COPY } from "../data/copy.js";
 
 const PROVIDER_NAMES = { google: "Google", github: "GitHub" };
 
@@ -40,7 +41,7 @@ const nav = [
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;800;900&family=Silkscreen&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;800;900&family=Silkscreen&display=swap"
     />
     {adsOn && (
       <>
@@ -49,7 +50,7 @@ const nav = [
       </>
     )}
   </head>
-  <body>
+  <body id="top">
     <header class="site-head">
       <div class="wrap head-inner">
         <a class="brand" href={href("/")} aria-label={`${SITE.name} (beta) home`}>
@@ -64,11 +65,11 @@ const nav = [
         </nav>
         <div class="head-tools">
           <form class="head-search" action={href("/")} method="get" role="search">
-            <label class="sr-text" for="site-q">Search the shop</label>
-            <input id="site-q" name="q" type="search" placeholder="Search the shop" autocomplete="off" />
+            <label class="sr-text" for="site-q">{COPY.header.search}</label>
+            <input id="site-q" name="q" type="search" placeholder={COPY.header.search} autocomplete="off" />
           </form>
           <div class="account" id="account">
-            <button type="button" class="account-btn" data-signed-out data-open>Sign in</button>
+            <button type="button" class="account-btn" data-signed-out data-open>{COPY.header.signIn}</button>
             <a class="account-btn account-me" href={href("/account/")} data-signed-in hidden>
               <img alt="" width="30" height="30" referrerpolicy="no-referrer" hidden />
               <span data-name>Account</span>
@@ -77,11 +78,12 @@ const nav = [
         </div>
       </div>
     </header>
+    <div class="awning" aria-hidden="true"></div>
 
     <dialog class="signin" id="signin-dialog" aria-labelledby="signin-title">
       <button type="button" class="signin-close" data-close aria-label="Close">×</button>
-      <h2 id="signin-title">Sign in to Quitanda</h2>
-      <p>Signing in lets you share themes and tell others what works on your iPod. Browsing and downloading never need an account.</p>
+      <h2 id="signin-title">{COPY.signIn.title}</h2>
+      <p>{COPY.signIn.text}</p>
       <div class="signin-buttons">
         {providers.map((p) => (
           <button type="button" class="btn" data-provider={p}>Continue with {PROVIDER_NAMES[p] || p}</button>
@@ -94,23 +96,48 @@ const nav = [
     <slot />
 
     <footer class="site-foot">
+      <div class="awning awning-foot" aria-hidden="true"></div>
       <div class="wrap foot-inner">
-        <p>Back up your music before you install anything or open your iPod. Everything listed here is made by independent developers and makers, and used at your own risk.</p>
-        <p>
-          Not affiliated with Apple Inc. iPod is a trademark of Apple Inc. Catalog updated <time datetime={updatedOn}>{fmtDate(updatedOn, true)}</time>.
-        </p>
-        <p class="foot-links">
-          <a href={href("/about/")}>About</a>
-          <a href={href("/start/")}>Start here</a>
-          <a href={href("/compatibility/")}>Compatibility</a>
-          <a href={href("/blog/")}>Blog</a>
-          <a href={href("/suggest/")}>Suggest a listing</a>
-          <a href={href("/contributors/")}>Contributors</a>
-          <a href={href("/rss.xml")}>RSS</a>
-          <a href={href("/privacy/")}>Privacy</a>
-          <a href={href("/gdpr/")}>Your data rights</a>
-          <a href={SITE.repo}>Source on GitHub</a>
-          {adsOn && <button type="button" class="foot-link" id="ad-privacy">Privacy and cookie settings</button>}
+        <div class="foot-top">
+          <div class="foot-hand">
+            <a class="wheel-top" href="#top" aria-label="Back to the top">
+              <span>{COPY.footer.backToTop}</span><i></i>
+            </a>
+            <p class="scribble">{COPY.footer.madeBy} <span>{COPY.footer.thanks}</span></p>
+          </div>
+          <nav class="foot-cols" aria-label="Footer">
+            <div>
+              <h2>The shelves</h2>
+              <a href={href("/")}>Firmware</a>
+              <a href={href("/apps/")}>Apps</a>
+              <a href={href("/themes/")}>Themes</a>
+              <a href={href("/mods/")}>Mods</a>
+              <a href={href("/compatibility/")}>Compatibility</a>
+            </div>
+            <div>
+              <h2>Read</h2>
+              <a href={href("/start/")}>Start here</a>
+              <a href={href("/blog/")}>Blog</a>
+              <a href={href("/rss.xml")}>RSS</a>
+              <a href={href("/about/")}>About</a>
+            </div>
+            <div>
+              <h2>Pitch in</h2>
+              <a href={href("/suggest/")}>Suggest a listing</a>
+              <a href={href("/contributors/")}>Contributors</a>
+              <a href={SITE.repo}>Source on GitHub</a>
+            </div>
+            <div>
+              <h2>Small print</h2>
+              <a href={href("/privacy/")}>Privacy</a>
+              <a href={href("/gdpr/")}>Your data rights</a>
+              {adsOn && <button type="button" class="foot-link" id="ad-privacy">Privacy and cookie settings</button>}
+            </div>
+          </nav>
+        </div>
+        <p class="foot-fine">{COPY.footer.warning}</p>
+        <p class="foot-fine">
+          {COPY.footer.legal} Catalog updated <time datetime={updatedOn}>{fmtDate(updatedOn, true)}</time>.
         </p>
       </div>
     </footer>

@@ -3,11 +3,13 @@ import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
 import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
+import { COPY } from "../data/copy.js";
 import {
   firmwares, apps, mods, devices, categories, watchlist, latest, recentChanges, updatedOn,
   byId, flavorLabel, fmtDate, isNumbered, plain, href,
 } from "../lib/catalog.js";
 
+const C = COPY.home;
 const shelf = [...firmwares].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name));
 const freshDate = updatedOn > latest.date ? updatedOn : latest.date;
 const freshItems = [
@@ -49,18 +51,22 @@ const searchable = [
       <section class="hero">
         <div class="hero-top">
           <div>
-            <p class="lcd-kicker">A quitanda is a fruit shop. This one is for iPods.</p>
-            <h1>Pick your flavor.</h1>
+            <p class="lcd-kicker">{C.kicker}</p>
+            <h1>{C.headline}</h1>
           </div>
-          <p>Your iPod doesn’t have to run what it shipped with. Tell us which one you have and the whole shop rearranges around it.</p>
+          <aside class="note" aria-label="A note from the shopkeeper">
+            {C.note.hello && <p class="note-hello">{C.note.hello}</p>}
+            {C.note.lines.map((line) => <p>{line}</p>)}
+            <p class="note-sign">{C.note.signoff} <b>{C.note.signature}</b></p>
+          </aside>
         </div>
 
         <div class="picker">
           <div class="picker-head">
-            <h2>Which iPod is yours?</h2>
+            <h2>{C.pickerTitle}{C.pickerHint && <span class="scribble picker-hint" aria-hidden="true">{C.pickerHint}<svg viewBox="0 0 40 30" width="34" height="26"><path d="M4 4c10 2 22 8 28 20M32 24l-9-2M32 24l1-10" /></svg></span>}</h2>
             <div>
-              <a href={href("/start/ipod-users/#which")}>Not sure? Check the number on the back</a>
-              <button type="button" class="seg" data-device="all" aria-pressed="true">Show every iPod</button>
+              <a href={href("/start/ipod-users/#which")}>{C.pickerHelp}</a>
+              <button type="button" class="seg" data-device="all" aria-pressed="true">{C.pickerAll}</button>
             </div>
           </div>
           <div class="picker-row" id="picker">
@@ -115,18 +121,18 @@ const searchable = [
         <p><a class="more-link" href={href("/compatibility/")}>See the full compatibility table →</a></p>
       </section>
 
-      <section class="fresh" aria-label="Fresh in">
-        <div>
-          <strong>Fresh in · {fmtDate(freshDate)}</strong>
-          {freshItems.map((f) => <a href={href(f.path)}>{f.text}</a>)}
-          <a href={href("/themes/")}>The themes shelf is open</a>
-        </div>
+      <section class="board" aria-label={C.boardSubtitle}>
+        <p class="board-head"><strong>{C.boardTitle}</strong><span>{C.boardSubtitle} · {fmtDate(freshDate)}</span></p>
+        <ul>
+          {freshItems.map((f) => <li><a href={href(f.path)}>{f.text}</a></li>)}
+          <li><a href={href("/themes/")}>{C.boardThemes}</a></li>
+        </ul>
       </section>
 
       <section class="shelves">
         <div class="shelf" id="apps">
-          <h2>Library apps</h2>
-          <p>Put music on it without iTunes. Recently updated:</p>
+          <h2>{C.apps.title}</h2>
+          <p>{C.apps.text}</p>
           <ul class="shelf-list">
             {recentApps.map((a) => (
               <li><a href={href(a.path)}><span class="txt"><strong>{a.name}</strong><span>{[(a.platforms || []).join(" · "), a.price].filter(Boolean).join(" · ")}</span></span></a></li>
@@ -135,16 +141,16 @@ const searchable = [
           <a class="more-link" href={href("/apps/")}>All {apps.length} apps →</a>
         </div>
         <div class="shelf">
-          <h2>Themes</h2>
-          <p>Looks people made, with screenshots.</p>
+          <h2>{C.themes.title}</h2>
+          <p>{C.themes.text}</p>
           <ul class="shelf-list" id="theme-shelf">
-            <li><a href={href("/themes/submit/")}><span class="txt"><strong>Share the first one</strong><span>For Rockbox, its forks or CrateDigger.</span></span></a></li>
+            <li><a href={href("/themes/submit/")}><span class="txt"><strong>{C.themes.firstTitle}</strong><span>{C.themes.firstText}</span></span></a></li>
           </ul>
           <a class="more-link" href={href("/themes/")}>The themes shelf →</a>
         </div>
         <div class="shelf" id="mods">
-          <h2>Hardware mods</h2>
-          <p>Parts that keep it going.</p>
+          <h2>{C.mods.title}</h2>
+          <p>{C.mods.text}</p>
           <ul class="shelf-list">
             {mods.slice(0, 4).map((m) => (
               <li><a href={href(m.path)}><span class="txt"><strong>{m.name}</strong><span>{m.skill}</span></span></a></li>
@@ -157,8 +163,8 @@ const searchable = [
       {watchlist.length > 0 && (
         <section class="section" id="watch-list">
           <div class="section-head">
-            <h2>Still on the tree</h2>
-            <p>Projects that can’t be installed yet. Each moves onto the shelves once it ships.</p>
+            <h2>{C.watchTitle}</h2>
+            <p>{C.watchText}</p>
           </div>
           <ul class="watch-list">
             {watchlist.map((w) => (
@@ -172,7 +178,7 @@ const searchable = [
       )}
 
       <section class="section" id="guides">
-        <div class="section-head"><h2>New here? Start with a guide.</h2></div>
+        <div class="section-head"><h2>{C.guidesTitle}</h2></div>
         <ul class="guide-links">
           <li><a href={href("/start/ipod-users/")}><em>Seven steps · about an hour</em><strong>I use an iPod</strong><span>Find your model, back up, install your first firmware, load music, and get it back if something goes wrong.</span></a></li>
           <li><a href={href("/start/makers/")}><em>For firmware, themes, apps and mods</em><strong>I make things for iPods</strong><span>Get listed, keep your version current automatically, and share themes with screenshots.</span></a></li>
@@ -181,10 +187,10 @@ const searchable = [
 
       <section class="band">
         <div>
-          <h2>Fresh arrivals, by email.</h2>
-          <p>Occasional news about new firmware, themes and guides. We use your name and email address for this and nothing else, and you can unsubscribe at any time.</p>
+          <h2>{C.newsletterTitle}</h2>
+          <p>{C.newsletterText}</p>
         </div>
-        <a class="btn btn-accent btn-lg" href={href("/account/#newsletter")}>Subscribe by email</a>
+        <a class="btn btn-accent btn-lg" href={href("/account/#newsletter")}>{C.newsletterButton}</a>
       </section>
     </div>
   </main>
