@@ -41,10 +41,17 @@ service cloud.firestore {
     function isLink(value) {
       return value is string && value.size() <= 300 && value.matches('^https?://[^ ]+$');
     }
-    // A list of up to `max` short slugs. Rules can't loop, so each entry's
-    // shape is checked again by the build, which drops anything it doesn't know.
+    // A list of up to `max` (20 at most) short slugs. Rules can't loop, so
+    // each place is checked in turn. The build also drops ids it doesn't know.
     function slugList(value, max) {
-      return value is list && value.size() <= max;
+      return value is list && value.size() <= max && slugAtTop(value, 0) && slugAtTop(value, 1) && slugAtTop(value, 2) && slugAtTop(value, 3) && slugAtTop(value, 4) && slugAtTop(value, 5) && slugAtTop(value, 6) && slugAtTop(value, 7) && slugAtTop(value, 8) && slugAtTop(value, 9) && slugAtTop(value, 10) && slugAtTop(value, 11) && slugAtTop(value, 12) && slugAtTop(value, 13) && slugAtTop(value, 14) && slugAtTop(value, 15) && slugAtTop(value, 16) && slugAtTop(value, 17) && slugAtTop(value, 18) && slugAtTop(value, 19);
+    }
+    // What a library app runs on, from the catalog's platform list.
+    function isPlatforms(value) {
+      return value is list && value.size() <= 5 && value.hasOnly(['macOS', 'Windows', 'Linux', 'iPhone', 'Web']);
+    }
+    function slugAtTop(list, index) {
+      return list.size() <= index || isSlug(list[index]);
     }
     function optionalText(data, field, max) {
       return !(field in data) || (data[field] is string && data[field].size() <= max);
@@ -214,9 +221,16 @@ service cloud.firestore {
       allow read: if isOwner(resource.data.uid) || isAdmin();
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
-        && (request.resource.data.status == 'new' || (request.resource.data.status == 'added' && isTrusted()))
+        // Trusted people publish new listings straight away; their fixes to
+        // existing listings still wait for an admin.
+        && (request.resource.data.status == 'new' || (request.resource.data.status == 'added'
+          && (isAdmin() || (isTrusted() && request.resource.data.action == 'add'))))
+        && (!('createdAt' in request.resource.data) || request.resource.data.createdAt == request.time)
+        // An ID whose public record is still up can't be reused, so nobody can
+        // claim someone else's published record by recreating its suggestion.
+        && !exists(/databases/$(database)/documents/community/$(suggestionId))
         && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details',
-            'devices', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
+            'devices', 'platforms', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
         && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
         && request.resource.data.kind in ['firmware', 'app', 'mod', 'other']
         && request.resource.data.action in ['add', 'fix']
@@ -226,6 +240,7 @@ service cloud.firestore {
         && request.resource.data.details is string
         && request.resource.data.details.size() >= 1 && request.resource.data.details.size() <= 2000
         && (!('devices' in request.resource.data) || slugList(request.resource.data.devices, 20))
+        && (!('platforms' in request.resource.data) || isPlatforms(request.resource.data.platforms))
         && optionalText(request.resource.data, 'maker', 60)
         && (!('fixes' in request.resource.data) || (request.resource.data.fixes is list && request.resource.data.fixes.size() <= 3
           && request.resource.data.fixes.hasOnly(['link', 'ipods', 'text'])))
@@ -233,6 +248,7 @@ service cloud.firestore {
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt'])
         && request.resource.data.status in ['new', 'added', 'declined']
+        && (!('reviewedAt' in request.resource.data) || request.resource.data.reviewedAt == request.time)
         && optionalText(request.resource.data, 'reviewNote', 500);
       allow delete: if isOwner(resource.data.uid) || isAdmin();
     }
@@ -244,7 +260,8 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create, update: if isAdmin()
         && request.resource.data.keys().hasOnly(['name', 'addedAt'])
-        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40;
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+        && (!('addedAt' in request.resource.data) || request.resource.data.addedAt == request.time);
       allow delete: if isAdmin();
     }
 
@@ -257,14 +274,14 @@ service cloud.firestore {
     match /community/{suggestionId} {
       allow read: if true;
       allow create: if validCommunity(request.resource.data)
-        && (isAdmin() || (isTrusted()
+        && (isAdmin() || (isTrusted() && request.resource.data.action == 'add'
           && getAfter(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid));
       allow update: if isAdmin() && validCommunity(request.resource.data);
       allow delete: if isAdmin() || (signedIn()
         && get(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid);
 
       function validCommunity(data) {
-        return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'maker',
+        return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'platforms', 'maker',
             'blurb', 'category', 'publishedAt'])
           && optionalText(data, 'credit', 40)
           && data.kind in ['firmware', 'app', 'mod', 'other']
@@ -273,9 +290,11 @@ service cloud.firestore {
           && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
           && (!('url' in data) || isLink(data.url))
           && (!('devices' in data) || slugList(data.devices, 20))
+          && (!('platforms' in data) || isPlatforms(data.platforms))
           && optionalText(data, 'maker', 60)
           && optionalText(data, 'blurb', 600)
-          && optionalText(data, 'category', 40);
+          && optionalText(data, 'category', 40)
+          && (!('publishedAt' in data) || data.publishedAt == request.time);
       }
     }
 

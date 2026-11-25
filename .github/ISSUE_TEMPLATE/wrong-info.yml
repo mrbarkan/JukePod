@@ -1,0 +1,73 @@
+name: Report wrong info
+description: A broken link, an outdated version, or a wrong claim about which iPods something works on.
+title: "Fix: "
+labels: ["correction"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks! Corrections from people who actually use these things are the most useful help there is.
+  - type: input
+    id: page
+    attributes:
+      label: Which listing?
+      description: Paste the page address, or just the name.
+      placeholder: https://quitanda.mrbarkan.com/firmware/rockbox/
+    validations:
+      required: true
+  - type: dropdown
+    id: what
+    attributes:
+      label: What's wrong?
+      multiple: true
+      options:
+        - A link is broken or points to the wrong place
+        - The version or release date is out of date
+        - It works on an iPod that isn't listed
+        - It doesn't work on an iPod that is listed
+        - The install steps are wrong or missing something
+        - The description is wrong
+        - A screenshot should come down
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: devices
+    attributes:
+      label: Which iPod is this about?
+      multiple: true
+      options:
+        - iPod 1st / 2nd gen
+        - iPod 3rd gen
+        - iPod 4th gen
+        - iPod Photo / Color
+        - iPod Video 5G / 5.5G
+        - iPod Classic 6G / 7G
+        - iPod mini 1G / 2G
+        - iPod nano 1st gen
+        - iPod nano 2nd gen
+        - iPod nano 3rd gen
+        - iPod nano 4th gen
+        - iPod nano 5th gen
+        - iPod nano 6th gen
+        - iPod nano 7th gen
+        - Not sure
+  - type: textarea
+    id: details
+    attributes:
+      label: What should it say?
+      description: The correct information, and how you know (tried it yourself, release notes, the maker's site).
+    validations:
+      required: true
+  - type: dropdown
+    id: maker
+    attributes:
+      label: Are you the maker?
+      options:
+        - "No"
+        - Yes, I make this project
+  - type: input
+    id: credit
+    attributes:
+      label: How should we credit you?
+      description: Your Reddit (u/name) or GitHub (@name) handle for the Contributors page. Leave it empty to stay anonymous.
+      placeholder: u/your_name

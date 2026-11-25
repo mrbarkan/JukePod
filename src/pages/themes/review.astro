@@ -2,7 +2,7 @@
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
 import ThemeData from "../../components/ThemeData.astro";
-import { href, devices, categories, mods, SITE } from "../../lib/catalog.js";
+import { href, devices, categories, mods, platforms, SITE } from "../../lib/catalog.js";
 const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind))];
 ---
 <Base title="Review queue" description="Themes and suggested listings waiting to be checked." section="themes">
@@ -22,7 +22,7 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
       </section>
       <section class="section">
         <div class="section-head"><h2>Trusted contributors <span class="badge-count" id="rv-trusted-count">0</span></h2></div>
-        <p class="aside-note">What they suggest is published straight away, without waiting here. Trust someone from one of their suggestions.</p>
+        <p class="aside-note">New listings they suggest are published straight away, without waiting here; their fixes to existing listings still come here. Trust someone from one of their suggestions.</p>
         <div id="rv-trusted" class="review-list"></div>
       </section>
       <section class="section">
@@ -37,7 +37,7 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
     </div>
   </main>
   <ThemeData />
-  <script type="application/json" id="rv-data" set:html={JSON.stringify({ devices: devices.map((d) => [d.id, d.short]), categories: categories.map((c) => [c.id, c.name]), modKinds })} />
+  <script type="application/json" id="rv-data" set:html={JSON.stringify({ platforms, devices: devices.map((d) => [d.id, d.short]), categories: categories.map((c) => [c.id, c.name]), modKinds })} />
 </Base>
 
 <script>
@@ -82,11 +82,14 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
         : select(RV.categories, s.kind === "app" ? "tools" : "players");
       const ticks = RV.devices.map(([id, short]) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: id, checked: (s.devices || []).includes(id) }), h("span", {}, short)));
       edits.devices = ticks;
+      const hostTicks = s.kind === "app" ? RV.platforms.map((p) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: p, checked: (s.platforms || []).includes(p) }), h("span", {}, p))) : [];
+      edits.platforms = hostTicks;
       form = h("div", { class: "acct-form" },
         field("Name", edits.title), field("Link", edits.url), field("Who makes it", edits.maker),
         field(s.kind === "mod" ? "Shelf" : "Kind", h("span", { class: "select" }, edits.category)),
         field("Description on the listing", edits.blurb),
-        h("fieldset", { class: "theme-devices" }, h("legend", {}, "Works on"), h("div", {}, ...ticks))
+        h("fieldset", { class: "theme-devices" }, h("legend", {}, "Works on"), h("div", {}, ...ticks)),
+        hostTicks.length ? h("fieldset", { class: "theme-devices" }, h("legend", {}, "Runs on"), h("div", {}, ...hostTicks)) : null
       );
     }
     const act = (fn) => async () => {
@@ -100,6 +103,7 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
       return lib.publishSuggestion(s, {
         title: edits.title.value, url: edits.url.value, maker: edits.maker.value, blurb: edits.blurb.value,
         category: edits.category.value, devices: edits.devices.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
+        platforms: edits.platforms.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
       }, note.value);
     });
     const fixList = (s.fixes || []).map((f) => FIXES[f]).filter(Boolean);

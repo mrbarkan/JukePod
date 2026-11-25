@@ -6,7 +6,7 @@ import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
 import { COPY } from "../data/copy.js";
 import {
-  firmwares, apps, mods, devices, categories, watchlist, latest, recentChanges, updatedOn,
+  firmwares, apps, mods, devices, categories, families, watchlist, latest, recentChanges, updatedOn,
   byId, flavorLabel, fmtDate, isNumbered, plain, href, STATUS,
 } from "../lib/catalog.js";
 
@@ -97,6 +97,11 @@ const searchable = [
           <div class="segs" id="kinds" role="group" aria-label="Kind of firmware">
             <button type="button" class="seg" data-kind="all" aria-pressed="true">All</button>
             {categories.map((c) => <button type="button" class="seg" data-kind={c.id} aria-pressed="false">{c.name}</button>)}
+          </div>
+          <div class="segs segs-small" id="families" role="group" aria-label="What it's built on">
+            <span class="control-label">Built on</span>
+            <button type="button" class="seg" data-family="all" aria-pressed="true">Anything</button>
+            {families.map((f) => <button type="button" class="seg" data-family={f.id} aria-pressed="false" title={f.hint}>{f.name}</button>)}
           </div>
           <label class="order">
             <span class="control-label">Order</span>

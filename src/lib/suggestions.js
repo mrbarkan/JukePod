@@ -24,20 +24,27 @@ const plainDoc = (snap) => {
 const newestFirst = (list) => list.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
 export const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
+export const PLATFORMS = ["macOS", "Windows", "Linux", "iPhone", "Web"];
 export const FIXES = { link: "The link is broken or wrong", ipods: "The iPods it works on are wrong", text: "Something else in the text" };
 
-/** True if the signed-in person's suggestions publish without review. */
-export async function amTrusted(uid = auth.currentUser?.uid) {
-  if (!uid) return false;
+/**
+ * What the signed-in person may publish without review: "all" for admins,
+ * "new" (new listings, not fixes) for trusted contributors, or "" for nothing.
+ */
+export async function trustLevel(uid = auth.currentUser?.uid) {
+  if (!uid) return "";
   try {
-    if ((await getDoc(doc(db, "admins", uid))).exists()) return true;
+    if ((await getDoc(doc(db, "admins", uid))).exists()) return "all";
   } catch { /* not an admin */ }
   try {
-    return (await getDoc(doc(db, "trusted", uid))).exists();
+    return (await getDoc(doc(db, "trusted", uid))).exists() ? "new" : "";
   } catch {
-    return false;
+    return "";
   }
 }
+
+/** True if this suggestion would publish straight away at this trust level. */
+export const publishesNow = (level, action) => level === "all" || (level === "new" && action !== "fix");
 
 /**
  * The public record the nightly build reads. `edits` are the reviewer's
@@ -61,7 +68,10 @@ export function communityRecord(s, edits = {}) {
   const wantsIpods = record.action === "add" || fixes.includes("ipods");
   if (url && /^https?:\/\/[^ ]+$/.test(url) && wantsLink) record.url = url;
   const devices = (edits.devices ?? s.devices ?? []).filter(isSlug).slice(0, 20);
-  if (devices.length && wantsIpods) record.devices = devices;
+  // A fix to the iPods keeps an empty list: it means "none of them".
+  if (wantsIpods && (devices.length || record.action === "fix")) record.devices = devices;
+  const platforms = (edits.platforms ?? s.platforms ?? []).filter((p) => PLATFORMS.includes(p));
+  if (record.kind === "app" && record.action === "add" && platforms.length) record.platforms = platforms;
   if (record.action === "add") {
     if (pick("maker", 60)) record.maker = pick("maker", 60);
     const blurb = clean(edits.blurb ?? s.details, 600);
@@ -75,14 +85,15 @@ export function communityRecord(s, edits = {}) {
  * Saves a suggestion from the signed-in person. A trusted person's goes
  * straight to the site. Returns { id, published }. Throws with a message to show.
  */
-export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, maker, fixes, credit }) {
+export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, platforms, maker, fixes, credit }) {
   const user = auth.currentUser;
   if (!user) throw new Error("Sign in first.");
   if (!clean(title, 80)) throw new Error("Give it a name.");
   if (!clean(details, 2000)) throw new Error("Add a few details, so it can be checked.");
   const link = clean(url, 300);
   if (link && !/^https?:\/\/[^ ]+$/.test(link)) throw new Error("The link should start with https://");
-  const [profile, trusted] = await Promise.all([getDoc(doc(db, "users", user.uid)), amTrusted(user.uid)]);
+  const [profile, level] = await Promise.all([getDoc(doc(db, "users", user.uid)), trustLevel(user.uid)]);
+  const trusted = publishesNow(level, action);
   const record = {
     uid: user.uid,
     name: clean(profile.data()?.displayName || user.displayName, 40) || "Friend",
@@ -97,7 +108,9 @@ export async function sendSuggestion({ kind, action, itemId, title, url, details
   if (link) record.url = link;
   if (record.action === "fix" && isSlug(itemId)) record.itemId = itemId;
   const ipods = (devices || []).filter(isSlug).slice(0, 20);
-  if (ipods.length) record.devices = ipods;
+  if (ipods.length || (record.action === "fix" && (fixes || []).includes("ipods"))) record.devices = ipods;
+  const hosts = [...new Set((platforms || []).filter((p) => PLATFORMS.includes(p)))];
+  if (record.kind === "app" && record.action === "add" && hosts.length) record.platforms = hosts;
   if (record.action === "add" && clean(maker, 60)) record.maker = clean(maker, 60);
   const fixList = (fixes || []).filter((f) => FIXES[f]).slice(0, 3);
   if (record.action === "fix" && fixList.length) record.fixes = fixList;
@@ -122,7 +135,8 @@ export async function mySuggestions(uid = auth.currentUser?.uid) {
 
 /** Removes a suggestion, and takes it off the site at the next build if it was published. */
 export async function deleteSuggestion(id) {
-  await deleteDoc(doc(db, "community", id)).catch(() => {});
+  // The public record goes first: once the suggestion is gone, nobody can.
+  await deleteDoc(doc(db, "community", id));
   await deleteDoc(doc(db, "suggestions", id));
 }
 

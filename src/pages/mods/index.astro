@@ -14,7 +14,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
   <main class="wrap page">
     <header class="intro">
       <h1>Hardware mods</h1>
-      <p>Parts you fit inside the iPod. Each listing says which iPods it fits, how hard the job is, and what changes for the firmware you run.</p>
+      <p>Parts you fit inside the iPod, and a few that plug into it. Each listing says which iPods it fits, how hard the job is, and what changes for the firmware you run.</p>
       <p>Know a mod that's missing, or another way to do one of these? <a href={href("/suggest/?kind=mod")}>Suggest it</a> and you can be credited when it goes in.</p>
       <nav class="jump" aria-label="Kinds of mod">
         {kinds.map((k) => <a href={`#kind-${k.toLowerCase()}`}>{k}</a>)}
@@ -48,7 +48,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                   <dt>Fits</dt>
                   <dd><span class="chips">{m.devices.map((d) => <span class="chip">{deviceById[d]?.name}</span>)}</span></dd>
                   {(m.partial || []).length > 0 && (
-                    <><dt>With a converter</dt><dd><span class="chips">{m.partial.map((d) => <span class="chip partial">{deviceById[d]?.name}</span>)}</span></dd></>
+                    <><dt>{m.partialLabel || "With a converter"}</dt><dd><span class="chips">{m.partial.map((d) => <span class="chip partial">{deviceById[d]?.name}</span>)}</span></dd></>
                   )}
                   {suggestedBy(m).length > 0 && (
                     <><dt>Suggested by</dt><dd class="credit">{suggestedBy(m).map((h, i) => <>{i > 0 && ", "}<a href={href(`/contributors/#${contributorSlug(h)}`)}>{h}</a></>)}</dd></>

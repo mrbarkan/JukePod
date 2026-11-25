@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Share a theme
+    url: https://quitanda.mrbarkan.com/themes/submit/
+    about: Themes for Rockbox, its forks and CrateDigger are shared through the site, where they're checked before they appear.
+  - name: Browse the shop
+    url: https://quitanda.mrbarkan.com
+    about: See what's already listed for your iPod before suggesting it.

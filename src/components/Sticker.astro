@@ -9,7 +9,7 @@
 //   archived      arch, kraft      "Preserved"
 //   community     diamond, blue    "Fresh pick"
 import Badge from "./Badge.astro";
-import { STATUS } from "../lib/catalog.js";
+import { STATUS, isNumbered } from "../lib/catalog.js";
 const { version, status, large = false, seed = "" } = Astro.props;
 const LOOKS = {
   stable: ["round", "green"],
@@ -21,7 +21,7 @@ const LOOKS = {
 const [shape, tone] = LOOKS[status] || LOOKS.archived;
 const s = STATUS[status] || { ripeness: String(status || ""), plain: String(status || "") };
 const number = String(version || "").replace(/^v/i, "");
-const numbered = number && number.length <= 5 && !/\s/.test(number);
+const numbered = isNumbered(version) && number.length <= 5 && !/\s/.test(number);
 
 // The tilt is the only thing left to chance: stickers are put on by hand.
 const TILTS = [-9, 7, -4, 10, -11, 5];
