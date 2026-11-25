@@ -64,9 +64,9 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
       const { thanksList } = await import("../lib/suggestions.js");
       const people = new Map(); // one line per person, listing everything they helped with
       for (const s of await thanksList()) {
-        const p = people.get(s.uid) || { name: s.name, items: [] };
+        const p = people.get(s.name) || { name: s.name, items: [] };
         p.items.push(`${s.title} (${s.action === "fix" ? "a fix" : `new ${KINDS[s.kind] || "listing"}`})`);
-        people.set(s.uid, p);
+        people.set(s.name, p);
       }
       list.replaceChildren(
         ...(people.size

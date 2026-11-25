@@ -237,7 +237,7 @@ test("flags: members create them; only admins and the sender read or remove them
   assert.equal(await del(bo, "flags/f1"), 200);
 });
 
-test("suggestions: members send them; the sender and admins read them until added with credit", async () => {
+test("suggestions: private to the sender and admins; credits hold only the public name and title", async () => {
   const good = { uid: ana.uid, name: "Ana", kind: "mod", action: "add", title: "Bluetooth kit", url: "https://example.com/kit", details: "Fits the Classic.", credit: true, status: "new" };
   assert.equal(await put(ana, "suggestions/s1", good), 200);
   assert.equal(await put(ana, "suggestions/s-fix", { ...good, action: "fix", itemId: "iflash" }), 200);
@@ -263,14 +263,19 @@ test("suggestions: members send them; the sender and admins read them until adde
   assert.equal(await put(admin, "suggestions/s1", { status: "published" }, { update: ["status"] }), 403);
   assert.equal(await put(admin, "suggestions/s1", { status: "added", reviewNote: "Thanks!" }, { update: ["status", "reviewNote"] }), 200);
   assert.equal(await put(admin, "suggestions/s-quiet", { status: "added" }, { update: ["status"] }), 200);
-  assert.equal(await get(null, "suggestions/s1"), 200, "added with credit: on the thank-you list");
-  assert.equal(await get(null, "suggestions/s-quiet"), 403, "added without credit stays private");
+  assert.equal(await get(null, "suggestions/s1"), 403, "an added suggestion stays private");
+  // Credits: public, holding only the name and title; written by admins only.
+  const credit = { name: "Ana", title: "Bluetooth kit", kind: "mod", action: "add" };
+  assert.equal(await put(ana, "credits/s1", credit), 403, "senders can't credit themselves");
+  assert.equal(await put(admin, "credits/s1", { ...credit, uid: ana.uid }), 403, "no account ID on the public list");
+  assert.equal(await put(admin, "credits/s1", { ...credit, details: "x" }), 403);
+  assert.equal(await put(admin, "credits/s1", credit), 200);
+  assert.equal(await get(null, "credits/s1"), 200);
+  assert.equal((await fetch(`${DOCS}/credits`)).status, 200, "anyone can list the thank-you list");
+  assert.equal(await del(bo, "credits/s1"), 403);
   const query = (filters) => fetch(`${DOCS}:runQuery`, json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
     where: { compositeFilter: { op: "AND", filters: filters.map(([f, v]) => ({ fieldFilter: { field: { fieldPath: f }, op: "EQUAL", value: enc(v) } })) } } } }));
-  const thanks = await query([["status", "added"], ["credit", true]]);
-  assert.equal(thanks.status, 200);
-  assert.equal((await thanks.json()).filter((r) => r.document).length, 1);
-  assert.equal((await query([["status", "added"]])).status, 403, "the public can't list uncredited ones");
+  assert.equal((await query([["status", "added"], ["credit", true]])).status, 403, "the public can't list suggestions");
   const mine = await fetch(`${DOCS}:runQuery`, { ...json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
     where: { fieldFilter: { field: { fieldPath: "uid" }, op: "EQUAL", value: { stringValue: ana.uid } } } } }), headers: { "Content-Type": "application/json", ...bearer(ana) } });
   assert.equal(mine.status, 200, "the sender can list their own");
@@ -278,6 +283,9 @@ test("suggestions: members send them; the sender and admins read them until adde
   assert.equal(await del(bo, "suggestions/s-fix"), 403);
   assert.equal(await del(ana, "suggestions/s-fix"), 200);
   assert.equal(await del(admin, "suggestions/s-quiet"), 200);
+  // Deleting an account removes the sender's credit, then the suggestion.
+  assert.equal(await del(ana, "credits/s1"), 200);
+  assert.equal(await del(ana, "suggestions/s1"), 200);
 });
 
 test("member settings are private to their owner", async () => {

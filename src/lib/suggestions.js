@@ -2,7 +2,7 @@
 // is already listed. Loaded on demand, like the rest of the Firebase code.
 import "./auth.js"; // sets up sign-in (and the emulators, when testing) first
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, limit, serverTimestamp } from "firebase/firestore/lite";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, deleteDoc, query, limit, where, writeBatch, serverTimestamp } from "firebase/firestore/lite";
 import { app } from "./firebase-app.js";
 
 const auth = getAuth(app);
@@ -50,14 +50,19 @@ export async function mySuggestions(uid = auth.currentUser?.uid) {
   return newestFirst(snap.docs.map(plainDoc));
 }
 
-export function deleteSuggestion(id) {
-  return deleteDoc(doc(db, "suggestions", id));
+/** Removes a suggestion and its line on the thank-you list, if it has one. */
+export async function deleteSuggestion(id) {
+  await deleteDoc(doc(db, "credits", id));
+  await deleteDoc(doc(db, "suggestions", id));
 }
 
-/** Suggestions that were added and whose senders asked to be credited. Public. */
+/** The public thank-you list: who helped, and with what. */
 export async function thanksList() {
-  const snap = await getDocs(query(collection(db, "suggestions"), where("status", "==", "added"), where("credit", "==", true), limit(500)));
-  return snap.docs.map(plainDoc).sort((a, b) => String(b.reviewedAt || "").localeCompare(String(a.reviewedAt || "")));
+  const snap = await getDocs(query(collection(db, "credits"), limit(500)));
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return { id: d.id, ...data, addedAt: data.addedAt?.toDate ? data.addedAt.toDate().toISOString() : "" };
+  }).sort((a, b) => b.addedAt.localeCompare(a.addedAt));
 }
 
 /* ---------- admins ---------- */
@@ -67,8 +72,20 @@ export async function suggestionsByStatus(status) {
   return newestFirst(snap.docs.map(plainDoc));
 }
 
-export async function reviewSuggestion(id, status, note) {
+/**
+ * Marks a suggestion added or declined. Added ones whose sender asked for
+ * credit get a line on the public thank-you list; nothing else is made public.
+ */
+export async function reviewSuggestion(suggestion, status, note) {
   const change = { status, reviewedAt: serverTimestamp() };
   if (clean(note, 500)) change.reviewNote = clean(note, 500);
-  await updateDoc(doc(db, "suggestions", id), change);
+  const batch = writeBatch(db);
+  batch.update(doc(db, "suggestions", suggestion.id), change);
+  const credit = doc(db, "credits", suggestion.id);
+  if (status === "added" && suggestion.credit) {
+    batch.set(credit, { name: suggestion.name, title: suggestion.title, kind: suggestion.kind, action: suggestion.action, addedAt: serverTimestamp() });
+  } else {
+    batch.delete(credit);
+  }
+  await batch.commit();
 }

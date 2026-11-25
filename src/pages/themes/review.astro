@@ -44,7 +44,7 @@ import { href } from "../../lib/catalog.js";
     const out = h("span", { role: "status" });
     const act = (status) => async () => {
       out.textContent = "Saving…";
-      try { await (await suggestions()).reviewSuggestion(s.id, status, note.value); reload(); }
+      try { await (await suggestions()).reviewSuggestion(s, status, note.value); reload(); }
       catch { out.textContent = "Couldn't save. Try again."; }
     };
     const safeUrl = /^https?:\/\//.test(s.url || "") ? s.url : null;
