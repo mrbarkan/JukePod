@@ -24,6 +24,7 @@ const plainDoc = (snap) => {
 const newestFirst = (list) => list.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
 export const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
+export const PLATFORMS = ["macOS", "Windows", "Linux", "iPhone", "Web"];
 export const FIXES = { link: "The link is broken or wrong", ipods: "The iPods it works on are wrong", text: "Something else in the text" };
 
 /**
@@ -67,7 +68,10 @@ export function communityRecord(s, edits = {}) {
   const wantsIpods = record.action === "add" || fixes.includes("ipods");
   if (url && /^https?:\/\/[^ ]+$/.test(url) && wantsLink) record.url = url;
   const devices = (edits.devices ?? s.devices ?? []).filter(isSlug).slice(0, 20);
-  if (devices.length && wantsIpods) record.devices = devices;
+  // A fix to the iPods keeps an empty list: it means "none of them".
+  if (wantsIpods && (devices.length || record.action === "fix")) record.devices = devices;
+  const platforms = (edits.platforms ?? s.platforms ?? []).filter((p) => PLATFORMS.includes(p));
+  if (record.kind === "app" && record.action === "add" && platforms.length) record.platforms = platforms;
   if (record.action === "add") {
     if (pick("maker", 60)) record.maker = pick("maker", 60);
     const blurb = clean(edits.blurb ?? s.details, 600);
@@ -81,7 +85,7 @@ export function communityRecord(s, edits = {}) {
  * Saves a suggestion from the signed-in person. A trusted person's goes
  * straight to the site. Returns { id, published }. Throws with a message to show.
  */
-export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, maker, fixes, credit }) {
+export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, platforms, maker, fixes, credit }) {
   const user = auth.currentUser;
   if (!user) throw new Error("Sign in first.");
   if (!clean(title, 80)) throw new Error("Give it a name.");
@@ -104,7 +108,9 @@ export async function sendSuggestion({ kind, action, itemId, title, url, details
   if (link) record.url = link;
   if (record.action === "fix" && isSlug(itemId)) record.itemId = itemId;
   const ipods = (devices || []).filter(isSlug).slice(0, 20);
-  if (ipods.length) record.devices = ipods;
+  if (ipods.length || (record.action === "fix" && (fixes || []).includes("ipods"))) record.devices = ipods;
+  const hosts = [...new Set((platforms || []).filter((p) => PLATFORMS.includes(p)))];
+  if (record.kind === "app" && record.action === "add" && hosts.length) record.platforms = hosts;
   if (record.action === "add" && clean(maker, 60)) record.maker = clean(maker, 60);
   const fixList = (fixes || []).filter((f) => FIXES[f]).slice(0, 3);
   if (record.action === "fix" && fixList.length) record.fixes = fixList;

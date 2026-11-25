@@ -28,7 +28,7 @@ function addCredit(item, name) {
   return { ...item, suggestedBy: [...now, name] };
 }
 
-function newEntry(c, deviceIds, categoryIds) {
+function newEntry(c, deviceIds, categoryIds, raw) {
   const devices = (c.devices || []).filter((d) => deviceIds.has(d));
   const blurb = text(c.blurb, 600) || `Suggested by the community. See ${text(c.name, 80)}’s own page for the details.`;
   const link = { label: c.kind === "mod" ? "Where to get it" : "Project page", url: c.url, icon: c.kind === "mod" ? "info" : "release" };
@@ -47,7 +47,10 @@ function newEntry(c, deviceIds, categoryIds) {
   if (creditName(c.credit)) base.suggestedBy = [creditName(c.credit)];
   if (c.kind === "mod") return { ...base, kind: text(c.category, 40) || "From the community", skill: "Not stated" };
   const category = categoryIds.has(c.category) ? [c.category] : [];
-  if (c.kind === "app") return { ...base, categories: category, status: "community", platforms: [] };
+  if (c.kind === "app") {
+    const platforms = (c.platforms || []).filter((p) => (raw.platforms || []).includes(p));
+    return { ...base, categories: category, status: "community", platforms };
+  }
   return { ...base, categories: category, status: "community", version: null, updated: null };
 }
 
@@ -81,7 +84,7 @@ export function applyCommunity(raw, community) {
         lists[kind][i] = addCredit(lists[kind][i], credit);
         continue;
       }
-      lists[c.kind].push(newEntry(c, deviceIds, categoryIds));
+      lists[c.kind].push(newEntry(c, deviceIds, categoryIds, raw));
       where.set(c.itemId, [c.kind, lists[c.kind].length - 1]);
       continue;
     }
@@ -94,9 +97,10 @@ export function applyCommunity(raw, community) {
         links[0] = { ...(links[0] || { label: "Project page", icon: "release" }), url: c.url };
         item = { ...item, links };
       }
-      const devices = (c.devices || []).filter((d) => deviceIds.has(d));
-      // The sender ticks every iPod it works on. Ones listed as partial stay partial.
-      if (devices.length) {
+      // The sender ticks every iPod it works on (possibly none). Ones listed
+      // as partial stay partial.
+      if (Array.isArray(c.devices)) {
+        const devices = c.devices.filter((d) => deviceIds.has(d));
         const partial = (item.partial || []).filter((d) => devices.includes(d));
         item = { ...item, devices: devices.filter((d) => !partial.includes(d)), partial };
       }

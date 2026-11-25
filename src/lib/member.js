@@ -111,7 +111,10 @@ export async function deleteEverything() {
   for (const flag of await myFlags(user.uid)) await deleteDoc(doc(db, "flags", flag.id));
   for (const report of await myReports(user.uid)) await deleteDoc(doc(db, "reports", report.id));
   const { mySuggestions, deleteSuggestion } = await import("./suggestions.js");
-  for (const suggestion of await mySuggestions(user.uid)) await deleteSuggestion(suggestion.id);
+  // A page at a time, until none are left, however many there are.
+  for (let batch = await mySuggestions(user.uid); batch.length; batch = await mySuggestions(user.uid)) {
+    for (const suggestion of batch) await deleteSuggestion(suggestion.id);
+  }
   const { loadMyIpods, removeIpod } = await import("./my-ipods.js");
   for (const ipod of await loadMyIpods(user.uid)) await removeIpod(ipod.id);
   await Promise.all(["subscribers", "members", "users"].map((path) => deleteDoc(doc(db, path, user.uid))));

@@ -6,6 +6,7 @@ import { applyCommunity } from "../src/lib/community.js";
 const raw = {
   devices: [{ id: "ipod-video" }, { id: "ipod-classic" }, { id: "ipod-4g" }],
   categories: [{ id: "players" }, { id: "tools" }],
+  platforms: ["macOS", "Windows"],
   firmwares: [{ id: "rockbox", name: "Rockbox", devices: ["ipod-video"], partial: ["ipod-4g"], links: [{ label: "Download", url: "https://rockbox.org", icon: "download" }] }],
   apps: [],
   mods: [{ id: "flash-storage", name: "Flash storage", kind: "Storage", devices: ["ipod-video"], partial: [], links: [] }],
@@ -77,4 +78,14 @@ test("entries without a link, of an unknown kind, or with a bad id add nothing",
 test("a credit can't borrow a Reddit or GitHub handle", () => {
   const out = applyCommunity(raw, { entries: [{ id: "s9", kind: "mod", action: "add", itemId: "kit2", name: "Kit 2", url: "https://example.com", credit: "u/GarlicNo3695" }] });
   assert.deepEqual(out.mods.find((m) => m.id === "kit2").suggestedBy, ["GarlicNo3695"]);
+});
+
+test("a community app keeps the platforms it runs on", () => {
+  const out = applyCommunity(raw, { entries: [{ id: "a1", kind: "app", action: "add", itemId: "pod-sync", name: "Pod Sync", url: "https://example.com", platforms: ["Windows", "Amiga"] }] });
+  assert.deepEqual(out.apps[0].platforms, ["Windows"]);
+});
+
+test("a fix can say a listing works on no iPods at all", () => {
+  const out = applyCommunity(raw, { entries: [{ id: "f1", kind: "mod", action: "fix", itemId: "flash-storage", name: "Flash storage", devices: [] }] });
+  assert.deepEqual(out.mods[0].devices, []);
 });

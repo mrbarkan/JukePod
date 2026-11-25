@@ -321,6 +321,8 @@ test("trusted contributors publish their own suggestions without review", async 
   assert.equal(await put(bo, "suggestions/t8", sugg(bo.uid, { status: "new", createdAt: "x".repeat(5000) })), 403, "timestamps must be the server's");
   assert.equal(await put(bo, "suggestions/t9", sugg(bo.uid, { status: "new", devices: ["ipod-video", { evil: true }] })), 403, "every iPod must be an id");
   assert.equal(await put(bo, "suggestions/t1", sugg(bo.uid, { status: "new" })), 403, "can't reuse the ID of a published record");
+  assert.equal(await put(bo, "suggestions/t10", sugg(bo.uid, { kind: "app", status: "new", platforms: ["Windows", "macOS"] })), 200);
+  assert.equal(await put(bo, "suggestions/t11", sugg(bo.uid, { kind: "app", status: "new", platforms: ["Amiga"] })), 403, "platforms come from the catalog's list");
   assert.equal(await del(bo, `trusted/${bo.uid}`), 403);
   assert.equal(await del(admin, `trusted/${bo.uid}`), 200);
   assert.equal(await commit(bo, [["suggestions/t6", sugg(bo.uid)], ["community/t6", pub]]), 403, "no longer trusted");

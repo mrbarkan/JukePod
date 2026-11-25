@@ -46,6 +46,10 @@ service cloud.firestore {
     function slugList(value, max) {
       return value is list && value.size() <= max && slugAtTop(value, 0) && slugAtTop(value, 1) && slugAtTop(value, 2) && slugAtTop(value, 3) && slugAtTop(value, 4) && slugAtTop(value, 5) && slugAtTop(value, 6) && slugAtTop(value, 7) && slugAtTop(value, 8) && slugAtTop(value, 9) && slugAtTop(value, 10) && slugAtTop(value, 11) && slugAtTop(value, 12) && slugAtTop(value, 13) && slugAtTop(value, 14) && slugAtTop(value, 15) && slugAtTop(value, 16) && slugAtTop(value, 17) && slugAtTop(value, 18) && slugAtTop(value, 19);
     }
+    // What a library app runs on, from the catalog's platform list.
+    function isPlatforms(value) {
+      return value is list && value.size() <= 5 && value.hasOnly(['macOS', 'Windows', 'Linux', 'iPhone', 'Web']);
+    }
     function slugAtTop(list, index) {
       return list.size() <= index || isSlug(list[index]);
     }
@@ -226,7 +230,7 @@ service cloud.firestore {
         // claim someone else's published record by recreating its suggestion.
         && !exists(/databases/$(database)/documents/community/$(suggestionId))
         && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details',
-            'devices', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
+            'devices', 'platforms', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
         && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
         && request.resource.data.kind in ['firmware', 'app', 'mod', 'other']
         && request.resource.data.action in ['add', 'fix']
@@ -236,6 +240,7 @@ service cloud.firestore {
         && request.resource.data.details is string
         && request.resource.data.details.size() >= 1 && request.resource.data.details.size() <= 2000
         && (!('devices' in request.resource.data) || slugList(request.resource.data.devices, 20))
+        && (!('platforms' in request.resource.data) || isPlatforms(request.resource.data.platforms))
         && optionalText(request.resource.data, 'maker', 60)
         && (!('fixes' in request.resource.data) || (request.resource.data.fixes is list && request.resource.data.fixes.size() <= 3
           && request.resource.data.fixes.hasOnly(['link', 'ipods', 'text'])))
@@ -276,7 +281,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid);
 
       function validCommunity(data) {
-        return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'maker',
+        return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'platforms', 'maker',
             'blurb', 'category', 'publishedAt'])
           && optionalText(data, 'credit', 40)
           && data.kind in ['firmware', 'app', 'mod', 'other']
@@ -285,6 +290,7 @@ service cloud.firestore {
           && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
           && (!('url' in data) || isLink(data.url))
           && (!('devices' in data) || slugList(data.devices, 20))
+          && (!('platforms' in data) || isPlatforms(data.platforms))
           && optionalText(data, 'maker', 60)
           && optionalText(data, 'blurb', 600)
           && optionalText(data, 'category', 40)

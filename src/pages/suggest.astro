@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { firmwares, apps, mods, devices, SITE, href } from "../lib/catalog.js";
+import { firmwares, apps, mods, devices, platforms, SITE, href } from "../lib/catalog.js";
 
 // Every listing, so "fix a listing" can name the one it means.
 const listings = [
@@ -79,6 +79,13 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         <input class="field" id="sg-maker" maxlength="60" placeholder="a person, a group or a shop" />
       </label>
 
+      <fieldset class="theme-devices" id="sg-platforms-box" hidden>
+        <legend>What does it run on?</legend>
+        <div>
+          {platforms.map((p) => <label class="theme-check"><input type="checkbox" name="sg-platform" value={p} /><span>{p}</span></label>)}
+        </div>
+      </fieldset>
+
       <fieldset class="theme-devices" id="sg-devices-box">
         <legend id="sg-devices-legend">Which iPods does it work on?</legend>
         <small id="sg-devices-help">Tick the ones you know about. Leave it empty if you're not sure.</small>
@@ -152,6 +159,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
     $("sg-url-label").innerHTML = fix ? (f.includes("link") ? "The right link" : "Link <em>(optional)</em>") : other ? "Link <em>(optional)</em>" : "Link";
     $("sg-url-help").textContent = fix ? "Where it lives now, or where you found the right details." : "Its website, repository, shop page or video.";
     $("sg-devices-box").hidden = fix ? !f.includes("ipods") : other;
+    $("sg-platforms-box").hidden = fix || $("sg-kind").value !== "app";
     $("sg-devices-legend").textContent = fix ? "Which iPods does it really work on?" : "Which iPods does it work on?";
     $("sg-devices-help").textContent = fix ? "Tick every one it works on, including the ones already listed." : "Tick the ones you know about. Leave it empty if you're not sure.";
     $("sg-details-label").textContent = fix ? "What needs changing" : "Description";
@@ -244,6 +252,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         url: $("sg-url-box").hidden ? "" : $("sg-url").value,
         maker: $("sg-maker").value,
         devices: $("sg-devices-box").hidden ? [] : ticked(),
+        platforms: $("sg-platforms-box").hidden ? [] : [...document.querySelectorAll("input[name=sg-platform]:checked")].map((i) => i.value),
         fixes: fix ? fixes() : [],
         details: $("sg-details").value,
         credit: $("sg-credit").checked,
