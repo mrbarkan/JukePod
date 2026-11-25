@@ -14,7 +14,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   <main class="wrap page narrow">
     <header class="intro">
       <h1>Suggest a listing</h1>
-      <p>Know a mod, firmware or app that's missing, or spotted something wrong? Send it here. Each suggestion is read by a person, and you can be credited by name when it goes in.</p>
+      <p>Know a mod, firmware or app that's missing, or spotted something wrong? Send it here. A person reads each suggestion before it goes up, unless you're a trusted contributor, and you can be credited by name.</p>
     </header>
 
     <p id="sg-loading" class="aside-note">Checking whether you're signed in…</p>
@@ -98,7 +98,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         <span>Credit me by name on the listing and the <a href={href("/contributors/")}>contributors page</a> if it goes in. <span id="sg-as"></span></span>
       </label>
 
-      <p class="aside-note" id="sg-trusted-note" hidden>You're a trusted contributor, so this goes straight to the site with the next nightly update, without waiting for review.</p>
+      <p class="aside-note" id="sg-trusted-note" hidden>You're a trusted contributor, so a new listing goes straight to the site with the next nightly update, without waiting for review. Fixes to existing listings are still checked first.</p>
       <div class="acct-actions">
         <button type="submit" class="btn" id="sg-send">Send suggestion</button>
         <span id="sg-status" role="status"></span>
@@ -129,6 +129,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   const ADD_HELP = "What it does and anything worth knowing. This becomes the description on its listing, so write it for other iPod owners. Say if you make or sell it yourself.";
   const FIX_HELP = "What's wrong, and what it should say. A link to where you found it helps.";
   let busy = false;
+  let level = "";
   let trusted = false;
 
   const action = () => document.querySelector("input[name=sg-action]:checked").value;
@@ -139,6 +140,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   // Shows only the questions that matter for what's being sent.
   function refresh() {
     const fix = action() === "fix";
+    trusted = level === "all" || (level === "new" && !fix);
     const other = !fix && $("sg-kind").value === "other";
     const f = fixes();
     $("sg-item-box").hidden = !fix;
@@ -211,10 +213,10 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
     $("sg-out").hidden = !!user;
     if ($("sg-done").hidden) $("sg-form").hidden = !user;
     $("sg-as").textContent = user?.displayName ? `(as ${user.displayName.split(" ")[0]}; change it on your account page)` : "";
-    trusted = false;
+    level = "";
     if (user) {
       drawMine().catch(() => {});
-      trusted = await (await lib()).amTrusted(user.uid).catch(() => false);
+      level = await (await lib()).trustLevel(user.uid).catch(() => "");
     } else $("sg-mine-box").hidden = true;
     refresh();
   });

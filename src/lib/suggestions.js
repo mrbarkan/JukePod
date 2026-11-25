@@ -26,18 +26,24 @@ const newestFirst = (list) => list.sort((a, b) => String(b.createdAt || "").loca
 export const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
 export const FIXES = { link: "The link is broken or wrong", ipods: "The iPods it works on are wrong", text: "Something else in the text" };
 
-/** True if the signed-in person's suggestions publish without review. */
-export async function amTrusted(uid = auth.currentUser?.uid) {
-  if (!uid) return false;
+/**
+ * What the signed-in person may publish without review: "all" for admins,
+ * "new" (new listings, not fixes) for trusted contributors, or "" for nothing.
+ */
+export async function trustLevel(uid = auth.currentUser?.uid) {
+  if (!uid) return "";
   try {
-    if ((await getDoc(doc(db, "admins", uid))).exists()) return true;
+    if ((await getDoc(doc(db, "admins", uid))).exists()) return "all";
   } catch { /* not an admin */ }
   try {
-    return (await getDoc(doc(db, "trusted", uid))).exists();
+    return (await getDoc(doc(db, "trusted", uid))).exists() ? "new" : "";
   } catch {
-    return false;
+    return "";
   }
 }
+
+/** True if this suggestion would publish straight away at this trust level. */
+export const publishesNow = (level, action) => level === "all" || (level === "new" && action !== "fix");
 
 /**
  * The public record the nightly build reads. `edits` are the reviewer's
@@ -82,7 +88,8 @@ export async function sendSuggestion({ kind, action, itemId, title, url, details
   if (!clean(details, 2000)) throw new Error("Add a few details, so it can be checked.");
   const link = clean(url, 300);
   if (link && !/^https?:\/\/[^ ]+$/.test(link)) throw new Error("The link should start with https://");
-  const [profile, trusted] = await Promise.all([getDoc(doc(db, "users", user.uid)), amTrusted(user.uid)]);
+  const [profile, level] = await Promise.all([getDoc(doc(db, "users", user.uid)), trustLevel(user.uid)]);
+  const trusted = publishesNow(level, action);
   const record = {
     uid: user.uid,
     name: clean(profile.data()?.displayName || user.displayName, 40) || "Friend",
@@ -122,7 +129,8 @@ export async function mySuggestions(uid = auth.currentUser?.uid) {
 
 /** Removes a suggestion, and takes it off the site at the next build if it was published. */
 export async function deleteSuggestion(id) {
-  await deleteDoc(doc(db, "community", id)).catch(() => {});
+  // The public record goes first: once the suggestion is gone, nobody can.
+  await deleteDoc(doc(db, "community", id));
   await deleteDoc(doc(db, "suggestions", id));
 }
 

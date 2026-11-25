@@ -13,6 +13,9 @@
 
 const isSlug = (v) => typeof v === "string" && /^[a-z0-9-]{1,60}$/.test(v);
 const text = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+// A credit is a site display name, never a Reddit or GitHub handle, so it
+// can't borrow a real person's card and profile link on /contributors/.
+const creditName = (v) => text(v, 40).replace(/^(\/?u\/|@)+/i, "").trim();
 const isLink = (v) => typeof v === "string" && /^https?:\/\/[^ ]+$/.test(v) && v.length <= 300;
 
 /** The words shown on a community listing's status chip. */
@@ -41,7 +44,7 @@ function newEntry(c, deviceIds, categoryIds) {
     communityId: c.id,
     publishedAt: c.publishedAt || null,
   };
-  if (c.credit) base.suggestedBy = [text(c.credit, 40)];
+  if (creditName(c.credit)) base.suggestedBy = [creditName(c.credit)];
   if (c.kind === "mod") return { ...base, kind: text(c.category, 40) || "From the community", skill: "Not stated" };
   const category = categoryIds.has(c.category) ? [c.category] : [];
   if (c.kind === "app") return { ...base, categories: category, status: "community", platforms: [] };
@@ -66,7 +69,7 @@ export function applyCommunity(raw, community) {
   const sorted = [...entries].sort((a, b) => String(a.publishedAt || "").localeCompare(String(b.publishedAt || "")));
   for (const c of sorted) {
     if (!c || !isSlug(c.itemId) || !text(c.name, 80)) continue;
-    const credit = text(c.credit, 40);
+    const credit = creditName(c.credit);
     if (c.action === "add") {
       if (!lists[c.kind] || !isLink(c.url)) {
         if (credit) credits.push({ name: credit, idea: `Suggested ${text(c.name, 80)}`, date: c.publishedAt });

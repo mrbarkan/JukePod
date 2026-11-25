@@ -73,3 +73,8 @@ test("entries without a link, of an unknown kind, or with a bad id add nothing",
   assert.equal(out.firmwares.length, 1);
   assert.deepEqual(out.communityCredits.map((c) => c.idea), ["Suggested A guide"]);
 });
+
+test("a credit can't borrow a Reddit or GitHub handle", () => {
+  const out = applyCommunity(raw, { entries: [{ id: "s9", kind: "mod", action: "add", itemId: "kit2", name: "Kit 2", url: "https://example.com", credit: "u/GarlicNo3695" }] });
+  assert.deepEqual(out.mods.find((m) => m.id === "kit2").suggestedBy, ["GarlicNo3695"]);
+});

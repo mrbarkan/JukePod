@@ -315,7 +315,12 @@ test("trusted contributors publish their own suggestions without review", async 
   assert.equal(await put(ana, "suggestions/t3", { ...sugg(ana.uid), name: "Ana" }), 403, "untrusted members still wait");
   assert.equal(await put(bo, "community/t1", { ...pub, name: "Changed" }), 403, "can't edit once published");
   assert.equal(await put(bo, "suggestions/t4", sugg(bo.uid, { fixes: ["everything"] })), 403);
-  assert.equal(await put(bo, "suggestions/t5", sugg(bo.uid, { action: "fix", itemId: "rockbox", fixes: ["link", "ipods"] })), 200);
+  assert.equal(await put(bo, "suggestions/t5", sugg(bo.uid, { action: "fix", itemId: "rockbox", fixes: ["link", "ipods"] })), 403, "a trusted fix still waits for review");
+  assert.equal(await put(bo, "suggestions/t5", sugg(bo.uid, { action: "fix", itemId: "rockbox", fixes: ["link"], status: "new" })), 200);
+  assert.equal(await commit(bo, [["suggestions/t7", sugg(bo.uid, { action: "fix", itemId: "rockbox" })], ["community/t7", { ...pub, action: "fix", itemId: "rockbox", url: "https://evil.example" }]]), 403, "can't publish a fix to a hand-written listing");
+  assert.equal(await put(bo, "suggestions/t8", sugg(bo.uid, { status: "new", createdAt: "x".repeat(5000) })), 403, "timestamps must be the server's");
+  assert.equal(await put(bo, "suggestions/t9", sugg(bo.uid, { status: "new", devices: ["ipod-video", { evil: true }] })), 403, "every iPod must be an id");
+  assert.equal(await put(bo, "suggestions/t1", sugg(bo.uid, { status: "new" })), 403, "can't reuse the ID of a published record");
   assert.equal(await del(bo, `trusted/${bo.uid}`), 403);
   assert.equal(await del(admin, `trusted/${bo.uid}`), 200);
   assert.equal(await commit(bo, [["suggestions/t6", sugg(bo.uid)], ["community/t6", pub]]), 403, "no longer trusted");
