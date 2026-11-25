@@ -5,7 +5,7 @@ import Icon from "./Icon.astro";
 import ShareRow from "./ShareRow.astro";
 import Ripeness from "./Ripeness.astro";
 import Sticker from "./Sticker.astro";
-import { byId, builtOn, deviceById, devices, categoryById, themeTargets, fmt, plain, fmtDate, isNumbered, href } from "../lib/catalog.js";
+import { byId, builtOn, deviceById, devices, categoryById, themeTargets, fmt, plain, fmtDate, isNumbered, href, suggestedBy, contributorSlug } from "../lib/catalog.js";
 
 const { item } = Astro.props;
 const isApp = item.type === "app";
@@ -25,6 +25,7 @@ const files = (item.files || []).filter((f) => f.device);
 const otherFiles = (item.files || []).filter((f) => !f.device);
 const hasThemes = themeTargets.some((t) => t.id === item.id);
 const steps = item.install || [];
+const credits = suggestedBy(item);
 const meta = [
   item.updated && `Updated ${fmtDate(item.updated)}`,
   item.stars != null && `${item.stars} ${item.stars === 1 ? "star" : "stars"} on GitHub`,
@@ -94,6 +95,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             {item.requires && (<><dt>Needs first</dt><dd set:html={fmt(item.requires)} /></>)}
             {parent && (<><dt>Based on</dt><dd><a href={href(parent.path)}>{parent.name}</a></dd></>)}
             {item.license && (<><dt>License</dt><dd>{item.license}</dd></>)}
+            {credits.length > 0 && (<><dt>Suggested by</dt><dd class="credit">{credits.map((h, i) => <>{i > 0 && ", "}<a href={href(`/contributors/#${contributorSlug(h)}`)}>{h}</a></>)}</dd></>)}
           </dl>
           {links.length > 1 && (
             <div class="item-actions">

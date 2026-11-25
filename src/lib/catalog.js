@@ -3,6 +3,7 @@
 import raw from "../data/catalog.js";
 import stats from "../data/github-stats.json";
 import shots from "../data/screenshots.json";
+import people from "../data/contributors.js";
 
 const repos = (stats && stats.repos) || {};
 
@@ -149,3 +150,47 @@ export const SITE = {
   // needs no change here.
   repo: import.meta.env.PUBLIC_REPO_URL || "https://github.com/mrbarkan/quitanda",
 };
+
+/* ---------- Contributors ---------- */
+
+/** The handles in an item's `suggestedBy`, which may be one string or a list. */
+export function suggestedBy(item) {
+  const v = item && item.suggestedBy;
+  return (Array.isArray(v) ? v : v ? [v] : []).map((h) => String(h).trim()).filter(Boolean);
+}
+
+/** Anchor on /contributors/ for a handle: "u/Lord_Voltan" -> "u-lord_voltan". */
+export function contributorSlug(handle) {
+  return handle.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/** Profile link for a handle, from its prefix, unless the entry gives one. */
+export function contributorUrl(handle, url) {
+  if (url) return url;
+  if (handle.startsWith("u/")) return `https://www.reddit.com/user/${handle.slice(2)}/`;
+  if (handle.startsWith("@")) return `https://github.com/${handle.slice(1)}`;
+  return null;
+}
+
+/**
+ * Everyone credited, from contributors.js plus anyone named only in a
+ * listing's suggestedBy, each with the listings they suggested. Oldest first.
+ */
+export const contributors = (() => {
+  const all = [...items, ...mods];
+  const byKey = new Map();
+  for (const p of people) byKey.set(p.handle.toLowerCase(), { ...p, ideas: p.ideas || [] });
+  for (const item of all) {
+    for (const h of suggestedBy(item)) {
+      if (!byKey.has(h.toLowerCase())) byKey.set(h.toLowerCase(), { handle: h, ideas: [] });
+    }
+  }
+  return [...byKey.values()]
+    .map((p) => ({
+      ...p,
+      slug: contributorSlug(p.handle),
+      profile: contributorUrl(p.handle, p.url),
+      listings: all.filter((i) => suggestedBy(i).some((h) => h.toLowerCase() === p.handle.toLowerCase())),
+    }))
+    .sort((a, b) => (a.since || "9999").localeCompare(b.since || "9999"));
+})();

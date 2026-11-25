@@ -24,12 +24,9 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
       <p>A listing here isn’t a guarantee. Read the project’s own notes, and back up your music first.</p>
 
       <h2 id="add-or-correct-a-listing">Add or correct a listing</h2>
-      <p>Sign in and <a href={href("/suggest/")}>suggest a listing</a>: something missing, or a fix to one that's here. A person reads each one and adds it, and you can be credited below.</p>
+      <p>Sign in and <a href={href("/suggest/")}>suggest a listing</a>: something missing, or a fix to one that's here. A person reads each one before it goes up, and you can be credited by name.</p>
       <p>The whole catalog is also one file in a public repository, so you can <a href={`${SITE.repo}/issues/new`}>open an issue</a> with the details, or <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>edit the file</a> and send a pull request. If you make one of the projects listed and something is wrong, any of these routes works, and corrections go in quickly.</p>
-
-      <h2 id="thanks">Thanks</h2>
-      <p>People who helped fill the shelves. Suggest a listing and tick the box to be credited, and your name goes here once it's in.</p>
-      <ul id="thanks-list" class="thanks-list"><li class="aside-note">Loading…</li></ul>
+      <p id="thanks">Everyone whose suggestion shapes the catalog is credited on the <a href={href("/contributors/")}>contributors page</a>, and on the listing they brought in.</p>
 
       <h2>Shared themes</h2>
       <p>Anyone signed in can <a href={href("/themes/submit/")}>share a theme</a> for Rockbox, its forks or CrateDigger. Every theme is checked by a person before it appears in the <a href={href("/themes/")}>gallery</a>. Themes can’t contain programs, plugins or firmware, and they can’t include Apple’s fonts, icons or artwork. If you spot a problem with one, use “Report a problem” on its page.</p>
@@ -49,36 +46,3 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
   </main>
 </Base>
 
-<script>
-  const h = (tag, attrs, ...children) => {
-    const el = Object.assign(document.createElement(tag), attrs?.class ? { className: attrs.class } : {});
-    el.append(...children);
-    return el;
-  };
-
-  // Loaded when the list scrolls near, so the page itself stays light.
-  const list = document.getElementById("thanks-list");
-  const KINDS = { firmware: "firmware", app: "app", mod: "mod", other: "listing" };
-  async function draw() {
-    try {
-      const { thanksList } = await import("../lib/suggestions.js");
-      const people = new Map(); // one line per person, listing everything they helped with
-      for (const s of await thanksList()) {
-        const p = people.get(s.uid) || { name: s.name, items: [] };
-        p.items.push(`${s.title} (${s.action === "fix" ? "a fix" : `new ${KINDS[s.kind] || "listing"}`})`);
-        people.set(s.uid, p);
-      }
-      list.replaceChildren(
-        ...(people.size
-          ? [...people.values()].map((p) => h("li", {}, h("strong", {}, p.name), ` for ${p.items.join(", ")}`))
-          : [h("li", { class: "aside-note" }, "Nobody yet. Be the first.")])
-      );
-    } catch {
-      list.replaceChildren(h("li", { class: "aside-note" }, "The list couldn't load right now."));
-    }
-  }
-  if ("IntersectionObserver" in window) {
-    const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); draw(); } }, { rootMargin: "400px" });
-    io.observe(list);
-  } else draw();
-</script>
