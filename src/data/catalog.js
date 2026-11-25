@@ -26,6 +26,13 @@
  *   install      ordered steps. Wrap file names and paths in `backticks`.
  *   wayBack      how to get back to what was there before, when it isn't
  *                "copy the .rockbox folder back" (optional)
+ *   basedOn      id of the listing it forks, e.g. "rockbox"
+ *   family       what it's built on, for the "Built on" filter: "rockbox" |
+ *                "stock" (patches Apple's firmware) | "scratch" (something
+ *                new). Leave it out when `basedOn` leads back to Rockbox.
+ *   suggestedBy  who told us about it: "u/RedditName", or a list of them.
+ *                Works on firmwares, apps and mods; the contributors page
+ *                reads it.
  *   rockboxThemes  false for a Rockbox fork with its own interface that
  *                can't load Rockbox themes; it is then left off the themes pages
  *   files        file names per device: { label, file, device }. `device` is
@@ -40,11 +47,14 @@
  * November 2026. Check versions and dates before you launch.
  */
 export default {
-  updatedOn: "2026-11-24",
+  updatedOn: "2026-11-25",
 
   latest: {
-    date: "2026-11-24",
+    date: "2026-11-25",
     lines: [
+      { label: "Added firmware", ids: ["repriseos", "classic-6g-newer-firmware"] },
+      { label: "Added library apps", ids: ["clickwheel-games", "handbrake-ipod"] },
+      { label: "Added mods", ids: ["bluetooth-adapters"], suffix: "and more storage options" },
       { label: "Added firmware", ids: ["rockwheel", "prokbox5g"] },
       { label: "Added library apps", ids: ["iopenpod", "stonepod", "swinsian", "foo-dop", "copytrans-manager", "musicbee", "rhythmbox", "finder-itunes", "cratedigger"] },
       { label: "Watching", ids: ["helikon-os"], suffix: "on the watch list, with its launcher and music player beta due this month" },
@@ -446,10 +456,103 @@ export default {
     },
 
     {
+      id: "repriseos",
+      menu: ["Music", "Up Next", "Equalizer", "Settings"],
+      name: "RepriseOS",
+      maker: "lgreitis",
+      family: "stock",
+      categories: ["players", "audio"],
+      status: "experimental",
+      version: null,
+      updated: null,
+      github: "lgreitis/osos-lab",
+      stars: 64,
+      license: "GPL-3.0",
+      suggestedBy: "u/No_Shock_2308",
+      blurb: "Apple\u2019s own iPod Classic firmware with new features patched in: a custom equalizer, Play Next and Play Last, album artists and no EU volume cap. It isn\u2019t a Rockbox fork or skin.",
+      more: [
+        "RepriseOS starts from Apple\u2019s 2.0.5 firmware and adds to it, so the menus, the database and syncing with Finder or iTunes stay as they were. A modified Rockbox bootloader starts it, and you can still pick Apple\u2019s firmware or Rockbox at power-on. Its makers say the same 2.0.5 file is used on every supported Classic, even one running older Apple firmware, so a 6th or 6.5th gen doesn\u2019t need the SysCFG guide first.",
+        "It\u2019s experimental, and only works on iPods formatted for Windows (FAT32) for now. Dark mode is in progress, and a game SDK is planned."
+      ],
+      features: [
+        "Custom equalizer",
+        "Play Next and Play Last",
+        "Browse by album artist",
+        "Song info screen",
+        "No EU volume limit",
+        "Boots Apple\u2019s firmware or Rockbox too"
+      ],
+      devices: ["ipod-classic"],
+      partial: [],
+      requires: "An iPod Classic formatted for Windows (FAT32), and a Mac, Windows or Linux computer for the installer",
+      install: [
+        "Back up the iPod. Music and Apple\u2019s firmware are kept, but back up anyway.",
+        "Download the RepriseOS installer for your computer and open it.",
+        "Choose `iPod_38.2.0.5.ipsw` and follow the app\u2019s steps to put the iPod in DFU mode.",
+        "The installer downloads RepriseOS and sets it up for your iPod.",
+        "At power-on, hold nothing for RepriseOS, Menu for Apple\u2019s firmware, or Play/Pause for Rockbox if you installed it."
+      ],
+      wayBack: "In disk mode, delete `osos-cfw.bin` and `cfw-loader.bin` from the iPod\u2019s root folder. Then restore it in DFU mode with Finder or iTunes (this erases it), or install the standard Rockbox bootloader with Rockbox Utility.",
+      files: [
+        { label: "iPod Classic 6G, 6.5G and 7G", file: "iPod_38.2.0.5.ipsw", device: "ipod-classic" }
+      ],
+      links: [
+        { label: "Download", url: "https://repriseos.com/download/", icon: "download" },
+        { label: "FAQ", url: "https://repriseos.com/faq/", icon: "docs" },
+        { label: "Installer source", url: "https://github.com/lgreitis/repriseos-installer", icon: "source" },
+        { label: "Firmware source", url: "https://github.com/lgreitis/osos-lab", icon: "source" }
+      ]
+    },
+
+    {
+      id: "classic-6g-newer-firmware",
+      menu: ["SysCFG", "DFU", "2.0.2", "128 GB+"],
+      name: "7th gen firmware on a 6th gen Classic",
+      maker: "Olsro",
+      family: "stock",
+      categories: ["tools"],
+      status: "experimental",
+      version: "Guide",
+      updated: "2025-08-24",
+      github: null,
+      stars: null,
+      license: null,
+      suggestedBy: "u/Lord_Voltan",
+      blurb: "A guide to running Apple\u2019s newer 7th gen firmware (2.0.2 to 2.0.5) on a 6th or 6.5th gen Classic board. The point is to lift the 128 GB limit, so bigger flash mods work on Apple\u2019s firmware.",
+      more: [
+        "The 6th gen Classic is stuck on firmware 1.1.2 and the 6.5th gen on 2.0.1, and both only see 128 GB. The guide edits the iPod\u2019s SysCFG (its serial, hardware version and firmware ID) so iTunes accepts a newer firmware. 2.0.2 is the main target and feels like 2.0.1; 2.0.4 is the one to pick for Rockbox dual boot.",
+        "It erases the iPod, and a wrong SysCFG edit can leave it half bricked. Back up the original SysCFG first: that backup is the way back. On a 6th gen, the remote and headset microphone don\u2019t work on the newer firmware. If you sell a modded iPod, say so.",
+        "You don\u2019t need this guide to run RepriseOS: its makers say the installer handles 6th and 6.5th gen boards without it."
+      ],
+      features: [
+        "Removes the 128 GB limit on Apple\u2019s firmware",
+        "Works on the 80, 120 and 160 GB thick Classics",
+        "Opens the way to Rockbox dual boot on 2.0.4"
+      ],
+      devices: ["ipod-classic"],
+      partial: [],
+      requires: "A Windows PC, iTunes 12.10.11, Rockbox Utility, the iPod SysCFG Editor and a custom Rockbox build with flashing tools (all linked from the guide)",
+      install: [
+        "Back up your music. The iPod is wiped.",
+        "Follow the guide to back up the original SysCFG.",
+        "Edit the SysCFG values the guide gives for your model.",
+        "Restore the newer firmware in DFU mode with iTunes 12.10.11."
+      ],
+      wayBack: "Write your SysCFG backup back to the iPod, then restore Apple\u2019s original firmware in DFU mode. The guide lists the stock values if the backup is lost.",
+      files: [],
+      links: [
+        { label: "Guide", url: "https://github.com/Olsro/reddit-ipod-guides/blob/main/guides/ipod6g-flash-more-recent-firmwares.md", icon: "docs" },
+        { label: "Video walkthrough (Parts Plus Pods)", url: "https://www.youtube.com/watch?v=_RqaiXN-F3Y", icon: "info" },
+        { label: "Demo on a 6.5G (AnalogueEars)", url: "https://www.youtube.com/shorts/JglLyb7tq2E", icon: "info" }
+      ]
+    },
+
+    {
       id: "ipod-sun",
       menu: ["DFU", "Read memory", "Write memory", "Run code"],
       name: "ipod_sun",
       maker: "CUB3D",
+      family: "stock",
       categories: ["tools"],
       status: "experimental",
       version: "Source only",
@@ -489,6 +592,7 @@ export default {
       menu: ["Podzilla", "Loader2", "Games", "Tools"],
       name: "iPodLinux",
       maker: "iPodLinux Project",
+      family: "scratch",
       categories: ["players", "games"],
       status: "archived",
       version: "Final",
@@ -533,6 +637,7 @@ export default {
       id: "finder-itunes",
       name: "Finder & iTunes",
       maker: "Apple",
+      suggestedBy: "u/Lord_Voltan",
       pinned: true,
       platforms: ["macOS", "Windows"],
       price: "Free",
@@ -544,6 +649,7 @@ export default {
       license: "Proprietary",
       blurb: "Apple’s own sync. On a Mac, Finder syncs an iPod from the Music app. On Windows, iTunes still handles click-wheel iPods.",
       more: [
+        "If a recent iTunes for Windows won’t see your iPod, try iTunes 12.10.11, the last version for Windows 7 and 8.1 and still offered by Apple. People report fewer connection problems with the 12.10 releases (u/Lord_Voltan had luck with 12.10.2, which Apple no longer offers; avoid unofficial download mirrors). On an older Mac, Apple still offers iTunes 12.8.3.",
         "It’s the baseline every other app here is measured against: it writes the iPod’s own database, so the stock firmware sees everything. It only syncs from one library per computer, and it converts nothing it can’t play, so FLAC has to be converted first."
       ],
       features: [
@@ -560,7 +666,9 @@ export default {
       ],
       links: [
         { label: "iPod support", url: "https://support.apple.com/ipod", icon: "docs" },
-        { label: "iTunes for Windows", url: "https://www.apple.com/itunes/", icon: "download" }
+        { label: "iTunes for Windows", url: "https://www.apple.com/itunes/", icon: "download" },
+        { label: "iTunes 12.10.11 for Windows (64-bit)", url: "https://support.apple.com/106372", icon: "download" },
+        { label: "iTunes 12.8.3 for older Macs", url: "https://support.apple.com/106374", icon: "download" }
       ]
     },
 
@@ -856,28 +964,107 @@ export default {
         { label: "All releases and betas", url: "https://github.com/mrbarkan/cratedigger/releases", icon: "release" },
         { label: "Source", url: "https://github.com/mrbarkan/cratedigger", icon: "source" }
       ]
+    },
+
+    {
+      id: "handbrake-ipod",
+      name: "HandBrake 1.1.2 (with the iPod preset)",
+      maker: "The HandBrake Team",
+      platforms: ["macOS", "Windows", "Linux"],
+      price: "Free, open source",
+      status: "archived",
+      version: "1.1.2",
+      updated: "2018-09-07",
+      github: null,
+      stars: null,
+      license: "GPL-2.0",
+      suggestedBy: "u/Lord_Voltan",
+      blurb: "The last HandBrake with a ready-made iPod preset, for turning your videos into files a click-wheel iPod will play. Current HandBrake no longer has one.",
+      more: [
+        "HandBrake 1.2 dropped the Legacy presets, iPod among them, and 1.4 dropped the Apple 240p30 preset that replaced it. Version 1.1.2 still has Legacy › iPod, which makes 320×240 video for the 5th gen and later.",
+        "For full-screen video on a TV out, you can also make a custom preset in any HandBrake version: MP4, H.264 Baseline profile, level 3.0, at most 640×480 and 2.5 Mbps, with AAC stereo audio. That matches what Apple lists for the iPod Classic."
+      ],
+      features: [
+        "Legacy › iPod preset built in",
+        "Converts almost any video file",
+        "Official build from HandBrake’s own release archive"
+      ],
+      devices: ["ipod-video", "ipod-classic", "ipod-nano-3g", "ipod-nano-4g", "ipod-nano-5g"],
+      partial: [],
+      install: [
+        "Download HandBrake 1.1.2 for your computer from HandBrake’s release archive.",
+        "Open a video and pick Presets › Legacy › iPod.",
+        "Start the encode, then add the file to your iPod with Finder, iTunes or another app here."
+      ],
+      links: [
+        { label: "HandBrake 1.1.2 downloads", url: "https://github.com/HandBrake/HandBrake/releases/tag/1.1.2", icon: "download" },
+        { label: "What replaced the old presets", url: "https://handbrake.fr/docs/en/1.0.0/technical/official-presets.html", icon: "docs" },
+        { label: "Apple’s iPod Classic video specs", url: "https://support.apple.com/kb/SP572", icon: "info" }
+      ]
+    },
+
+    {
+      id: "clickwheel-games",
+      name: "Click Wheel Games Preservation Project",
+      maker: "Olsro",
+      platforms: ["macOS", "Windows", "Linux"],
+      price: "Free",
+      status: "stable",
+      version: null,
+      updated: null,
+      github: "Olsro/ipodclickwheelgamespreservationproject",
+      stars: 1000,
+      license: "MIT (project files)",
+      suggestedBy: "u/Lord_Voltan",
+      blurb: "Every one of the 54 click-wheel games Apple sold for the iPod, saved and playable again, with a ready-made virtual machine that syncs them to your iPod.",
+      more: [
+        "Apple pulled the games from the iTunes Store in 2011, and they only sync from the iTunes account that bought them. The project collected every game and ships an offline Windows 10 virtual machine with the iTunes needed to sync them, so it runs on a Mac (with UTM), on Linux (with QEMU) or on Windows (with VMware).",
+        "It needs no custom firmware. The iPod must be formatted for Windows (FAT32), since the virtual machine can\u2019t sync a Mac-formatted iPod; the guide explains how to switch and back."
+      ],
+      features: [
+        "All 54 games, from Tetris to Real Soccer 2009",
+        "Offline Windows virtual machine with iTunes set up",
+        "Guides for macOS, Windows and Linux",
+        "No custom firmware needed"
+      ],
+      devices: ["ipod-video", "ipod-classic", "ipod-nano-3g", "ipod-nano-4g", "ipod-nano-5g"],
+      partial: [],
+      install: [
+        "Read the project\u2019s guide on its GitHub page.",
+        "Start the virtual machine and pass the iPod through to it over USB.",
+        "Sync the games from iTunes inside it, a few at a time, following the project\u2019s guide."
+      ],
+      links: [
+        { label: "Project page", url: "https://github.com/Olsro/ipodclickwheelgamespreservationproject", icon: "info" },
+        { label: "Video: the project (That Nostalgic Nerd)", url: "https://www.youtube.com/watch?v=OM7mdKy3opo", icon: "info" },
+        { label: "Video: install on a Mac (iPod for EvEr)", url: "https://www.youtube.com/watch?v=iTb1Fb6UTqI", icon: "install" }
+      ]
     }
   ],
 
   /*
    * HARDWARE MODS: parts you fit inside the iPod.
-   *   kind      "Storage" | "Battery" | "Wireless" | "Port" | "Feel"
+   *   kind      "Storage" | "Battery" | "Wireless" | "Plug-in" | "Port" | "Feel"
    *   skill     short text on how hard it is
    *   devices   iPods it fits
+   *   partial   iPods it fits with a catch; `partialLabel` names the catch
+   *             (default "With a converter")
    *   firmware  notes on how the mod interacts with firmware
    */
   mods: [
     {
       id: "flash-storage",
-      name: "Flash storage with iFlash",
-      maker: "iFlash",
+      name: "Flash storage adapters",
+      maker: "iFlash, generic adapters",
+      suggestedBy: "u/GarlicNo3695",
       kind: "Storage",
       skill: "No soldering",
       devices: ["ipod-video", "ipod-classic"],
       partial: ["ipod-4g", "ipod-photo"],
-      blurb: "Swap the spinning hard drive for SD cards or an mSATA SSD. The iPod gets lighter, quieter, tougher and longer-lived, and there\u2019s room left for a bigger battery.",
+      blurb: "Swap the spinning hard drive for SD cards, a CompactFlash card or an SSD. The iPod gets lighter, quieter, tougher and longer-lived, and there\u2019s room left for a bigger battery.",
       more: [
-        "iFlash makes adapter boards that plug in where the hard drive was: Solo takes one SD card, Dual takes two, Quad takes four microSD cards, and SATA takes an mSATA SSD. The 4th gen and Photo need a separate converter.",
+        "iFlash, designed by Tarkan Akdam, is the best-known option: boards that plug in where the hard drive was. Solo takes one SD card, Dual takes two, Quad takes four microSD cards, and SATA takes an SSD. The 4th gen and Photo need a separate converter.",
+        "It isn\u2019t the only way. Cheap generic ZIF-to-CompactFlash adapters, often stacked with an SD-to-CF adapter, do the same job for less; iFixit has a guide for the Video, and one for the 4th gen and Photo with a CF-to-microSD adapter. They\u2019re less consistent than iFlash: not every SD-to-CF adapter works, a stacked pair can be too thick for a thin case, and people report mixed luck with 64 and 128 GB cards. Some mod shops, such as Elite Obsolete Electronics, also sell flash kits and fit them for you.",
         "The Classic 6th gen (80 GB, 120 GB and the thick 160 GB) only sees 128 GB on Apple\u2019s firmware, whatever you fit. The Video and the Classic 7th gen (the late 2009 160 GB) have no such limit."
       ],
       firmware: [
@@ -886,7 +1073,9 @@ export default {
       ],
       links: [
         { label: "iFlash compatibility", url: "https://www.iflash.xyz/store/iflash-compatibility/", icon: "docs" },
-        { label: "iFlash store", url: "https://www.iflash.xyz/", icon: "info" }
+        { label: "iFlash store", url: "https://www.iflash.xyz/", icon: "info" },
+        { label: "iFixit: CF or SD in a Video", url: "https://www.ifixit.com/Guide/iPod+5th+Generation+(Video)+Hard+Drive+Replacement+with+a+CF+or+SDHC-SDXC+Memory+Card/7492", icon: "docs" },
+        { label: "iFixit: microSD in a 4th gen or Photo", url: "https://www.ifixit.com/Guide/iPod+4th+generation+or+Photo+hard+drive+replacement+by+micro+SD+card/148097", icon: "docs" }
       ]
     },
     {
@@ -930,14 +1119,15 @@ export default {
     {
       id: "bluetooth",
       name: "Internal Bluetooth",
-      maker: "EOE Works, Boxy Pixel, Moonlit Market",
+      maker: "EOE Works, Boxy Pixel, Moonlit Market, Parts Plus Pods",
+      suggestedBy: "u/GarlicNo3695",
       kind: "Wireless",
       skill: "Kits with and without soldering",
       devices: ["ipod-video", "ipod-classic"],
       partial: [],
       blurb: "A small transmitter board inside the case sends the iPod\u2019s audio to wireless headphones and speakers.",
       more: [
-        "EOE Works sells a solder-free Bluetooth 5.0 kit for the Video and Classic. Boxy Pixel\u2019s board pairs Bluetooth 5.0 with a USB-C charging port, and Moonlit Market\u2019s kit adds both while keeping the headphone jack and the 30-pin port.",
+        "EOE Works sells a solder-free Bluetooth 5.0 kit for the Video and Classic. Boxy Pixel\u2019s board pairs Bluetooth 5.0 with a USB-C charging port, and Moonlit Market\u2019s kit adds both while keeping the headphone jack and the 30-pin port. Parts Plus Pods, in Australia, sells a replacement back with the Bluetooth board and a 3000 mAh battery built in; it fits the 5th gen, and the 6th and 7th gen once the metal shield behind the screen comes out. It turns the hold switch into the Bluetooth power switch.",
         "The iPod doesn\u2019t know the transmitter is there: it takes the analog audio, so pairing is done with a button on the board, not from a menu."
       ],
       firmware: [
@@ -945,7 +1135,31 @@ export default {
       ],
       links: [
         { label: "EOE Works kit", url: "https://eoe.works/products/solder-less-internal-bluetooth-5-0-kit-for-apple-ipod-video-5th-5-5-classic-6th-7th", icon: "info" },
-        { label: "Boxy Pixel board", url: "https://www.boxypixel.com/products/ipod-mkii-electronics-pcb", icon: "info" }
+        { label: "Boxy Pixel board", url: "https://www.boxypixel.com/products/ipod-mkii-electronics-pcb", icon: "info" },
+        { label: "Parts Plus Pods back", url: "https://partspluspods.com.au/product/bluetooth-upgrade-kit-for-apple-ipod-classic-5th-gen/", icon: "info" }
+      ]
+    },
+    {
+      id: "bluetooth-adapters",
+      name: "Plug-in Bluetooth adapters",
+      maker: "WyMod Labs, Kokkia",
+      kind: "Plug-in",
+      skill: "Plugs into the dock port",
+      suggestedBy: "u/GarlicNo3695",
+      devices: ["ipod-classic", "ipod-nano-2g", "ipod-nano-3g", "ipod-nano-4g", "ipod-nano-5g", "ipod-nano-6g"],
+      partial: ["ipod-3g", "ipod-4g", "ipod-photo", "ipod-video", "ipod-mini", "ipod-nano-1g"],
+      partialLabel: "Under Rockbox only (WyMod)",
+      blurb: "A small transmitter that plugs into the 30-pin dock port and sends the iPod\u2019s audio to Bluetooth headphones or speakers. Nothing to open, and it moves between iPods.",
+      more: [
+        "WyMod\u2019s AeroStream V2, sold by Elite Obsolete Electronics, runs off the iPod\u2019s own battery and adds a USB-C charging port. Its makers list the Classic and the nano 2nd to 6th gen as working on Apple\u2019s firmware; older iPods and the mini and nano 1st gen only work with it under Rockbox.",
+        "Kokkia\u2019s i10s and i10 Pro are older dock-port transmitters, still sold new; the i10 Pro adds aptX. Expect the iPod\u2019s battery to run down faster with any of these attached."
+      ],
+      firmware: [
+        "On the 3rd and 4th gen, the Photo, the Video, the mini and the nano 1st gen, WyMod says its adapter only works under Rockbox-family firmware."
+      ],
+      links: [
+        { label: "WyMod FAQ and compatibility", url: "https://eoe.works/pages/wymod-faq", icon: "docs" },
+        { label: "Kokkia adapters at EOE", url: "https://eoe.works/collections/bluetooth-transmitters-for-apple-ipod", icon: "info" }
       ]
     },
     {

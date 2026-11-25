@@ -5,7 +5,7 @@ import Icon from "./Icon.astro";
 import ShareRow from "./ShareRow.astro";
 import Ripeness from "./Ripeness.astro";
 import Sticker from "./Sticker.astro";
-import { byId, builtOn, deviceById, devices, categoryById, themeTargets, fmt, plain, fmtDate, isNumbered, href } from "../lib/catalog.js";
+import { byId, builtOn, deviceById, devices, categoryById, themeTargets, fmt, plain, fmtDate, isNumbered, href, suggestedBy, contributorSlug } from "../lib/catalog.js";
 
 const { item } = Astro.props;
 const isApp = item.type === "app";
@@ -25,6 +25,7 @@ const files = (item.files || []).filter((f) => f.device);
 const otherFiles = (item.files || []).filter((f) => !f.device);
 const hasThemes = themeTargets.some((t) => t.id === item.id);
 const steps = item.install || [];
+const credits = suggestedBy(item);
 const meta = [
   item.updated && `Updated ${fmtDate(item.updated)}`,
   item.stars != null && `${item.stars} ${item.stars === 1 ? "star" : "stars"} on GitHub`,
@@ -52,7 +53,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
       <a class="back" href={href(isApp ? "/apps/" : "/")}><Icon name="back" />{isApp ? "All library apps" : "All firmware"}</a>
       <div class="item-top">
         <header class="item-head">
-          <p class="kicker">{[item.maker, ...kinds].join(" · ")}</p>
+          <p class="kicker">{[item.maker, item.familyTag, ...kinds].filter(Boolean).join(" · ")}</p>
           <div class="item-title">
             <h1>{item.name}</h1>
             <Sticker version={item.version} large />
@@ -63,6 +64,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             {meta && <span>{meta}</span>}
           </div>
           <p class="item-blurb" set:html={fmt(item.blurb)} />
+          {item.community && <p class="aside-note community-note">Added from a community suggestion and not checked by Quitanda yet. Read the project’s own page before you install anything. <a href={href(`/suggest/?fix=${item.id}`)}>Spotted a problem?</a></p>}
           {(runs.length > 0 || partial.length > 0) && (
             <div class="fit-banner" id="fit" hidden>
               <strong id="fit-text"></strong>
@@ -94,6 +96,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             {item.requires && (<><dt>Needs first</dt><dd set:html={fmt(item.requires)} /></>)}
             {parent && (<><dt>Based on</dt><dd><a href={href(parent.path)}>{parent.name}</a></dd></>)}
             {item.license && (<><dt>License</dt><dd>{item.license}</dd></>)}
+            {credits.length > 0 && (<><dt>Suggested by</dt><dd class="credit">{credits.map((h, i) => <>{i > 0 && ", "}<a href={href(`/contributors/#${contributorSlug(h)}`)}>{h}</a></>)}</dd></>)}
           </dl>
           {links.length > 1 && (
             <div class="item-actions">
@@ -101,6 +104,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             </div>
           )}
           <ShareRow url={pageUrl} title={`${item.name}: ${plain(item.blurb)}`} />
+          <p class="aside-note">Something out of date or wrong? <a href={href(`/suggest/?fix=${item.id}`)}>Suggest a fix</a></p>
         </aside>
       </div>
     </div>
@@ -150,7 +154,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
               ))}
             </ol>
             {item.wayBack ? (
-              <p class="tip"><strong>Keep a way back.</strong> {item.wayBack}</p>
+              <p class="tip"><strong>Keep a way back.</strong> <span set:html={fmt(item.wayBack)} /></p>
             ) : parent && !isApp && (
               <p class="tip"><strong>Keep a way back.</strong> Before you switch, copy the iPod’s <code>.rockbox</code> folder to your computer. To return, delete the folder on the iPod and copy yours back.</p>
             )}

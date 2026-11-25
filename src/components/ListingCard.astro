@@ -11,7 +11,7 @@ const words = [
   item.name, item.maker, plain(item.blurb), (item.features || []).join(" "),
   all.map((d) => deviceById[d]?.name).join(" "),
   (item.categories || []).map((c) => categoryById[c]?.name).join(" "),
-  (item.platforms || []).join(" "), item.price || "",
+  (item.platforms || []).join(" "), item.price || "", item.familyTag || "",
 ].join(" ").toLowerCase();
 const fit = isApp
   ? [(item.platforms || []).join(" · "), item.price].filter(Boolean).join(" · ")
@@ -25,6 +25,7 @@ const fit = isApp
   data-partial={(item.partial || []).join(" ")}
   data-open={isApp && !all.length ? "" : undefined}
   data-kinds={(item.categories || []).join(" ")}
+  data-family={item.family || undefined}
   data-platforms={(item.platforms || []).join("|")}
   data-stars={item.stars ?? -1}
   data-updated={item.updated || ""}
@@ -40,6 +41,7 @@ const fit = isApp
       <Ripeness status={item.status} />
     </div>
     <h3><a href={href(item.path)}>{item.name}</a></h3>
+    {item.familyTag && <p class="fw-family">{item.familyTag}</p>}
     <p class="blurb">{plain(item.blurb)}</p>
     <p class="fw-fit" data-fit data-default={fit}>{fit}</p>
     <a class="btn" href={href(item.path)}>See {item.name}<span aria-hidden="true">→</span></a>

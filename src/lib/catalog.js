@@ -1,10 +1,17 @@
 // Build-time view of the catalog: merges the nightly GitHub stats into the
 // hand-written entries and exposes helpers the pages share.
-import raw from "../data/catalog.js";
+import written from "../data/catalog.js";
+import community from "../data/community.json";
+import { applyCommunity, COMMUNITY_STATUS } from "./community.js";
 import stats from "../data/github-stats.json";
 import shots from "../data/screenshots.json";
+import people from "../data/contributors.js";
 
 const repos = (stats && stats.repos) || {};
+
+// The hand-written catalog, with published suggestions folded in.
+const raw = applyCommunity(written, community);
+export const communityCredits = raw.communityCredits;
 
 function withStats(item, type) {
   const out = { ...item, type };
@@ -33,6 +40,23 @@ export const updatedOn = stats.date && stats.date > raw.updatedOn ? stats.date :
 
 export const items = [...firmwares, ...apps];
 export const byId = Object.fromEntries([...items, ...mods].map((x) => [x.id, x]));
+
+/**
+ * What a firmware is built on. Anything whose `basedOn` chain reaches Rockbox
+ * is in the Rockbox family; the rest say so with `family` in the catalog.
+ */
+export const FAMILIES = {
+  rockbox: { name: "Rockbox family", tag: "Rockbox fork", hint: "Rockbox or built on it" },
+  stock: { name: "Apple firmware mods", tag: "Apple firmware mod", hint: "Patches Apple’s own firmware" },
+  scratch: { name: "Something new", tag: "Something new", hint: "Neither Rockbox nor Apple’s firmware" },
+};
+for (const f of firmwares) {
+  f.family = f.family || (inRockboxFamily(f) ? "rockbox" : null);
+  f.familyTag = f.id === "rockbox" ? "Rockbox" : FAMILIES[f.family]?.tag || null;
+}
+export const families = Object.entries(FAMILIES)
+  .filter(([id]) => firmwares.some((f) => f.family === id))
+  .map(([id, v]) => ({ id, ...v }));
 export const deviceById = Object.fromEntries(devices.map((d) => [d.id, d]));
 export const categoryById = Object.fromEntries(categories.map((c) => [c.id, c]));
 
@@ -47,6 +71,7 @@ export const STATUS = {
   beta: { ripeness: "Ripening", plain: "Beta", dots: 2 },
   experimental: { ripeness: "Unripe", plain: "Experimental", dots: 1 },
   archived: { ripeness: "Preserved", plain: "Archived", dots: 0 },
+  community: COMMUNITY_STATUS,
 };
 
 /** Firmware that runs on a device, fully or partly. */
@@ -68,6 +93,7 @@ export const clientData = {
   latest,
   recentChanges,
   categories,
+  families,
   platforms,
   devices,
   firmwares,
@@ -149,3 +175,59 @@ export const SITE = {
   // needs no change here.
   repo: import.meta.env.PUBLIC_REPO_URL || "https://github.com/mrbarkan/quitanda",
 };
+
+/* ---------- Contributors ---------- */
+
+/** The handles in an item's `suggestedBy`, which may be one string or a list. */
+export function suggestedBy(item) {
+  const v = item && item.suggestedBy;
+  return (Array.isArray(v) ? v : v ? [v] : []).map((h) => String(h).trim()).filter(Boolean);
+}
+
+/** Anchor on /contributors/ for a handle: "u/Lord_Voltan" -> "u-lord_voltan". */
+export function contributorSlug(handle) {
+  return handle.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/** Profile link for a handle, from its prefix, unless the entry gives one. */
+export function contributorUrl(handle, url) {
+  if (url) return url;
+  if (handle.startsWith("u/")) return `https://www.reddit.com/user/${handle.slice(2)}/`;
+  if (handle.startsWith("@")) return `https://github.com/${handle.slice(1)}`;
+  return null;
+}
+
+/**
+ * Everyone credited, from contributors.js plus anyone named only in a
+ * listing's suggestedBy, each with the listings they suggested. Oldest first.
+ */
+export const contributors = (() => {
+  const all = [...items, ...mods];
+  const byKey = new Map();
+  for (const p of people) byKey.set(p.handle.toLowerCase(), { ...p, ideas: p.ideas || [] });
+  const person = (h) => {
+    if (!byKey.has(h.toLowerCase())) byKey.set(h.toLowerCase(), { handle: h, ideas: [] });
+    return byKey.get(h.toLowerCase());
+  };
+  const firstSeen = (p, date) => {
+    const day = date ? String(date).slice(0, 10) : null;
+    if (day && (!p.since || day < p.since)) p.since = day;
+  };
+  for (const item of all) {
+    for (const h of suggestedBy(item)) firstSeen(person(h), item.community ? item.publishedAt : null);
+  }
+  // Credited fixes and suggestions that didn't become a listing of their own.
+  for (const c of communityCredits) {
+    const p = person(c.name);
+    if (!p.ideas.includes(c.idea)) p.ideas = [...p.ideas, c.idea];
+    firstSeen(p, c.date);
+  }
+  return [...byKey.values()]
+    .map((p) => ({
+      ...p,
+      slug: contributorSlug(p.handle),
+      profile: contributorUrl(p.handle, p.url),
+      listings: all.filter((i) => suggestedBy(i).some((h) => h.toLowerCase() === p.handle.toLowerCase())),
+    }))
+    .sort((a, b) => (a.since || "9999").localeCompare(b.since || "9999"));
+})();
