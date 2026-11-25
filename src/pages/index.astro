@@ -115,7 +115,8 @@ const searchable = [
         <div class="fw-grid" id="grid">
           {shelf.map((item, i) => <div data-slot style="display: contents" data-shelf={i}><ListingCard item={item} /></div>)}
         </div>
-        <p class="empty" id="empty" hidden>Nothing on the shelves runs on this iPod yet. A <a href={href("/apps/")}>library app</a> can still manage its music without iTunes.</p>
+        <p class="empty" id="empty" hidden>Nothing on this shelf runs on this iPod yet. A <a href={href("/apps/")}>library app</a> can still manage its music without iTunes. Know something that belongs here? <a href={href("/suggest/?kind=firmware")} id="empty-suggest">Suggest it</a>.</p>
+        <p class="aside-note">Missing a firmware? <a href={href("/suggest/?kind=firmware")}>Suggest a listing</a> and you can be credited when it goes up.</p>
         <p><a class="more-link" href={href("/compatibility/")}>See the full compatibility table →</a></p>
       </section>
 

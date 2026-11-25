@@ -753,3 +753,13 @@ textarea.field { resize: vertical; line-height: 1.5; }
 .dot-none { box-shadow: inset 0 0 0 1.5px var(--line-strong); }
 .matrix-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--ink-2); font-size: 14px; }
 .matrix-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Contributors ---------- */
+.prose ul.people { list-style: none; padding: 0; gap: 14px; }
+.person { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-card); padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; scroll-margin-top: 88px; }
+.prose .person h2 { margin-top: 0; font-size: 22px; overflow-wrap: anywhere; }
+.prose .person h3 { font: 400 12px/1.3 var(--f-lcd); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.person-since { font-size: 14px; color: var(--muted); margin: 0; }
+.prose .person ul { font-size: 16px; }
+.person:target { border-color: var(--accent); }
+.credit a { text-decoration-color: var(--accent); }

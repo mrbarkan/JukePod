@@ -1,0 +1,38 @@
+---
+import Base from "../layouts/Base.astro";
+import { contributors, fmtDate, href, SITE } from "../lib/catalog.js";
+---
+<Base title="Contributors" description="The people who suggest listings, catch mistakes and help shape Quitanda." section="about">
+  <main class="wrap page narrow">
+    <article class="prose">
+      <header>
+        <h1>Contributors</h1>
+        <p>Quitanda gets better when people who know their iPods point out what’s missing or wrong. These are the people who have. Thank you.</p>
+      </header>
+
+      <ul class="people">
+        {contributors.map((p) => (
+          <li class="person" id={p.slug}>
+            <h2>{p.profile ? <a href={p.profile} target="_blank" rel="noopener">{p.handle}</a> : p.handle}</h2>
+            {p.since && <p class="person-since">Since <time datetime={p.since}>{fmtDate(p.since, true)}</time></p>}
+            {p.ideas.length > 0 && (
+              <>
+                <h3>Suggested</h3>
+                <ul>{p.ideas.map((i) => <li>{i}</li>)}</ul>
+              </>
+            )}
+            {p.listings.length > 0 && (
+              <>
+                <h3>Listings they brought in</h3>
+                <ul>{p.listings.map((i) => <li><a href={href(i.path)}>{i.name}</a></li>)}</ul>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <h2 id="get-credited">Get credited</h2>
+      <p>Suggest a listing or a fix and you’ll be added here, and on the listing itself if it came from you. Reply on r/ipod, <a href={`${SITE.repo}/issues/new`}>open an issue</a>, or <a href={href("/about/#add-or-correct-a-listing")}>edit the catalog</a> directly. If you’d rather not be named, say so and you won’t be.</p>
+    </article>
+  </main>
+</Base>

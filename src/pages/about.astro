@@ -24,7 +24,9 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
       <p>A listing here isn’t a guarantee. Read the project’s own notes, and back up your music first.</p>
 
       <h2 id="add-or-correct-a-listing">Add or correct a listing</h2>
-      <p>The whole catalog is one file in a public repository. <a href={`${SITE.repo}/issues/new`}>Open an issue</a> with the details, or <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>edit the file</a> and send a pull request. If you make one of the projects listed and something is wrong, the same route works, and corrections go in quickly.</p>
+      <p>Sign in and <a href={href("/suggest/")}>suggest a listing</a>: something missing, or a fix to one that's here. A person reads each one before it goes up (a few trusted regulars can add new listings directly), and you can be credited by name.</p>
+      <p>The whole catalog is also one file in a public repository, so you can <a href={`${SITE.repo}/issues/new`}>open an issue</a> with the details, or <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>edit the file</a> and send a pull request. If you make one of the projects listed and something is wrong, any of these routes works, and corrections go in quickly.</p>
+      <p id="thanks">Everyone whose suggestion shapes the catalog is credited on the <a href={href("/contributors/")}>contributors page</a>, and on the listing they brought in.</p>
 
       <h2>Shared themes</h2>
       <p>Anyone signed in can <a href={href("/themes/submit/")}>share a theme</a> for Rockbox, its forks or CrateDigger. Every theme is checked by a person before it appears in the <a href={href("/themes/")}>gallery</a>. Themes can’t contain programs, plugins or firmware, and they can’t include Apple’s fonts, icons or artwork. If you spot a problem with one, use “Report a problem” on its page.</p>
@@ -43,3 +45,4 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
     </article>
   </main>
 </Base>
+

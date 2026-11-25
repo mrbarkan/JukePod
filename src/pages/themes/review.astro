@@ -2,9 +2,10 @@
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
 import ThemeData from "../../components/ThemeData.astro";
-import { href } from "../../lib/catalog.js";
+import { href, devices, categories, mods, platforms, SITE } from "../../lib/catalog.js";
+const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind))];
 ---
-<Base title="Review queue" description="Themes waiting to be checked." section="themes">
+<Base title="Review queue" description="Themes and suggested listings waiting to be checked." section="themes">
   <main class="wrap page">
     <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
     <header class="intro"><h1>Review queue</h1></header>
@@ -14,6 +15,21 @@ import { href } from "../../lib/catalog.js";
         <div class="section-head"><h2>Waiting for review <span class="badge-count" id="rv-count">0</span></h2></div>
         <div id="rv-pending" class="review-list"></div>
       </section>
+      <section class="section" id="suggestions">
+        <div class="section-head"><h2>Suggested listings <span class="badge-count" id="rv-sg-count">0</span></h2></div>
+        <p class="aside-note">“Approve and publish” puts a new listing on the site with the next nightly build, as its own page, and credits the sender if they asked. Touch up the wording first if it needs it. A fix replaces the listing’s link or iPods; a fix to the wording is credited, but you make that change in catalog.js yourself. <a href={`${SITE.repo}/actions/workflows/deploy.yml`} target="_blank" rel="noopener">Publish now</a> with “Run workflow” instead of waiting for the night.</p>
+        <div id="rv-suggestions" class="review-list"></div>
+      </section>
+      <section class="section">
+        <div class="section-head"><h2>Trusted contributors <span class="badge-count" id="rv-trusted-count">0</span></h2></div>
+        <p class="aside-note">New listings they suggest are published straight away, without waiting here; their fixes to existing listings still come here. Trust someone from one of their suggestions.</p>
+        <div id="rv-trusted" class="review-list"></div>
+      </section>
+      <section class="section">
+        <div class="section-head"><h2>Published from suggestions <span class="badge-count" id="rv-pub-count">0</span></h2></div>
+        <p class="aside-note">Unpublishing takes it off the site at the next build. Once you've written a listing into catalog.js by hand, the hand-written one wins.</p>
+        <div id="rv-published" class="review-list"></div>
+      </section>
       <section class="section">
         <div class="section-head"><h2>Reported themes <span class="badge-count" id="rv-flag-count">0</span></h2></div>
         <div id="rv-flags" class="review-list"></div>
@@ -21,6 +37,7 @@ import { href } from "../../lib/catalog.js";
     </div>
   </main>
   <ThemeData />
+  <script type="application/json" id="rv-data" set:html={JSON.stringify({ platforms, devices: devices.map((d) => [d.id, d.short]), categories: categories.map((c) => [c.id, c.name]), modKinds })} />
 </Base>
 
 <script>
@@ -31,6 +48,102 @@ import { href } from "../../lib/catalog.js";
   const { targets } = pageData();
   const $ = (id) => document.getElementById(id);
   const write = () => import("../../lib/themes-write.js");
+  const suggestions = () => import("../../lib/suggestions.js");
+  const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
+  const FIXES = { link: "link", ipods: "iPods", text: "wording" };
+  const RV = JSON.parse($("rv-data").textContent);
+  const deviceName = Object.fromEntries(RV.devices);
+  const listingHref = (kind, id) => link(kind === "mod" ? `/mods/#${id}` : kind === "app" ? `/apps/${id}/` : `/firmware/${id}/`);
+
+  const field = (label, input) => h("label", {}, h("span", {}, label), input);
+  function select(options, value) {
+    const el = h("select", { class: "field" }, ...options.map(([v, label]) => h("option", { value: v }, label)));
+    el.value = value;
+    return el;
+  }
+
+  // A suggestion, with what will go on the site laid out to touch up before approving.
+  function suggestionCard(s, reload) {
+    const fix = s.action === "fix";
+    const listing = !fix && s.kind !== "other";
+    const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the sender (optional, shown to them)" });
+    const out = h("span", { role: "status" });
+    const safeUrl = /^https?:\/\//.test(s.url || "") ? s.url : null;
+    const edits = {};
+    let form = null;
+    if (listing) {
+      edits.title = h("input", { class: "field", maxlength: "80", value: s.title });
+      edits.url = h("input", { class: "field", maxlength: "300", value: s.url || "" });
+      edits.maker = h("input", { class: "field", maxlength: "60", value: s.maker || "" });
+      edits.blurb = h("textarea", { class: "field", rows: "4", maxlength: "600" });
+      edits.blurb.value = (s.details || "").slice(0, 600);
+      edits.category = s.kind === "mod"
+        ? select([...RV.modKinds.map((k) => [k, k]), ["From the community", "Something new"]], RV.modKinds[0])
+        : select(RV.categories, s.kind === "app" ? "tools" : "players");
+      const ticks = RV.devices.map(([id, short]) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: id, checked: (s.devices || []).includes(id) }), h("span", {}, short)));
+      edits.devices = ticks;
+      const hostTicks = s.kind === "app" ? RV.platforms.map((p) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: p, checked: (s.platforms || []).includes(p) }), h("span", {}, p))) : [];
+      edits.platforms = hostTicks;
+      form = h("div", { class: "acct-form" },
+        field("Name", edits.title), field("Link", edits.url), field("Who makes it", edits.maker),
+        field(s.kind === "mod" ? "Shelf" : "Kind", h("span", { class: "select" }, edits.category)),
+        field("Description on the listing", edits.blurb),
+        h("fieldset", { class: "theme-devices" }, h("legend", {}, "Works on"), h("div", {}, ...ticks)),
+        hostTicks.length ? h("fieldset", { class: "theme-devices" }, h("legend", {}, "Runs on"), h("div", {}, ...hostTicks)) : null
+      );
+    }
+    const act = (fn) => async () => {
+      out.textContent = "Saving…";
+      try { await fn(await suggestions()); reload(); }
+      catch (err) { out.textContent = err.message === "link" ? "Add a working link first." : "Couldn't save. Try again."; }
+    };
+    const publish = act((lib) => {
+      if (!listing) return lib.publishSuggestion(s, {}, note.value);
+      if (!/^https?:\/\/[^ ]+$/.test(edits.url.value.trim())) throw new Error("link");
+      return lib.publishSuggestion(s, {
+        title: edits.title.value, url: edits.url.value, maker: edits.maker.value, blurb: edits.blurb.value,
+        category: edits.category.value, devices: edits.devices.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
+        platforms: edits.platforms.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
+      }, note.value);
+    });
+    const fixList = (s.fixes || []).map((f) => FIXES[f]).filter(Boolean);
+    return h("article", { class: "card review-flag" },
+      h("p", { class: "kicker" }, `${fix ? `Fix (${fixList.join(", ") || "not said"})` : "New"} · ${KINDS[s.kind] || s.kind} · from ${s.name}${s.credit ? " (wants credit)" : ""} · ${fmtDate(s.createdAt)}`),
+      h("h3", { class: "card-title" }, s.title),
+      s.itemId ? h("p", {}, h("a", { href: listingHref(s.kind, s.itemId) }, "Open the listing")) : null,
+      safeUrl ? h("p", {}, h("a", { href: safeUrl, target: "_blank", rel: "noopener noreferrer nofollow ugc" }, safeUrl)) : null,
+      fix && (s.devices || []).length ? h("p", {}, `Works on: ${s.devices.map((d) => deviceName[d] || d).join(", ")}`) : null,
+      h("p", { class: "blurb", style: "white-space: pre-line" }, s.details),
+      form,
+      note,
+      h("div", { class: "item-actions" },
+        h("button", { type: "button", class: "btn", onclick: publish }, listing || (fix && fixList.some((f) => f !== "wording")) ? "Approve and publish" : "Approve"),
+        h("button", { type: "button", class: "btn btn-quiet", onclick: act((lib) => lib.reviewSuggestion(s.id, "declined", note.value)) }, "Not adding"),
+        h("button", { type: "button", class: "btn btn-quiet", onclick: act((lib) => lib.trust(s.uid, s.name)) }, `Trust ${s.name}`),
+        out
+      )
+    );
+  }
+
+  async function loadSuggestions() {
+    const lib = await suggestions();
+    const [waiting, trusted, published] = await Promise.all([lib.suggestionsByStatus("new"), lib.trustedList(), lib.communityList()]);
+    $("rv-sg-count").textContent = waiting.length;
+    $("rv-suggestions").replaceChildren(...(waiting.length ? waiting.map((s) => suggestionCard(s, loadSuggestions)) : [h("p", { class: "aside-note" }, "No suggestions waiting.")]));
+    $("rv-trusted-count").textContent = trusted.length;
+    $("rv-trusted").replaceChildren(...(trusted.length
+      ? trusted.map((t) => h("article", { class: "card review-flag" },
+          h("p", {}, h("strong", {}, t.name), t.addedAt ? ` · since ${fmtDate(t.addedAt)}` : ""),
+          h("div", { class: "item-actions" }, h("button", { type: "button", class: "btn btn-quiet", onclick: async () => { await lib.untrust(t.id); loadSuggestions(); } }, "Stop trusting"))))
+      : [h("p", { class: "aside-note" }, "Nobody yet.")]));
+    $("rv-pub-count").textContent = published.length;
+    $("rv-published").replaceChildren(...(published.length
+      ? published.map((c) => h("article", { class: "card review-flag" },
+          h("p", { class: "kicker" }, `${c.action === "fix" ? "Fix" : "New"} · ${KINDS[c.kind] || c.kind}${c.credit ? ` · credits ${c.credit}` : ""} · ${fmtDate(c.publishedAt)}`),
+          h("h3", { class: "card-title" }, c.kind === "other" ? c.name : h("a", { href: listingHref(c.kind, c.itemId) }, c.name)),
+          h("div", { class: "item-actions" }, h("button", { type: "button", class: "btn btn-quiet", onclick: async () => { await lib.unpublish(c.id); loadSuggestions(); } }, "Unpublish"))))
+      : [h("p", { class: "aside-note" }, "Nothing yet.")]));
+  }
 
   function pendingCard(theme, reload) {
     const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the author (optional, shown if not accepted)" });
@@ -67,6 +180,7 @@ import { href } from "../../lib/catalog.js";
 
   async function load() {
     const { themesByStatus, listFlags, dismissFlag } = await write();
+    loadSuggestions();
     const [pending, flags] = await Promise.all([themesByStatus("pending"), listFlags()]);
     $("rv-count").textContent = pending.length;
     $("rv-pending").replaceChildren(...(pending.length ? pending.map((t) => pendingCard(t, load)) : [h("p", { class: "aside-note" }, "Nothing is waiting.")]));
