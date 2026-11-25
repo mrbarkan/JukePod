@@ -21,7 +21,8 @@ const names = Object.fromEntries(devices.map((d) => [d.id, d.short]));
     <div class="fw-grid" id="grid">
       {shelf.map((item) => <ListingCard item={item} />)}
     </div>
-    <p class="aside-note">Looking for what runs on the iPod itself? <a href={href("/")}>Browse the firmware</a>.</p>
+    <p class="empty" id="apps-empty" hidden>No apps for this platform yet. <a href={href("/suggest/?kind=app")}>Suggest one</a>.</p>
+    <p class="aside-note">Know an app that's missing? <a href={href("/suggest/?kind=app")}>Suggest it</a>. Looking for what runs on the iPod itself? <a href={href("/")}>Browse the firmware</a>.</p>
   </main>
 </Base>
 
@@ -42,5 +43,6 @@ const names = Object.fromEntries(devices.map((d) => [d.id, d.short]));
     const platform = button.dataset.platform;
     document.querySelectorAll("#platforms [data-platform]").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
     cards.forEach((card) => (card.hidden = platform !== "all" && !(card.dataset.platforms || "").split("|").includes(platform)));
+    document.getElementById("apps-empty").hidden = cards.some((card) => !card.hidden);
   });
 </script>

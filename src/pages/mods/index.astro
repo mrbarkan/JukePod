@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import Icon from "../../components/Icon.astro";
-import { mods, watchlist, deviceById, fmt, href } from "../../lib/catalog.js";
+import { mods, watchlist, deviceById, fmt, href, suggestedBy, contributorSlug } from "../../lib/catalog.js";
 
 const kinds = [...new Set(mods.map((m) => m.kind))];
 const coming = watchlist.filter((w) => w.kind === "mod");
@@ -15,6 +15,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
     <header class="intro">
       <h1>Hardware mods</h1>
       <p>Parts you fit inside the iPod. Each listing says which iPods it fits, how hard the job is, and what changes for the firmware you run.</p>
+      <p>Know a mod that's missing, or another way to do one of these? <a href={href("/suggest/?kind=mod")}>Suggest it</a> and you can be credited when it goes in.</p>
       <nav class="jump" aria-label="Kinds of mod">
         {kinds.map((k) => <a href={`#kind-${k.toLowerCase()}`}>{k}</a>)}
       </nav>
@@ -30,6 +31,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                 <p class="kicker">{m.maker}</p>
                 <h3 class="card-title"><a href={`#${m.id}`}>{m.name}</a></h3>
                 <p class="blurb" set:html={fmt(m.blurb)} />
+                {m.community && <p class="aside-note">Added from a community suggestion and not checked by Quitanda yet.</p>}
                 {(m.more || []).map((p) => <p set:html={fmt(p)} />)}
                 {(m.links || []).length > 0 && (
                   <div class="item-actions">
@@ -38,6 +40,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                     ))}
                   </div>
                 )}
+                <p class="aside-note"><a href={href(`/suggest/?fix=${m.id}`)}>Suggest a fix</a></p>
               </div>
               <div class="mod-side">
                 <dl class="facts">
@@ -46,6 +49,9 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                   <dd><span class="chips">{m.devices.map((d) => <span class="chip">{deviceById[d]?.name}</span>)}</span></dd>
                   {(m.partial || []).length > 0 && (
                     <><dt>With a converter</dt><dd><span class="chips">{m.partial.map((d) => <span class="chip partial">{deviceById[d]?.name}</span>)}</span></dd></>
+                  )}
+                  {suggestedBy(m).length > 0 && (
+                    <><dt>Suggested by</dt><dd class="credit">{suggestedBy(m).map((h, i) => <>{i > 0 && ", "}<a href={href(`/contributors/#${contributorSlug(h)}`)}>{h}</a></>)}</dd></>
                   )}
                 </dl>
                 {(m.firmware || []).length > 0 && (
@@ -78,6 +84,6 @@ const coming = watchlist.filter((w) => w.kind === "mod");
       </section>
     )}
 
-    <p class="aside-note">Opening an iPod can damage it, and lithium batteries can catch fire if punctured. Follow a teardown guide, and don’t pry near the battery. Looking for software instead? <a href={href("/")}>Browse the firmware</a>.</p>
+    <p class="aside-note">Opening an iPod can damage it, and lithium batteries can catch fire if punctured. Follow a teardown guide, and don’t pry near the battery. Missing something? <a href={href("/suggest/?kind=mod")}>Suggest a mod</a>. Looking for software instead? <a href={href("/")}>Browse the firmware</a>.</p>
   </main>
 </Base>
