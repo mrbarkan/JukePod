@@ -1,0 +1,36 @@
+name: Report a bug
+description: Something on the site is broken or behaves strangely.
+labels: ["bug"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Where did it happen?
+      placeholder: https://quitanda.mrbarkan.com/...
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we see it?
+      description: The steps that lead to it, if you know them.
+      placeholder: |
+        1. Pick iPod Classic
+        2. Open Rockbox
+        3. ...
+  - type: input
+    id: browser
+    attributes:
+      label: Device and browser
+      placeholder: e.g. iPhone 15, Safari / Windows 11, Firefox
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here if they help.

@@ -1,0 +1,79 @@
+name: Suggest a listing
+description: Tell us about a firmware, app, mod or tool that should be in the shop.
+title: "Suggest: "
+labels: ["listing suggestion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping fill the shelves! A name and a link is enough to start, so skip anything you don't know.
+        Themes are shared on the site instead: https://quitanda.mrbarkan.com/themes/submit/
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      placeholder: e.g. Rockpod
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: The project's own page, repository or store page.
+      placeholder: https://
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is it?
+      options:
+        - Firmware
+        - Library app (puts music on an iPod or manages it)
+        - Hardware mod or part
+        - Tool or guide
+        - Not released yet (for the watch list)
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: devices
+    attributes:
+      label: Which iPods does it work on?
+      description: Pick every one you know of. It's fine to leave this empty.
+      multiple: true
+      options:
+        - iPod 1st / 2nd gen
+        - iPod 3rd gen
+        - iPod 4th gen
+        - iPod Photo / Color
+        - iPod Video 5G / 5.5G
+        - iPod Classic 6G / 7G
+        - iPod mini 1G / 2G
+        - iPod nano 1st gen
+        - iPod nano 2nd gen
+        - iPod nano 3rd gen
+        - iPod nano 4th gen
+        - iPod nano 5th gen
+        - iPod nano 6th gen
+        - iPod nano 7th gen
+        - Not sure
+  - type: dropdown
+    id: tried
+    attributes:
+      label: Have you used it yourself?
+      options:
+        - Yes, on my own iPod
+        - No, I've read about it
+        - I make it
+  - type: textarea
+    id: note
+    attributes:
+      label: Anything else?
+      description: What it does, why it's good, gotchas, install tips, price.
+  - type: input
+    id: credit
+    attributes:
+      label: How should we credit you?
+      description: Your Reddit (u/name) or GitHub (@name) handle for "Suggested by" on the listing and the Contributors page. Leave it empty to stay anonymous.
+      placeholder: u/your_name

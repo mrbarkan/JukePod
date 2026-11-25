@@ -51,7 +51,7 @@ const example = `{
       <h2 id="list">Get your project listed</h2>
       <p>Firmware, library apps and hardware mods all live in one file in the site’s public repository. There are two ways in:</p>
       <ul>
-        <li><strong>Open an issue</strong> with the details below and it will be added for you. <a href={`${SITE.repo}/issues/new`}>Open an issue</a></li>
+        <li><strong>Open an issue</strong> with the details below and it will be added for you. <a href={`${SITE.repo}/issues/new?template=suggest-listing.yml`}>Open an issue</a></li>
         <li><strong>Send a pull request</strong> that adds your entry to <code>src/data/catalog.js</code>. <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>Edit the file on GitHub</a></li>
       </ul>
       <p>A listing needs:</p>
@@ -118,7 +118,7 @@ const example = `{
       </ul>
 
       <h2 id="yours">It’s your listing</h2>
-      <p>If you make something listed here, your word on it goes. Tell us when a description is wrong, a status has changed, or you’d rather not be listed, and it will be fixed quickly. The same route works: an <a href={`${SITE.repo}/issues/new`}>issue</a> or a pull request.</p>
+      <p>If you make something listed here, your word on it goes. Tell us when a description is wrong, a status has changed, or you’d rather not be listed, and it will be fixed quickly. The same route works: an <a href={`${SITE.repo}/issues/new?template=wrong-info.yml`}>issue</a> or a pull request.</p>
       <p>Pictures came from your project’s own pages and are credited to you. If you want one changed or removed, say so.</p>
       <p>Quitanda links to your downloads and doesn’t host firmware files, so your release page stays the source of truth and your download counts stay yours.</p>
 
