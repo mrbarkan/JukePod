@@ -56,7 +56,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
           <p class="kicker">{[item.maker, ...kinds].join(" · ")}</p>
           <div class="item-title">
             <h1>{item.name}</h1>
-            <Sticker version={item.version} seed={item.id} large />
+            <Sticker version={item.version} status={item.status} seed={item.id} large />
           </div>
           <div class="item-meta">
             <Ripeness status={item.status} />

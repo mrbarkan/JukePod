@@ -30,6 +30,7 @@
   --pink: #ff7ab8;
   --orange: #ff8a1f;
   --cream: #fff6e3;
+  --kraft: #cdbd98;
   --sticker-ink: #17120f;
 
   --bg: #fff6e3;
@@ -293,7 +294,7 @@ textarea.field { resize: vertical; line-height: 1.5; }
 /* ---------- home ---------- */
 .hero { display: flex; flex-direction: column; gap: 32px; padding-top: 16px; }
 .hero-top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 56px; }
-.hero-top > div { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.hero-top > div { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .hero-top h1 { font: 900 clamp(56px, 9vw, 116px)/0.9 var(--f-head); letter-spacing: -0.045em; }
 .picker { position: relative; background: var(--panel); border: 1.5px solid var(--edge); box-shadow: var(--drop); border-radius: var(--r-big); padding: 24px; display: flex; flex-direction: column; gap: 18px; }
 .picker-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; }
@@ -845,6 +846,12 @@ textarea.field { resize: vertical; line-height: 1.5; }
    THE STICKER SHEET
    Everything above sets layout. This part is the look: the big type,
    the blue shop front, the colored shelves, keys and pills.
+
+   Color and stickers each do one job:
+     green / yellow / red / kraft on a listing   its ripeness (card, sticker, label)
+     the sticker's shape                          ripeness again, for anyone who can't tell the colors apart
+     yellow keys and the yellow tab               something to press, or where you are
+     blue                                         the shop front, where you pick your iPod
    ==================================================================== */
 body { overflow-x: clip; }
 
@@ -892,26 +899,15 @@ body { overflow-x: clip; }
 
 /* ---------- the shop front ---------- */
 #home { padding-top: 0; }
-.hero { position: relative; isolation: isolate; gap: 30px; padding: 44px 0 48px; color: var(--cream); }
+.hero { position: relative; isolation: isolate; gap: 18px; padding: 20px 0 30px; color: var(--cream); }
 .hero::before { content: ""; position: absolute; z-index: -1; inset: 0 -100vmax; background: var(--blue); border-bottom: 2px solid var(--sticker-ink); }
-.hero-top { align-items: center; gap: 20px 40px; }
-.hero-top > div:first-child { flex: 1 1 500px; gap: 16px; }
+.hero-top { align-items: center; justify-content: space-between; gap: 6px 40px; }
+.hero-top > .hero-say { flex: 0 1 auto; gap: 4px; }
 .hero-top .lcd-kicker { color: var(--yellow); }
-.hero-top h1 { font: 400 clamp(46px, 7.6vw, 104px)/0.98 var(--f-display); letter-spacing: -0.03em; }
-.hero-top h1 em { display: block; width: max-content; margin: 0.02em 0 0.06em 0.04em; font: 700 1.2em/0.9 var(--f-script); letter-spacing: 0; color: var(--yellow); rotate: -4deg; text-shadow: 0.035em 0.045em 0 var(--sticker-ink); }
-.hero-intro { max-width: 44ch; font-size: 18px; line-height: 1.5; color: var(--cream); }
-/* Four stickers, stuck on by hand. */
-.hero-top > .hero-stickers { position: relative; display: block; flex: 0 1 440px; min-width: 300px; aspect-ratio: 44 / 35; }
-.hs { position: absolute; display: block; filter: drop-shadow(0 5px 0 rgb(0 0 0 / 0.28)); transition: rotate 0.25s cubic-bezier(0.3, 1.6, 0.5, 1), scale 0.25s; }
-.hs:hover { scale: 1.05; }
-.hs-1 { width: 52%; left: 0; top: 3%; rotate: -9deg; }
-.hs-1:hover { rotate: -3deg; }
-.hs-2 { width: 40%; right: 1%; top: 0; rotate: 10deg; }
-.hs-2:hover { rotate: 40deg; }
-.hs-3 { width: 29%; left: 13%; bottom: 0; rotate: 7deg; }
-.hs-3:hover { rotate: 0deg; }
-.hs-4 { width: 51%; right: 0; bottom: 3%; rotate: -6deg; }
-.hs-4:hover { rotate: 2deg; }
+.hero-top h1 { font: 400 clamp(30px, 4.6vw, 54px)/1.05 var(--f-display); letter-spacing: -0.03em; }
+.hero-top h1 em { display: inline-block; margin-left: 0.1em; font: 700 1.3em/0.8 var(--f-script); letter-spacing: 0; color: var(--yellow); rotate: -4deg; text-shadow: 0.035em 0.045em 0 var(--sticker-ink); }
+.hero-intro { flex: 0 1 40ch; margin: 0; font-size: 16.5px; line-height: 1.45; color: var(--cream); }
+
 
 .picker { color: var(--ink); border: 2px solid var(--sticker-ink); box-shadow: 0 6px 0 var(--sticker-ink); }
 .picker-head h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -925,8 +921,9 @@ body { overflow-x: clip; }
 .fw-card { border: 2px solid var(--edge); border-radius: var(--r-card); }
 .fw-card:hover { translate: 0 -4px; box-shadow: 0 8px 0 var(--edge); }
 .fw-art { padding: 18px; background: var(--tone, var(--blue)); border-bottom: 2px solid var(--edge); }
-.tone-blue { --tone: var(--blue); } .tone-pink { --tone: var(--pink); } .tone-yellow { --tone: var(--yellow); }
-.tone-green { --tone: var(--green); } .tone-red { --tone: var(--red); } .tone-orange { --tone: var(--orange); }
+/* The color behind the screen is the listing's ripeness, same as its sticker and label. */
+.tone-stable { --tone: var(--green); } .tone-beta { --tone: var(--yellow); } .tone-experimental { --tone: var(--red); }
+.tone-archived { --tone: var(--kraft); } .tone-community { --tone: var(--blue); }
 .fw-art .bezel { padding: 10px; border: 2px solid var(--sticker-ink); border-radius: 14px; box-shadow: 0 4px 0 rgb(0 0 0 / 0.28); }
 .fw-art .bezel img, .fw-art .lcd-menu { border-radius: 5px; }
 .fw-art .sticker { position: absolute; right: 4px; top: 2px; }
@@ -935,8 +932,6 @@ body { overflow-x: clip; }
 .shelf h2, .side-card h2, .card-title, .picker-head h2, .get-panel h2 { font-weight: 800; }
 .get-panel { border-width: 2px; }
 /* A colored dot on each small shelf, like the sticker on a crate. */
-.shelf h2 { display: flex; align-items: center; gap: 10px; }
-.shelf h2::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--pink); border: 2px solid var(--sticker-ink); }
 .shelf:nth-child(3n + 2) h2::before { background: var(--blue); }
 .shelf:nth-child(3n + 3) h2::before { background: var(--green); }
 .shelf-list a:hover strong { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
@@ -953,10 +948,7 @@ body { overflow-x: clip; }
 
 .guide-links a { border: 2px solid var(--sticker-ink); color: var(--sticker-ink); transition: translate 0.12s, box-shadow 0.12s; }
 .guide-links a:hover { color: var(--sticker-ink); border-color: var(--sticker-ink); translate: 0 -3px; box-shadow: 0 6px 0 var(--sticker-ink); }
-.guide-links li:nth-child(4n + 1) a { background: var(--yellow); }
-.guide-links li:nth-child(4n + 2) a { background: var(--pink); }
-.guide-links li:nth-child(4n + 3) a { background: #9be8b0; }
-.guide-links li:nth-child(4n + 4) a { background: #a9c8ff; }
+.guide-links a { background: var(--yellow); }
 .guide-links em { font-weight: 900; letter-spacing: 0.08em; color: var(--sticker-ink); }
 .guide-links span { color: var(--sticker-ink); }
 
@@ -995,16 +987,14 @@ body > main { flex: 1 0 auto; width: 100%; }
 @media (prefers-reduced-motion: reduce) { .post-feature, .post-card { transition: none; } }
 
 /* ---------- phones ---------- */
-@media (max-width: 860px) {
-  .hero-top > .hero-stickers { flex: 1 1 100%; min-width: 0; aspect-ratio: auto; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2%; padding: 4px 0; }
-  .hs { position: static; }
-  .hs-1 { width: 31%; } .hs-2 { width: 24%; } .hs-3 { width: 18%; } .hs-4 { width: 27%; }
-}
 @media (max-width: 720px) {
-  .hero { padding: 30px 0 34px; gap: 20px; }
-  .hero-intro { font-size: 16.5px; }
+  .hero { padding: 16px 0 24px; gap: 14px; }
+  .hero-intro { flex-basis: 100%; font-size: 15.5px; }
 }
 @media (max-width: 560px) {
+  .picker-hint { display: none; }
+  .picker-head > div { gap: 6px 12px; font-size: 14px; }
+  .picker-head .seg { padding: 0 14px; font-size: 14px; }
   .fw-art { padding: 10px; border-bottom: 0; border-right: 2px solid var(--edge); }
   .fw-art .bezel { padding: 6px; border-radius: 9px; box-shadow: none; }
   .fw-art .sticker { width: 54px; right: 2px !important; top: 2px !important; }

@@ -17,21 +17,13 @@
 export const COPY = {
   // ---------- the home page ----------
   home: {
-    // The small line above the big headline.
-    kicker: "A quitanda is a corner fruit shop. This one is for iPods.",
     // The headline is two parts: plain chunky letters, then one word in script.
     headline: "Pick your",
     headlineScript: "flavor.",
-    intro: "Your iPod doesn't have to run what it shipped with. Pick yours below and the whole shop rearranges around it.",
-
-    // The four stickers beside the headline. Keep each line short: a sticker
-    // is small. "top" and "sub" are the little lines, "main" is the big word.
-    stickers: {
-      fresh: { top: "Always", main: "Fresh", sub: "Firmware" },
-      club: { top: "Click Wheel", sub: "Social Club" },
-      beta: { top: "Est. 2026", main: "Beta", sub: "Still ripening" },
-      brasil: { top: "Feito no", main: "Brasil", sub: "Made in Brazil" },
-    },
+    // One or two short sentences beside the headline.
+    intro: "A quitanda is a corner fruit shop. This one is for iPods: tap yours to see what runs on it.",
+    // An optional small line above the headline. Empty means it isn't shown.
+    kicker: "",
 
     // The little tag that points at the iPod picker.
     pickerHint: "Start here",

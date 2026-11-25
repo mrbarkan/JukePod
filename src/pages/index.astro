@@ -1,7 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
-import Badge from "../components/Badge.astro";
 import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
 import { COPY } from "../data/copy.js";
@@ -51,17 +50,11 @@ const searchable = [
     <div id="shop-all" class="page" style="padding-block: 0">
       <section class="hero">
         <div class="hero-top">
-          <div>
-            <p class="lcd-kicker">{C.kicker}</p>
+          <div class="hero-say">
+            {C.kicker && <p class="lcd-kicker">{C.kicker}</p>}
             <h1>{C.headline} <em>{C.headlineScript}</em></h1>
-            <p class="hero-intro">{C.intro}</p>
           </div>
-          <div class="hero-stickers" aria-hidden="true">
-            <span class="hs hs-1"><Badge shape="lemon" tone="lemon" {...C.stickers.fresh} /></span>
-            <span class="hs hs-2"><Badge shape="round" tone="tomato" wheel {...C.stickers.club} /></span>
-            <span class="hs hs-3"><Badge shape="arch" tone="pink" {...C.stickers.beta} /></span>
-            <span class="hs hs-4"><Badge shape="diamond" tone="green" script {...C.stickers.brasil} /></span>
-          </div>
+          <p class="hero-intro">{C.intro}</p>
         </div>
 
         <div class="picker">
