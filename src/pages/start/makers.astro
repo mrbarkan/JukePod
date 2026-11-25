@@ -49,8 +49,9 @@ const example = `{
       </header>
 
       <h2 id="list">Get your project listed</h2>
-      <p>Firmware, library apps and hardware mods all live in one file in the site’s public repository. There are two ways in:</p>
+      <p>Firmware, library apps and hardware mods all live in one file in the site’s public repository. There are three ways in:</p>
       <ul>
+        <li><strong>Use the form.</strong> Sign in and <a href={href("/suggest/")}>suggest a listing</a>. It’s added for you, and you can be credited.</li>
         <li><strong>Open an issue</strong> with the details below and it will be added for you. <a href={`${SITE.repo}/issues/new`}>Open an issue</a></li>
         <li><strong>Send a pull request</strong> that adds your entry to <code>src/data/catalog.js</code>. <a href={`${SITE.repo}/edit/main/src/data/catalog.js`}>Edit the file on GitHub</a></li>
       </ul>
@@ -87,7 +88,7 @@ const example = `{
       <p>Be exact about iPods. People filter the whole shop by their model, and the compatibility table is built from your list. Use <em>partial</em> for a model that boots with known gaps, and say what the gaps are in the description. “Untested on hardware” is useful information; say it.</p>
 
       <h2 id="pictures">Screenshots</h2>
-      <p>Listings with pictures get opened far more. Send up to six, in the issue or pull request.</p>
+      <p>Listings with pictures get opened far more. Send up to six: link to them in your suggestion, or attach them to the issue or pull request.</p>
       <ul>
         <li><strong>iPod screens:</strong> capture at the screen’s real size, 320×240 on the Classic and Video, and save as PNG. The site shows them pixel-sharp in a screen frame. Don’t scale them up.</li>
         <li><strong>Apps and photos:</strong> JPEG or PNG, up to about 1,400 pixels wide.</li>
@@ -118,7 +119,7 @@ const example = `{
       </ul>
 
       <h2 id="yours">It’s your listing</h2>
-      <p>If you make something listed here, your word on it goes. Tell us when a description is wrong, a status has changed, or you’d rather not be listed, and it will be fixed quickly. The same route works: an <a href={`${SITE.repo}/issues/new`}>issue</a> or a pull request.</p>
+      <p>If you make something listed here, your word on it goes. Tell us when a description is wrong, a status has changed, or you’d rather not be listed, and it will be fixed quickly. The same routes work: <a href={href("/suggest/")}>the form</a>, an <a href={`${SITE.repo}/issues/new`}>issue</a> or a pull request.</p>
       <p>Pictures came from your project’s own pages and are credited to you. If you want one changed or removed, say so.</p>
       <p>Quitanda links to your downloads and doesn’t host firmware files, so your release page stays the source of truth and your download counts stay yours.</p>
 

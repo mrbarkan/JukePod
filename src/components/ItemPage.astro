@@ -101,6 +101,7 @@ const getTitle = `Get ${item.name}${isNumbered(item.version) ? " " + item.versio
             </div>
           )}
           <ShareRow url={pageUrl} title={`${item.name}: ${plain(item.blurb)}`} />
+          <p class="aside-note">Something out of date or wrong? <a href={href(`/suggest/?fix=${item.id}`)}>Suggest a fix</a></p>
         </aside>
       </div>
     </div>

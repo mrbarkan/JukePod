@@ -1,0 +1,202 @@
+---
+import Base from "../layouts/Base.astro";
+import { firmwares, apps, mods, SITE, href } from "../lib/catalog.js";
+
+// Every listing, so "fix a listing" can name the one it means.
+const listings = [
+  ...firmwares.map((x) => ({ id: x.id, name: x.name, kind: "firmware" })),
+  ...apps.map((x) => ({ id: x.id, name: x.name, kind: "app" })),
+  ...mods.map((x) => ({ id: x.id, name: x.name, kind: "mod" })),
+];
+const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Library app"], ["other", "Something else"]];
+---
+<Base title="Suggest a listing" description="Suggest firmware, an app or a hardware mod for the catalog, or a fix to one that's already listed. You can be credited when it goes in." section="about">
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1>Suggest a listing</h1>
+      <p>Know a mod, firmware or app that's missing, or spotted something wrong? Send it here. Each suggestion is read by a person, and you can be credited by name when it goes in.</p>
+    </header>
+
+    <p id="sg-loading" class="aside-note">Checking whether you're signed in…</p>
+    <section id="sg-out" hidden>
+      <p>Sign in to send a suggestion, so you can follow it and be credited. <button type="button" class="btn" id="sg-signin">Sign in</button></p>
+      <p class="aside-note">Rather not sign in? <a href={`${SITE.repo}/issues/new`}>Open an issue on GitHub</a> with the details.</p>
+    </section>
+
+    <form id="sg-form" class="acct-form theme-form" novalidate hidden>
+      <fieldset class="theme-devices">
+        <legend>Is it new, or a fix?</legend>
+        <div>
+          <label class="theme-check"><input type="radio" name="sg-action" value="add" checked /><span>Add something new</span></label>
+          <label class="theme-check"><input type="radio" name="sg-action" value="fix" /><span>Fix a listing</span></label>
+        </div>
+      </fieldset>
+
+      <label id="sg-item-box" hidden>
+        <span>Which listing?</span>
+        <span class="select">
+          <select class="field" id="sg-item">
+            <option value="">Choose one…</option>
+            {listings.map((l) => <option value={l.id} data-kind={l.kind}>{l.name}</option>)}
+          </select>
+          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        </span>
+      </label>
+
+      <label id="sg-kind-box">
+        <span>What is it?</span>
+        <span class="select">
+          <select class="field" id="sg-kind">
+            {KINDS.map(([v, label]) => <option value={v}>{label}</option>)}
+          </select>
+          <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+        </span>
+        <small>Something else could be a guide, a tool, or a place to buy parts.</small>
+      </label>
+
+      <label id="sg-title-box">
+        <span>Name</span>
+        <input class="field" id="sg-title" maxlength="80" placeholder="for example, a Bluetooth adapter kit" />
+      </label>
+
+      <label>
+        <span>Link <em>(optional)</em></span>
+        <input class="field" id="sg-url" type="url" inputmode="url" maxlength="300" placeholder="https://…" />
+        <small>Its website, repository, shop page or video.</small>
+      </label>
+
+      <label>
+        <span>Details</span>
+        <textarea class="field" id="sg-details" rows="6" maxlength="2000"></textarea>
+        <small id="sg-details-help">Who makes it, which iPods it fits, and anything worth knowing. Say if you make or sell it yourself.</small>
+      </label>
+
+      <label class="theme-check">
+        <input type="checkbox" id="sg-credit" checked />
+        <span>Credit me by name on the <a href={href("/about/#thanks")}>thank-you list</a> if it goes in. <span id="sg-as"></span></span>
+      </label>
+
+      <div class="acct-actions">
+        <button type="submit" class="btn" id="sg-send">Send suggestion</button>
+        <span id="sg-status" role="status"></span>
+      </div>
+      <p id="sg-error" class="signin-error" role="alert" hidden></p>
+    </form>
+
+    <section id="sg-done" hidden>
+      <h2>Thanks, it's in</h2>
+      <p>It will be read soon. You can see what happens to it below.</p>
+      <p><button type="button" class="btn btn-quiet" id="sg-another">Suggest something else</button></p>
+    </section>
+
+    <section class="acct-themes" id="sg-mine-box" hidden style="margin-top: 32px">
+      <h2>Your suggestions</h2>
+      <div id="sg-mine" class="acct-theme-list"></div>
+    </section>
+  </main>
+</Base>
+
+<script>
+  import { onUser } from "../scripts/account.js";
+  import { h, fmtDate } from "../scripts/theme-ui.js";
+
+  const $ = (id) => document.getElementById(id);
+  const lib = () => import("../lib/suggestions.js");
+  const STATUS = { new: ["Waiting", "pending"], added: ["Added", "approved"], declined: ["Not added", "rejected"] };
+  let busy = false;
+
+  const action = () => document.querySelector("input[name=sg-action]:checked").value;
+  function onActionChange() {
+    const fix = action() === "fix";
+    $("sg-item-box").hidden = !fix;
+    $("sg-kind-box").hidden = fix;
+    $("sg-title-box").hidden = fix;
+    $("sg-details-help").textContent = fix
+      ? "What's wrong, and what it should say. A link to where you found it helps."
+      : "Who makes it, which iPods it fits, and anything worth knowing. Say if you make or sell it yourself.";
+  }
+  document.querySelectorAll("input[name=sg-action]").forEach((r) => r.addEventListener("change", onActionChange));
+
+  // Links from listing pages fill in what they're about: ?fix=<id> or ?kind=mod.
+  const params = new URLSearchParams(location.search);
+  const fixId = params.get("fix");
+  if (fixId && [...$("sg-item").options].some((o) => o.value === fixId)) {
+    document.querySelector("input[name=sg-action][value=fix]").checked = true;
+    $("sg-item").value = fixId;
+  } else if ([...$("sg-kind").options].some((o) => o.value === params.get("kind"))) {
+    $("sg-kind").value = params.get("kind");
+  }
+  onActionChange();
+
+  $("sg-signin").addEventListener("click", () => document.querySelector("#account [data-open]")?.click());
+
+  function showError(message) {
+    $("sg-error").textContent = message || "";
+    $("sg-error").hidden = !message;
+  }
+
+  async function drawMine() {
+    const list = await (await lib()).mySuggestions();
+    $("sg-mine-box").hidden = !list.length;
+    $("sg-mine").replaceChildren(
+      ...list.map((s) => {
+        const [label, look] = STATUS[s.status] || STATUS.new;
+        return h("div", { class: "acct-theme" },
+          h("strong", {}, s.title),
+          h("span", { class: `pill pill-theme-${look}` }, label),
+          h("span", {}, fmtDate(s.createdAt)),
+          s.reviewNote ? h("em", {}, s.reviewNote) : null
+        );
+      })
+    );
+  }
+
+  onUser((user) => {
+    $("sg-loading").hidden = true;
+    $("sg-out").hidden = !!user;
+    if ($("sg-done").hidden) $("sg-form").hidden = !user;
+    $("sg-as").textContent = user?.displayName ? `(as ${user.displayName.split(" ")[0]}; change it on your account page)` : "";
+    if (user) drawMine().catch(() => {});
+    else $("sg-mine-box").hidden = true;
+  });
+
+  $("sg-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (busy) return;
+    const fix = action() === "fix";
+    const item = $("sg-item").selectedOptions[0];
+    if (fix && !item?.value) return showError("Choose the listing to fix.");
+    showError("");
+    busy = true;
+    $("sg-send").disabled = true;
+    $("sg-status").textContent = "Sending…";
+    try {
+      await (await lib()).sendSuggestion({
+        action: fix ? "fix" : "add",
+        kind: fix ? item.dataset.kind : $("sg-kind").value,
+        itemId: fix ? item.value : "",
+        title: fix ? item.textContent : $("sg-title").value,
+        url: $("sg-url").value,
+        details: $("sg-details").value,
+        credit: $("sg-credit").checked,
+      });
+      $("sg-form").reset();
+      onActionChange();
+      $("sg-form").hidden = true;
+      $("sg-done").hidden = false;
+      window.scrollTo({ top: 0 });
+      drawMine().catch(() => {});
+    } catch (err) {
+      showError(err.code ? "It didn't go through. Check your connection and try again." : err.message);
+    } finally {
+      $("sg-status").textContent = "";
+      busy = false;
+      $("sg-send").disabled = false;
+    }
+  });
+
+  $("sg-another").addEventListener("click", () => {
+    $("sg-done").hidden = true;
+    $("sg-form").hidden = false;
+  });
+</script>

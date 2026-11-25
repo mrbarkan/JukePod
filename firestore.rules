@@ -12,6 +12,8 @@ rules_version = '2';
 //   reports  "works on my iPod" reports, one per person, listing and iPod they own.
 //            Older reports name only the model and are still counted
 //   flags    reports of a problem with a theme; read by admins and their sender
+//   suggestions  listings people suggest adding or fixing; read by admins and their
+//            sender, and by anyone once added, if the sender asked to be credited
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -188,6 +190,33 @@ service cloud.firestore {
             && reportId == request.auth.uid + '_' + request.resource.data.itemId + '_' + request.resource.data.ipodId
             && get(/databases/$(database)/documents/members/$(request.auth.uid)/ipods/$(request.resource.data.ipodId)).data.model == request.resource.data.deviceId)
           : reportId == request.auth.uid + '_' + request.resource.data.itemId + '_' + request.resource.data.deviceId);
+      allow delete: if isOwner(resource.data.uid) || isAdmin();
+    }
+
+    // Listings people suggest: a new firmware, app or mod, or a fix to one.
+    // Only the sender and admins see one, until an admin marks it added; then
+    // it shows on the thank-you list, if the sender asked to be credited.
+    match /suggestions/{suggestionId} {
+      allow read: if isOwner(resource.data.uid) || isAdmin()
+        || (resource.data.status == 'added' && resource.data.credit == true);
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'new'
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details', 'credit', 'status', 'createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+        && request.resource.data.kind in ['firmware', 'app', 'mod', 'other']
+        && request.resource.data.action in ['add', 'fix']
+        && (!('itemId' in request.resource.data) || isSlug(request.resource.data.itemId))
+        && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 80
+        && (!('url' in request.resource.data) || (request.resource.data.url is string
+          && request.resource.data.url.size() <= 300 && request.resource.data.url.matches('^https?://[^ ]+$')))
+        && request.resource.data.details is string
+        && request.resource.data.details.size() >= 1 && request.resource.data.details.size() <= 2000
+        && request.resource.data.credit is bool;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt'])
+        && request.resource.data.status in ['new', 'added', 'declined']
+        && optionalText(request.resource.data, 'reviewNote', 500);
       allow delete: if isOwner(resource.data.uid) || isAdmin();
     }
 

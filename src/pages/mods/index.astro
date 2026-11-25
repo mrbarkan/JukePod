@@ -15,6 +15,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
     <header class="intro">
       <h1>Hardware mods</h1>
       <p>Parts you fit inside the iPod. Each listing says which iPods it fits, how hard the job is, and what changes for the firmware you run.</p>
+      <p>Know a mod that's missing, or another way to do one of these? <a href={href("/suggest/?kind=mod")}>Suggest it</a> and you can be credited when it goes in.</p>
       <nav class="jump" aria-label="Kinds of mod">
         {kinds.map((k) => <a href={`#kind-${k.toLowerCase()}`}>{k}</a>)}
       </nav>
@@ -38,6 +39,7 @@ const coming = watchlist.filter((w) => w.kind === "mod");
                     ))}
                   </div>
                 )}
+                <p class="aside-note"><a href={href(`/suggest/?fix=${m.id}`)}>Suggest a fix</a></p>
               </div>
               <div class="mod-side">
                 <dl class="facts">
@@ -78,6 +80,6 @@ const coming = watchlist.filter((w) => w.kind === "mod");
       </section>
     )}
 
-    <p class="aside-note">Opening an iPod can damage it, and lithium batteries can catch fire if punctured. Follow a teardown guide, and don’t pry near the battery. Looking for software instead? <a href={href("/")}>Browse the firmware</a>.</p>
+    <p class="aside-note">Opening an iPod can damage it, and lithium batteries can catch fire if punctured. Follow a teardown guide, and don’t pry near the battery. Missing something? <a href={href("/suggest/?kind=mod")}>Suggest a mod</a>. Looking for software instead? <a href={href("/")}>Browse the firmware</a>.</p>
   </main>
 </Base>

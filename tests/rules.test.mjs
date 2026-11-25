@@ -237,6 +237,49 @@ test("flags: members create them; only admins and the sender read or remove them
   assert.equal(await del(bo, "flags/f1"), 200);
 });
 
+test("suggestions: members send them; the sender and admins read them until added with credit", async () => {
+  const good = { uid: ana.uid, name: "Ana", kind: "mod", action: "add", title: "Bluetooth kit", url: "https://example.com/kit", details: "Fits the Classic.", credit: true, status: "new" };
+  assert.equal(await put(ana, "suggestions/s1", good), 200);
+  assert.equal(await put(ana, "suggestions/s-fix", { ...good, action: "fix", itemId: "iflash" }), 200);
+  assert.equal(await put(null, "suggestions/s2", good), 403);
+  assert.equal(await put(bo, "suggestions/s3", good), 403, "can't send one as someone else");
+  assert.equal(await put(ana, "suggestions/s4", { ...good, status: "added" }), 403, "can't mark your own as added");
+  assert.equal(await put(ana, "suggestions/s5", { ...good, kind: "spam" }), 403);
+  assert.equal(await put(ana, "suggestions/s6", { ...good, url: "javascript:alert(1)" }), 403);
+  assert.equal(await put(ana, "suggestions/s7", { ...good, details: "" }), 403);
+  assert.equal(await put(ana, "suggestions/s8", { ...good, details: "x".repeat(2001) }), 403);
+  assert.equal(await put(ana, "suggestions/s9", { ...good, credit: "yes" }), 403);
+  assert.equal(await put(ana, "suggestions/s10", { ...good, email: "a@b.c" }), 403);
+  assert.equal(await put(ana, "suggestions/s11", { ...good, itemId: "Not A Slug" }), 403);
+  const anon = { ...good, credit: false };
+  assert.equal(await put(ana, "suggestions/s-quiet", anon), 200);
+  assert.equal(await get(null, "suggestions/s1"), 403);
+  assert.equal(await get(bo, "suggestions/s1"), 403);
+  assert.equal(await get(ana, "suggestions/s1"), 200);
+  assert.equal(await get(admin, "suggestions/s1"), 200);
+  assert.equal(await put(ana, "suggestions/s1", { title: "Edited" }, { update: ["title"] }), 403);
+  assert.equal(await put(ana, "suggestions/s1", { status: "added" }, { update: ["status"] }), 403);
+  assert.equal(await put(admin, "suggestions/s1", { title: "Edited" }, { update: ["title"] }), 403);
+  assert.equal(await put(admin, "suggestions/s1", { status: "published" }, { update: ["status"] }), 403);
+  assert.equal(await put(admin, "suggestions/s1", { status: "added", reviewNote: "Thanks!" }, { update: ["status", "reviewNote"] }), 200);
+  assert.equal(await put(admin, "suggestions/s-quiet", { status: "added" }, { update: ["status"] }), 200);
+  assert.equal(await get(null, "suggestions/s1"), 200, "added with credit: on the thank-you list");
+  assert.equal(await get(null, "suggestions/s-quiet"), 403, "added without credit stays private");
+  const query = (filters) => fetch(`${DOCS}:runQuery`, json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
+    where: { compositeFilter: { op: "AND", filters: filters.map(([f, v]) => ({ fieldFilter: { field: { fieldPath: f }, op: "EQUAL", value: enc(v) } })) } } } }));
+  const thanks = await query([["status", "added"], ["credit", true]]);
+  assert.equal(thanks.status, 200);
+  assert.equal((await thanks.json()).filter((r) => r.document).length, 1);
+  assert.equal((await query([["status", "added"]])).status, 403, "the public can't list uncredited ones");
+  const mine = await fetch(`${DOCS}:runQuery`, { ...json({ structuredQuery: { from: [{ collectionId: "suggestions" }],
+    where: { fieldFilter: { field: { fieldPath: "uid" }, op: "EQUAL", value: { stringValue: ana.uid } } } } }), headers: { "Content-Type": "application/json", ...bearer(ana) } });
+  assert.equal(mine.status, 200, "the sender can list their own");
+  assert.equal((await mine.json()).filter((r) => r.document).length, 3);
+  assert.equal(await del(bo, "suggestions/s-fix"), 403);
+  assert.equal(await del(ana, "suggestions/s-fix"), 200);
+  assert.equal(await del(admin, "suggestions/s-quiet"), 200);
+});
+
 test("member settings are private to their owner", async () => {
   assert.equal(await put(ana, `members/${ana.uid}`, { role: "creator" }), 200);
   assert.equal(await put(ana, `members/${ana.uid}`, { role: "superuser" }), 403);

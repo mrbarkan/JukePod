@@ -4,7 +4,7 @@ import Icon from "../../components/Icon.astro";
 import ThemeData from "../../components/ThemeData.astro";
 import { href } from "../../lib/catalog.js";
 ---
-<Base title="Review queue" description="Themes waiting to be checked." section="themes">
+<Base title="Review queue" description="Themes and suggested listings waiting to be checked." section="themes">
   <main class="wrap page">
     <a class="back" href={href("/themes/")}><Icon name="back" />All themes</a>
     <header class="intro"><h1>Review queue</h1></header>
@@ -13,6 +13,11 @@ import { href } from "../../lib/catalog.js";
       <section class="section">
         <div class="section-head"><h2>Waiting for review <span class="badge-count" id="rv-count">0</span></h2></div>
         <div id="rv-pending" class="review-list"></div>
+      </section>
+      <section class="section">
+        <div class="section-head"><h2>Suggested listings <span class="badge-count" id="rv-sg-count">0</span></h2></div>
+        <p class="aside-note">Add the ones you take to the catalog yourself, then mark them added. People who asked for credit then appear on the thank-you list on the About page.</p>
+        <div id="rv-suggestions" class="review-list"></div>
       </section>
       <section class="section">
         <div class="section-head"><h2>Reported themes <span class="badge-count" id="rv-flag-count">0</span></h2></div>
@@ -31,6 +36,32 @@ import { href } from "../../lib/catalog.js";
   const { targets } = pageData();
   const $ = (id) => document.getElementById(id);
   const write = () => import("../../lib/themes-write.js");
+  const suggestions = () => import("../../lib/suggestions.js");
+  const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
+
+  function suggestionCard(s, reload) {
+    const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the sender (optional, shown to them)" });
+    const out = h("span", { role: "status" });
+    const act = (status) => async () => {
+      out.textContent = "Saving…";
+      try { await (await suggestions()).reviewSuggestion(s.id, status, note.value); reload(); }
+      catch { out.textContent = "Couldn't save. Try again."; }
+    };
+    const safeUrl = /^https?:\/\//.test(s.url || "") ? s.url : null;
+    return h("article", { class: "card review-flag" },
+      h("p", { class: "kicker" }, `${s.action === "fix" ? "Fix" : "New"} · ${KINDS[s.kind] || s.kind} · from ${s.name}${s.credit ? " (wants credit)" : ""} · ${fmtDate(s.createdAt)}`),
+      h("h3", { class: "card-title" }, s.title),
+      s.itemId ? h("p", {}, h("a", { href: link(s.kind === "mod" ? `/mods/#${s.itemId}` : s.kind === "app" ? `/apps/${s.itemId}/` : `/firmware/${s.itemId}/`) }, "Open the listing")) : null,
+      safeUrl ? h("p", {}, h("a", { href: safeUrl, target: "_blank", rel: "noopener noreferrer nofollow ugc" }, safeUrl)) : null,
+      h("p", { class: "blurb", style: "white-space: pre-line" }, s.details),
+      note,
+      h("div", { class: "item-actions" },
+        h("button", { type: "button", class: "btn", onclick: act("added") }, "Mark added"),
+        h("button", { type: "button", class: "btn btn-quiet", onclick: act("declined") }, "Not adding"),
+        out
+      )
+    );
+  }
 
   function pendingCard(theme, reload) {
     const note = h("input", { class: "field", maxlength: "500", placeholder: "Note to the author (optional, shown if not accepted)" });
@@ -67,7 +98,9 @@ import { href } from "../../lib/catalog.js";
 
   async function load() {
     const { themesByStatus, listFlags, dismissFlag } = await write();
-    const [pending, flags] = await Promise.all([themesByStatus("pending"), listFlags()]);
+    const [pending, flags, waiting] = await Promise.all([themesByStatus("pending"), listFlags(), (await suggestions()).suggestionsByStatus("new")]);
+    $("rv-sg-count").textContent = waiting.length;
+    $("rv-suggestions").replaceChildren(...(waiting.length ? waiting.map((s) => suggestionCard(s, load)) : [h("p", { class: "aside-note" }, "No suggestions waiting.")]));
     $("rv-count").textContent = pending.length;
     $("rv-pending").replaceChildren(...(pending.length ? pending.map((t) => pendingCard(t, load)) : [h("p", { class: "aside-note" }, "Nothing is waiting.")]));
     $("rv-flag-count").textContent = flags.length;

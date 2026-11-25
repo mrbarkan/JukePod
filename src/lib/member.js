@@ -68,8 +68,9 @@ export async function exportMyData() {
   const user = me();
   const { myThemes } = await import("./themes-write.js");
   const { loadMyIpods } = await import("./my-ipods.js");
-  const [profile, member, newsletter, ipods, themes, flags, reports] = await Promise.all([
-    read("users", user.uid), loadMember(), loadSubscription(), loadMyIpods(user.uid), myThemes(), myFlags(user.uid), myReports(user.uid),
+  const { mySuggestions } = await import("./suggestions.js");
+  const [profile, member, newsletter, ipods, themes, flags, reports, suggestions] = await Promise.all([
+    read("users", user.uid), loadMember(), loadSubscription(), loadMyIpods(user.uid), myThemes(), myFlags(user.uid), myReports(user.uid), mySuggestions(user.uid),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -89,12 +90,13 @@ export async function exportMyData() {
     themes,
     problemsYouReported: flags,
     worksOnMyIpodReports: reports,
+    listingSuggestions: suggestions,
   };
 }
 
 /**
  * Deletes the account and everything attached to it: shared themes and
- * their files, reports sent, the iPods listed, the newsletter record,
+ * their files, reports and suggestions sent, the iPods listed, the newsletter record,
  * settings, the public profile, and finally the sign-in itself.
  */
 export async function deleteEverything() {
@@ -108,6 +110,8 @@ export async function deleteEverything() {
   for (const theme of await myThemes()) await deleteTheme(theme);
   for (const flag of await myFlags(user.uid)) await deleteDoc(doc(db, "flags", flag.id));
   for (const report of await myReports(user.uid)) await deleteDoc(doc(db, "reports", report.id));
+  const { mySuggestions, deleteSuggestion } = await import("./suggestions.js");
+  for (const suggestion of await mySuggestions(user.uid)) await deleteSuggestion(suggestion.id);
   const { loadMyIpods, removeIpod } = await import("./my-ipods.js");
   for (const ipod of await loadMyIpods(user.uid)) await removeIpod(ipod.id);
   await Promise.all(["subscribers", "members", "users"].map((path) => deleteDoc(doc(db, path, user.uid))));
