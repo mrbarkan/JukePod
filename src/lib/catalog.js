@@ -33,6 +33,23 @@ export const updatedOn = stats.date && stats.date > raw.updatedOn ? stats.date :
 
 export const items = [...firmwares, ...apps];
 export const byId = Object.fromEntries([...items, ...mods].map((x) => [x.id, x]));
+
+/**
+ * What a firmware is built on. Anything whose `basedOn` chain reaches Rockbox
+ * is in the Rockbox family; the rest say so with `family` in the catalog.
+ */
+export const FAMILIES = {
+  rockbox: { name: "Rockbox family", tag: "Rockbox fork", hint: "Rockbox or built on it" },
+  stock: { name: "Apple firmware mods", tag: "Apple firmware mod", hint: "Patches Apple’s own firmware" },
+  scratch: { name: "Something new", tag: "Something new", hint: "Neither Rockbox nor Apple’s firmware" },
+};
+for (const f of firmwares) {
+  f.family = f.family || (inRockboxFamily(f) ? "rockbox" : null);
+  f.familyTag = f.id === "rockbox" ? "Rockbox" : FAMILIES[f.family]?.tag || null;
+}
+export const families = Object.entries(FAMILIES)
+  .filter(([id]) => firmwares.some((f) => f.family === id))
+  .map(([id, v]) => ({ id, ...v }));
 export const deviceById = Object.fromEntries(devices.map((d) => [d.id, d]));
 export const categoryById = Object.fromEntries(categories.map((c) => [c.id, c]));
 
@@ -68,6 +85,7 @@ export const clientData = {
   latest,
   recentChanges,
   categories,
+  families,
   platforms,
   devices,
   firmwares,

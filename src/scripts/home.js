@@ -17,6 +17,7 @@ const asked = params.get("ipod");
 const state = {
   device: asked && known.has(asked) ? asked : known.has(store.get()) ? store.get() : "all",
   kind: "all",
+  family: "all",
   order: "shelf",
 };
 if (asked && known.has(asked)) store.set(asked);
@@ -31,11 +32,15 @@ function apply() {
 
   let shown = 0;
   const perKind = {};
+  const perFamily = {};
+  const kindOk = (card) => state.kind === "all" || has(card, "kinds", state.kind);
+  const familyOk = (card) => state.family === "all" || card.dataset.family === state.family;
   cards.forEach((card, i) => {
     const fit = fitOf(card, state.device);
     const fitsDevice = fit !== "none";
-    if (fitsDevice) (card.dataset.kinds || "").split(" ").forEach((k) => (perKind[k] = (perKind[k] || 0) + 1));
-    const visible = fitsDevice && (state.kind === "all" || has(card, "kinds", state.kind));
+    if (fitsDevice && familyOk(card)) (card.dataset.kinds || "").split(" ").forEach((k) => (perKind[k] = (perKind[k] || 0) + 1));
+    if (fitsDevice && kindOk(card) && card.dataset.family) perFamily[card.dataset.family] = (perFamily[card.dataset.family] || 0) + 1;
+    const visible = fitsDevice && kindOk(card) && familyOk(card);
     slots[i].hidden = !visible;
     if (visible) shown++;
     const line = card.querySelector("[data-fit]");
@@ -43,11 +48,15 @@ function apply() {
       fit === "full" ? `Runs on your ${tile.dataset.short}` : fit === "partial" ? `Partly works on your ${tile.dataset.short}` : line.dataset.default;
   });
 
-  const onDevice = cards.filter((c) => fitOf(c, state.device) !== "none").length;
   document.querySelectorAll("#kinds [data-kind]").forEach((b) => {
     b.setAttribute("aria-pressed", String(b.dataset.kind === state.kind));
-    const n = b.dataset.kind === "all" ? onDevice : perKind[b.dataset.kind] || 0;
-    b.hidden = b.dataset.kind !== "all" && n === 0 && b.dataset.kind !== state.kind;
+    const n = b.dataset.kind === "all" ? 1 : perKind[b.dataset.kind] || 0;
+    b.hidden = n === 0 && b.dataset.kind !== state.kind;
+  });
+  document.querySelectorAll("#families [data-family]").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b.dataset.family === state.family));
+    const n = b.dataset.family === "all" ? 1 : perFamily[b.dataset.family] || 0;
+    b.hidden = n === 0 && b.dataset.family !== state.family;
   });
 
   const flavors = (n) => `${n} ${n === 1 ? "flavor" : "flavors"}`;
@@ -76,6 +85,7 @@ tiles.forEach((t) =>
   t.addEventListener("click", () => {
     state.device = t.dataset.device;
     state.kind = "all";
+    state.family = "all";
     store.set(state.device === "all" ? null : state.device);
     apply();
   })
@@ -84,6 +94,12 @@ $("kinds").addEventListener("click", (e) => {
   const b = e.target.closest("[data-kind]");
   if (!b) return;
   state.kind = b.dataset.kind;
+  apply();
+});
+$("families").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-family]");
+  if (!b) return;
+  state.family = b.dataset.family;
   apply();
 });
 $("order").addEventListener("change", (e) => {
