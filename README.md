@@ -37,7 +37,8 @@ Most of the catalog will come from the iPod community, and you don't need to kno
 
 | You want to… | Easiest way |
 | --- | --- |
-| Suggest a firmware, app, mod or tool | [Suggest a listing](https://github.com/mrbarkan/quitanda/issues/new?template=suggest-listing.yml) |
+| Suggest a listing or a fix, and get credited | [The suggest form on the site](https://quitanda.mrbarkan.com/suggest/) (sign in with Google) |
+| Suggest without signing in | [Suggest a listing](https://github.com/mrbarkan/quitanda/issues/new?template=suggest-listing.yml) |
 | Fix a broken link, wrong version or compatibility claim | [Report wrong info](https://github.com/mrbarkan/quitanda/issues/new?template=wrong-info.yml) |
 | Share a theme | [The theme form on the site](https://quitanda.mrbarkan.com/themes/submit/) |
 | Report something broken on the site | [Report a bug](https://github.com/mrbarkan/quitanda/issues/new?template=bug.yml) |

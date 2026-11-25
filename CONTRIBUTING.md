@@ -6,12 +6,13 @@ The catalog is still being checked. It was compiled from each project's public p
 
 ## The quick ways (no Git needed)
 
-- **Suggest something new:** [open a "Suggest a listing" issue](https://github.com/mrbarkan/quitanda/issues/new?template=suggest-listing.yml). A name and a link is enough to start.
+- **Suggest on the site:** sign in and use the [suggest form](https://quitanda.mrbarkan.com/suggest/) for a new listing or a fix to one that's there. You can ask to be credited by name.
+- **Suggest something new on GitHub:** [open a "Suggest a listing" issue](https://github.com/mrbarkan/quitanda/issues/new?template=suggest-listing.yml). A name and a link is enough to start.
 - **Fix something wrong:** [open a "Report wrong info" issue](https://github.com/mrbarkan/quitanda/issues/new?template=wrong-info.yml) for a broken link, an outdated version, or an iPod a listing does or doesn't work on.
 - **Share a theme:** use the [theme form on the site](https://quitanda.mrbarkan.com/themes/submit/). Themes don't go through GitHub.
 - **Tell us whether something worked:** sign in on the site and use "Does it work on yours?" on any listing.
 
-Each suggestion is read by a person before anything changes on the site.
+A person reads GitHub issues and most suggestions before anything changes on the site. People who have contributed before can be marked as trusted, and their new listings go up without waiting.
 
 ## What belongs here
 
