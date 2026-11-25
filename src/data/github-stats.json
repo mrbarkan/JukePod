@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-24",
+  "date": "2026-11-25",
   "repos": {
     "rockpod": {
-      "stars": 272,
+      "stars": 274,
       "updated": "2026-08-01",
       "version": "5.5"
     },
@@ -27,7 +27,7 @@
       "updated": "2026-05-19"
     },
     "iopenpod": {
-      "stars": 542,
+      "stars": 544,
       "updated": "2026-11-16",
       "version": "2.1.4"
     },
@@ -47,8 +47,12 @@
       "version": "2.1.0"
     },
     "prokbox5g": {
-      "stars": 7,
+      "stars": 8,
       "updated": "2026-11-19"
+    },
+    "clickwheel-games": {
+      "stars": 1079,
+      "updated": "2025-10-03"
     }
   },
   "changes": []
