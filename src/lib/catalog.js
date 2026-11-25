@@ -1,11 +1,17 @@
 // Build-time view of the catalog: merges the nightly GitHub stats into the
 // hand-written entries and exposes helpers the pages share.
-import raw from "../data/catalog.js";
+import written from "../data/catalog.js";
+import community from "../data/community.json";
+import { applyCommunity, COMMUNITY_STATUS } from "./community.js";
 import stats from "../data/github-stats.json";
 import shots from "../data/screenshots.json";
 import people from "../data/contributors.js";
 
 const repos = (stats && stats.repos) || {};
+
+// The hand-written catalog, with published suggestions folded in.
+const raw = applyCommunity(written, community);
+export const communityCredits = raw.communityCredits;
 
 function withStats(item, type) {
   const out = { ...item, type };
@@ -48,6 +54,7 @@ export const STATUS = {
   beta: { ripeness: "Ripening", plain: "Beta", dots: 2 },
   experimental: { ripeness: "Unripe", plain: "Experimental", dots: 1 },
   archived: { ripeness: "Preserved", plain: "Archived", dots: 0 },
+  community: COMMUNITY_STATUS,
 };
 
 /** Firmware that runs on a device, fully or partly. */
@@ -180,10 +187,22 @@ export const contributors = (() => {
   const all = [...items, ...mods];
   const byKey = new Map();
   for (const p of people) byKey.set(p.handle.toLowerCase(), { ...p, ideas: p.ideas || [] });
+  const person = (h) => {
+    if (!byKey.has(h.toLowerCase())) byKey.set(h.toLowerCase(), { handle: h, ideas: [] });
+    return byKey.get(h.toLowerCase());
+  };
+  const firstSeen = (p, date) => {
+    const day = date ? String(date).slice(0, 10) : null;
+    if (day && (!p.since || day < p.since)) p.since = day;
+  };
   for (const item of all) {
-    for (const h of suggestedBy(item)) {
-      if (!byKey.has(h.toLowerCase())) byKey.set(h.toLowerCase(), { handle: h, ideas: [] });
-    }
+    for (const h of suggestedBy(item)) firstSeen(person(h), item.community ? item.publishedAt : null);
+  }
+  // Credited fixes and suggestions that didn't become a listing of their own.
+  for (const c of communityCredits) {
+    const p = person(c.name);
+    if (!p.ideas.includes(c.idea)) p.ideas = [...p.ideas, c.idea];
+    firstSeen(p, c.date);
   }
   return [...byKey.values()]
     .map((p) => ({

@@ -1,13 +1,13 @@
 ---
 import Base from "../layouts/Base.astro";
-import { firmwares, apps, mods, SITE, href } from "../lib/catalog.js";
+import { firmwares, apps, mods, devices, SITE, href } from "../lib/catalog.js";
 
 // Every listing, so "fix a listing" can name the one it means.
 const listings = [
-  ...firmwares.map((x) => ({ id: x.id, name: x.name, kind: "firmware" })),
-  ...apps.map((x) => ({ id: x.id, name: x.name, kind: "app" })),
-  ...mods.map((x) => ({ id: x.id, name: x.name, kind: "mod" })),
-];
+  ...firmwares.map((x) => ({ ...x, kind: "firmware" })),
+  ...apps.map((x) => ({ ...x, kind: "app" })),
+  ...mods.map((x) => ({ ...x, kind: "mod" })),
+].map((x) => ({ id: x.id, name: x.name, kind: x.kind, devices: [...x.devices, ...(x.partial || [])].join(" "), url: x.links?.[0]?.url || "" }));
 const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Library app"], ["other", "Something else"]];
 ---
 <Base title="Suggest a listing" description="Suggest firmware, an app or a hardware mod for the catalog, or a fix to one that's already listed. You can be credited when it goes in." section="about">
@@ -37,11 +37,20 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         <span class="select">
           <select class="field" id="sg-item">
             <option value="">Choose one…</option>
-            {listings.map((l) => <option value={l.id} data-kind={l.kind}>{l.name}</option>)}
+            {listings.map((l) => <option value={l.id} data-kind={l.kind} data-devices={l.devices} data-url={l.url}>{l.name}</option>)}
           </select>
           <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
         </span>
       </label>
+
+      <fieldset class="theme-devices" id="sg-fixes-box" hidden>
+        <legend>What's wrong?</legend>
+        <div>
+          <label class="theme-check"><input type="checkbox" name="sg-fix" value="link" /><span>The link is broken or wrong</span></label>
+          <label class="theme-check"><input type="checkbox" name="sg-fix" value="ipods" /><span>The iPods it works on are wrong</span></label>
+          <label class="theme-check"><input type="checkbox" name="sg-fix" value="text" /><span>Something else</span></label>
+        </div>
+      </fieldset>
 
       <label id="sg-kind-box">
         <span>What is it?</span>
@@ -59,23 +68,37 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         <input class="field" id="sg-title" maxlength="80" placeholder="for example, a Bluetooth adapter kit" />
       </label>
 
-      <label>
-        <span>Link <em>(optional)</em></span>
+      <label id="sg-url-box">
+        <span id="sg-url-label">Link</span>
         <input class="field" id="sg-url" type="url" inputmode="url" maxlength="300" placeholder="https://…" />
-        <small>Its website, repository, shop page or video.</small>
+        <small id="sg-url-help">Its website, repository, shop page or video.</small>
       </label>
 
+      <label id="sg-maker-box">
+        <span>Who makes it <em>(optional)</em></span>
+        <input class="field" id="sg-maker" maxlength="60" placeholder="a person, a group or a shop" />
+      </label>
+
+      <fieldset class="theme-devices" id="sg-devices-box">
+        <legend id="sg-devices-legend">Which iPods does it work on?</legend>
+        <small id="sg-devices-help">Tick the ones you know about. Leave it empty if you're not sure.</small>
+        <div>
+          {devices.map((d) => <label class="theme-check"><input type="checkbox" name="sg-device" value={d.id} /><span>{d.name}</span></label>)}
+        </div>
+      </fieldset>
+
       <label>
-        <span>Details</span>
+        <span id="sg-details-label">Description</span>
         <textarea class="field" id="sg-details" rows="6" maxlength="2000"></textarea>
-        <small id="sg-details-help">Who makes it, which iPods it fits, and anything worth knowing. Say if you make or sell it yourself.</small>
+        <small id="sg-details-help"></small>
       </label>
 
       <label class="theme-check">
         <input type="checkbox" id="sg-credit" checked />
-        <span>Credit me by name on the <a href={href("/about/#thanks")}>thank-you list</a> if it goes in. <span id="sg-as"></span></span>
+        <span>Credit me by name on the listing and the <a href={href("/contributors/")}>contributors page</a> if it goes in. <span id="sg-as"></span></span>
       </label>
 
+      <p class="aside-note" id="sg-trusted-note" hidden>You're a trusted contributor, so this goes straight to the site with the next nightly update, without waiting for review.</p>
       <div class="acct-actions">
         <button type="submit" class="btn" id="sg-send">Send suggestion</button>
         <span id="sg-status" role="status"></span>
@@ -85,7 +108,7 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
 
     <section id="sg-done" hidden>
       <h2>Thanks, it's in</h2>
-      <p>It will be read soon. You can see what happens to it below.</p>
+      <p id="sg-done-text">It will be read soon. You can see what happens to it below.</p>
       <p><button type="button" class="btn btn-quiet" id="sg-another">Suggest something else</button></p>
     </section>
 
@@ -103,30 +126,62 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   const $ = (id) => document.getElementById(id);
   const lib = () => import("../lib/suggestions.js");
   const STATUS = { new: ["Waiting", "pending"], added: ["Added", "approved"], declined: ["Not added", "rejected"] };
+  const ADD_HELP = "What it does and anything worth knowing. This becomes the description on its listing, so write it for other iPod owners. Say if you make or sell it yourself.";
+  const FIX_HELP = "What's wrong, and what it should say. A link to where you found it helps.";
   let busy = false;
+  let trusted = false;
 
   const action = () => document.querySelector("input[name=sg-action]:checked").value;
-  function onActionChange() {
+  const fixes = () => [...document.querySelectorAll("input[name=sg-fix]:checked")].map((i) => i.value);
+  const ticked = () => [...document.querySelectorAll("input[name=sg-device]:checked")].map((i) => i.value);
+  const setDevices = (ids) => document.querySelectorAll("input[name=sg-device]").forEach((i) => (i.checked = ids.includes(i.value)));
+
+  // Shows only the questions that matter for what's being sent.
+  function refresh() {
     const fix = action() === "fix";
+    const other = !fix && $("sg-kind").value === "other";
+    const f = fixes();
     $("sg-item-box").hidden = !fix;
+    $("sg-fixes-box").hidden = !fix;
     $("sg-kind-box").hidden = fix;
     $("sg-title-box").hidden = fix;
-    $("sg-details-help").textContent = fix
-      ? "What's wrong, and what it should say. A link to where you found it helps."
-      : "Who makes it, which iPods it fits, and anything worth knowing. Say if you make or sell it yourself.";
+    $("sg-maker-box").hidden = fix || other;
+    $("sg-url-box").hidden = fix && !f.includes("link") && !f.includes("text");
+    $("sg-url-label").innerHTML = fix ? (f.includes("link") ? "The right link" : "Link <em>(optional)</em>") : other ? "Link <em>(optional)</em>" : "Link";
+    $("sg-url-help").textContent = fix ? "Where it lives now, or where you found the right details." : "Its website, repository, shop page or video.";
+    $("sg-devices-box").hidden = fix ? !f.includes("ipods") : other;
+    $("sg-devices-legend").textContent = fix ? "Which iPods does it really work on?" : "Which iPods does it work on?";
+    $("sg-devices-help").textContent = fix ? "Tick every one it works on, including the ones already listed." : "Tick the ones you know about. Leave it empty if you're not sure.";
+    $("sg-details-label").textContent = fix ? "What needs changing" : "Description";
+    $("sg-details-help").textContent = fix ? FIX_HELP : ADD_HELP;
+    $("sg-send").textContent = trusted ? (fix ? "Publish the fix" : "Publish it") : "Send suggestion";
+    $("sg-trusted-note").hidden = !trusted;
   }
-  document.querySelectorAll("input[name=sg-action]").forEach((r) => r.addEventListener("change", onActionChange));
 
-  // Links from listing pages fill in what they're about: ?fix=<id> or ?kind=mod.
+  // Picking a listing to fix fills in what it says now, to correct from.
+  function onItemChange() {
+    const item = $("sg-item").selectedOptions[0];
+    if (!item?.value) return;
+    setDevices((item.dataset.devices || "").split(" "));
+    if (!$("sg-url").value) $("sg-url").value = item.dataset.url || "";
+  }
+
+  document.querySelectorAll("input[name=sg-action], input[name=sg-fix]").forEach((r) => r.addEventListener("change", refresh));
+  $("sg-kind").addEventListener("change", refresh);
+  $("sg-item").addEventListener("change", onItemChange);
+
+  // Links from listing pages fill in what they're about: ?fix=<id>, ?kind=mod, ?ipod=<device>.
   const params = new URLSearchParams(location.search);
   const fixId = params.get("fix");
   if (fixId && [...$("sg-item").options].some((o) => o.value === fixId)) {
     document.querySelector("input[name=sg-action][value=fix]").checked = true;
     $("sg-item").value = fixId;
-  } else if ([...$("sg-kind").options].some((o) => o.value === params.get("kind"))) {
-    $("sg-kind").value = params.get("kind");
+    onItemChange();
+  } else {
+    if ([...$("sg-kind").options].some((o) => o.value === params.get("kind"))) $("sg-kind").value = params.get("kind");
+    if (params.get("ipod")) setDevices([params.get("ipod")]);
   }
-  onActionChange();
+  refresh();
 
   $("sg-signin").addEventListener("click", () => document.querySelector("#account [data-open]")?.click());
 
@@ -151,13 +206,17 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
     );
   }
 
-  onUser((user) => {
+  onUser(async (user) => {
     $("sg-loading").hidden = true;
     $("sg-out").hidden = !!user;
     if ($("sg-done").hidden) $("sg-form").hidden = !user;
     $("sg-as").textContent = user?.displayName ? `(as ${user.displayName.split(" ")[0]}; change it on your account page)` : "";
-    if (user) drawMine().catch(() => {});
-    else $("sg-mine-box").hidden = true;
+    trusted = false;
+    if (user) {
+      drawMine().catch(() => {});
+      trusted = await (await lib()).amTrusted(user.uid).catch(() => false);
+    } else $("sg-mine-box").hidden = true;
+    refresh();
   });
 
   $("sg-form").addEventListener("submit", async (e) => {
@@ -165,23 +224,33 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
     if (busy) return;
     const fix = action() === "fix";
     const item = $("sg-item").selectedOptions[0];
+    const kind = fix ? item?.dataset.kind : $("sg-kind").value;
     if (fix && !item?.value) return showError("Choose the listing to fix.");
+    if (fix && !fixes().length) return showError("Tick what's wrong with it.");
+    if (fix && fixes().includes("link") && !$("sg-url").value.trim()) return showError("Add the right link.");
+    if (!fix && kind !== "other" && !$("sg-url").value.trim()) return showError("Add a link, so people can find it.");
     showError("");
     busy = true;
     $("sg-send").disabled = true;
-    $("sg-status").textContent = "Sending…";
+    $("sg-status").textContent = trusted ? "Publishing…" : "Sending…";
     try {
-      await (await lib()).sendSuggestion({
+      const { published } = await (await lib()).sendSuggestion({
         action: fix ? "fix" : "add",
-        kind: fix ? item.dataset.kind : $("sg-kind").value,
+        kind,
         itemId: fix ? item.value : "",
         title: fix ? item.textContent : $("sg-title").value,
-        url: $("sg-url").value,
+        url: $("sg-url-box").hidden ? "" : $("sg-url").value,
+        maker: $("sg-maker").value,
+        devices: $("sg-devices-box").hidden ? [] : ticked(),
+        fixes: fix ? fixes() : [],
         details: $("sg-details").value,
         credit: $("sg-credit").checked,
       });
+      $("sg-done-text").textContent = published
+        ? "It's published, and it goes up on the site with the next nightly update."
+        : "It will be read soon. You can see what happens to it below.";
       $("sg-form").reset();
-      onActionChange();
+      refresh();
       $("sg-form").hidden = true;
       $("sg-done").hidden = false;
       window.scrollTo({ top: 0 });

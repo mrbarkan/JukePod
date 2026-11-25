@@ -12,8 +12,10 @@ rules_version = '2';
 //   reports  "works on my iPod" reports, one per person, listing and iPod they own.
 //            Older reports name only the model and are still counted
 //   flags    reports of a problem with a theme; read by admins and their sender
-//   suggestions  listings people suggest adding or fixing; read by admins and their
-//            sender, and by anyone once added, if the sender asked to be credited
+//   suggestions  listings people suggest adding or fixing; read by admins and their sender
+//   trusted  people whose suggestions publish without waiting for review; set by admins
+//   community  the public side of an approved suggestion: what the nightly build turns
+//            into a listing page or a fix, and the name to credit, if the sender asked
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -25,12 +27,24 @@ service cloud.firestore {
     function isAdmin() {
       return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
+    // Admins, and the people they trust to publish listings without review.
+    function isTrusted() {
+      return isAdmin() || (signedIn() && exists(/databases/$(database)/documents/trusted/$(request.auth.uid)));
+    }
     function isSlug(value) {
       return value is string && value.size() <= 60 && value.matches('^[a-z0-9-]+$');
     }
     // "p" and eight letters or digits: never the same as a model ID.
     function isIpodId(value) {
       return value is string && value.matches('^p[a-z0-9]{8}$');
+    }
+    function isLink(value) {
+      return value is string && value.size() <= 300 && value.matches('^https?://[^ ]+$');
+    }
+    // A list of up to `max` short slugs. Rules can't loop, so each entry's
+    // shape is checked again by the build, which drops anything it doesn't know.
+    function slugList(value, max) {
+      return value is list && value.size() <= max;
     }
     function optionalText(data, field, max) {
       return !(field in data) || (data[field] is string && data[field].size() <= max);
@@ -194,30 +208,72 @@ service cloud.firestore {
     }
 
     // Listings people suggest: a new firmware, app or mod, or a fix to one.
-    // Only the sender and admins see one, until an admin marks it added; then
-    // it shows on the thank-you list, if the sender asked to be credited.
+    // Only the sender and admins see one. It starts as "new", or as "added"
+    // when the sender is trusted, and its public side goes in `community`.
     match /suggestions/{suggestionId} {
-      allow read: if isOwner(resource.data.uid) || isAdmin()
-        || (resource.data.status == 'added' && resource.data.credit == true);
+      allow read: if isOwner(resource.data.uid) || isAdmin();
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.status == 'new'
-        && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details', 'credit', 'status', 'createdAt'])
+        && (request.resource.data.status == 'new' || (request.resource.data.status == 'added' && isTrusted()))
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details',
+            'devices', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
         && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
         && request.resource.data.kind in ['firmware', 'app', 'mod', 'other']
         && request.resource.data.action in ['add', 'fix']
         && (!('itemId' in request.resource.data) || isSlug(request.resource.data.itemId))
         && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 80
-        && (!('url' in request.resource.data) || (request.resource.data.url is string
-          && request.resource.data.url.size() <= 300 && request.resource.data.url.matches('^https?://[^ ]+$')))
+        && (!('url' in request.resource.data) || isLink(request.resource.data.url))
         && request.resource.data.details is string
         && request.resource.data.details.size() >= 1 && request.resource.data.details.size() <= 2000
+        && (!('devices' in request.resource.data) || slugList(request.resource.data.devices, 20))
+        && optionalText(request.resource.data, 'maker', 60)
+        && (!('fixes' in request.resource.data) || (request.resource.data.fixes is list && request.resource.data.fixes.size() <= 3
+          && request.resource.data.fixes.hasOnly(['link', 'ipods', 'text'])))
         && request.resource.data.credit is bool;
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt'])
         && request.resource.data.status in ['new', 'added', 'declined']
         && optionalText(request.resource.data, 'reviewNote', 500);
       allow delete: if isOwner(resource.data.uid) || isAdmin();
+    }
+
+    // Who may publish without review. Admins add and remove people; a
+    // person may check whether they are on the list.
+    match /trusted/{uid} {
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['name', 'addedAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40;
+      allow delete: if isAdmin();
+    }
+
+    // Published suggestions, public by design: the nightly build reads them
+    // without signing in. Named after the suggestion they came from. Admins
+    // publish anyone's; trusted people publish their own.
+    match /community/{suggestionId} {
+      allow read: if true;
+      allow create: if validCommunity(request.resource.data)
+        && (isAdmin() || (isTrusted() && request.resource.data.uid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/suggestions/$(suggestionId)).data.uid == request.auth.uid));
+      allow update: if isAdmin() && validCommunity(request.resource.data);
+      allow delete: if isAdmin();
+
+      function validCommunity(data) {
+        return data.keys().hasOnly(['uid', 'credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'maker',
+            'blurb', 'category', 'publishedAt'])
+          && data.uid is string && data.uid.size() <= 128
+          && optionalText(data, 'credit', 40)
+          && data.kind in ['firmware', 'app', 'mod', 'other']
+          && data.action in ['add', 'fix']
+          && isSlug(data.itemId)
+          && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+          && (!('url' in data) || isLink(data.url))
+          && (!('devices' in data) || slugList(data.devices, 20))
+          && optionalText(data, 'maker', 60)
+          && optionalText(data, 'blurb', 600)
+          && optionalText(data, 'category', 40);
+      }
     }
 
     match /flags/{flagId} {
