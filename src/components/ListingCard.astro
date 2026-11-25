@@ -13,6 +13,11 @@ const words = [
   (item.categories || []).map((c) => categoryById[c]?.name).join(" "),
   (item.platforms || []).join(" "), item.price || "",
 ].join(" ").toLowerCase();
+// The color behind the screen, picked from the name so it never changes.
+const TONES = ["blue", "pink", "yellow", "green", "red", "orange"];
+let n = 7;
+for (const ch of item.id) n = (n * 33 + ch.charCodeAt(0)) >>> 0;
+const tone = TONES[n % TONES.length];
 const fit = isApp
   ? [(item.platforms || []).join(" · "), item.price].filter(Boolean).join(" · ")
   : `Runs on ${all.length} ${all.length === 1 ? "iPod" : "iPods"}`;
@@ -30,9 +35,9 @@ const fit = isApp
   data-updated={item.updated || ""}
   data-search={words}
 >
-  <div class="fw-art">
+  <div class={`fw-art tone-${tone}`}>
     <ScreenArt item={item} />
-    <Sticker version={item.version} />
+    <Sticker version={item.version} seed={item.id} />
   </div>
   <div class="fw-body">
     <div class="fw-top">

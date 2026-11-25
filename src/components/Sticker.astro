@@ -1,12 +1,25 @@
 ---
-// The version, on a fruit sticker. Only short labels fit on one.
-const { version, large = false } = Astro.props;
+// The version, on a fruit sticker. Only short labels fit on one. Each listing
+// always gets the same shape, color and tilt, picked from its name, so a shelf
+// looks like a sheet of different stickers and never reshuffles.
+import Badge from "./Badge.astro";
+const { version, large = false, seed = "" } = Astro.props;
 const label = String(version || "").replace(/^v/i, "");
 const fits = label && label.length <= 5 && !/\s/.test(label);
+
+const LOOKS = [
+  ["round", "tomato"], ["lemon", "lemon"], ["burst", "cobalt"], ["arch", "pink"],
+  ["oval", "green"], ["diamond", "cream"], ["round", "orange"], ["burst", "pink"],
+  ["oval", "tomato"], ["arch", "cobalt"], ["lemon", "green"], ["round", "lemon"],
+];
+const TILTS = [-9, 7, -4, 11, -12, 5];
+let n = 0;
+for (const ch of String(seed)) n = (n * 31 + ch.charCodeAt(0)) >>> 0;
+const [shape, tone] = LOOKS[n % LOOKS.length];
+const tilt = TILTS[(n >>> 3) % TILTS.length];
 ---
 {fits && (
-  <span class:list={["sticker", { "sticker-lg": large }]} role="img" aria-label={`Version ${label}`}>
-    <small aria-hidden="true">Version</small>
-    <b aria-hidden="true">{label}</b>
+  <span class:list={["sticker", { "sticker-lg": large }]} role="img" aria-label={`Version ${label}`} style={`rotate: ${tilt}deg`}>
+    <Badge shape={shape} tone={tone} top="Version" main={label} />
   </span>
 )}

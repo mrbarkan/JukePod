@@ -17,31 +17,31 @@
 export const COPY = {
   // ---------- the home page ----------
   home: {
-    // The small pixel line above the big headline.
+    // The small line above the big headline.
     kicker: "A quitanda is a corner fruit shop. This one is for iPods.",
-    headline: "Pick your flavor.",
+    // The headline is two parts: plain chunky letters, then one word in script.
+    headline: "Pick your",
+    headlineScript: "flavor.",
+    intro: "Your iPod doesn't have to run what it shipped with. Pick yours below and the whole shop rearranges around it.",
 
-    // The handwritten note pinned next to the headline. One paragraph per line.
-    note: {
-      hello: "Oi!",
-      lines: [
-        "Your iPod doesn't have to run what it shipped with. Pick yours below and the whole shop rearranges around it.",
-        "I'm David, I keep this little shop from Brazil. It's still in beta and built with a lot of AI help, so if something looks off, let me know =)",
-      ],
-      signoff: "Cheers!",
-      signature: "David",
+    // The four stickers beside the headline. Keep each line short: a sticker
+    // is small. "top" and "sub" are the little lines, "main" is the big word.
+    stickers: {
+      fresh: { top: "Always", main: "Fresh", sub: "Firmware" },
+      club: { top: "Click Wheel", sub: "Social Club" },
+      beta: { top: "Est. 2026", main: "Beta", sub: "Still ripening" },
+      brasil: { top: "Feito no", main: "Brasil", sub: "Made in Brazil" },
     },
 
-    // The scribble that points at the iPod picker.
-    pickerHint: "start here",
+    // The little tag that points at the iPod picker.
+    pickerHint: "Start here",
     pickerTitle: "Which iPod is yours?",
     pickerHelp: "Not sure? Check the number on the back",
     pickerAll: "Show every iPod",
 
-    // The chalkboard.
-    boardTitle: "Chegou!",
-    boardSubtitle: "Fresh in",
-    boardThemes: "The themes shelf is open",
+    // The little screen that lists what came in lately.
+    freshTitle: "Fresh in",
+    freshThemes: "The themes shelf is open",
 
     apps: { title: "Library apps", text: "Put music on it without iTunes. Recently updated:" },
     themes: { title: "Themes", text: "Looks people made, with screenshots.", firstTitle: "Share the first one", firstText: "For Rockbox, its forks or CrateDigger." },
@@ -71,9 +71,9 @@ export const COPY = {
 
   // ---------- bottom of every page ----------
   footer: {
-    // The handwritten line next to the click wheel.
-    madeBy: "Made in Brazil by David, with a lot of AI help and a drawer full of iPods.",
-    thanks: "Obrigado for stopping by!",
+    // The line next to the click wheel. "thanks" is set in script.
+    madeBy: "Kept by David in Brazil, with a lot of AI help and a drawer full of iPods.",
+    thanks: "Obrigado!",
     backToTop: "Menu",
     warning: "Back up your music before you install anything or open your iPod. Everything listed here is made by independent developers and makers, and used at your own risk.",
     legal: "Not affiliated with Apple Inc. iPod is a trademark of Apple Inc.",

@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
+import Badge from "../components/Badge.astro";
 import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
 import { COPY } from "../data/copy.js";
@@ -52,18 +53,20 @@ const searchable = [
         <div class="hero-top">
           <div>
             <p class="lcd-kicker">{C.kicker}</p>
-            <h1>{C.headline}</h1>
+            <h1>{C.headline} <em>{C.headlineScript}</em></h1>
+            <p class="hero-intro">{C.intro}</p>
           </div>
-          <aside class="note" aria-label="A note from the shopkeeper">
-            {C.note.hello && <p class="note-hello">{C.note.hello}</p>}
-            {C.note.lines.map((line) => <p>{line}</p>)}
-            <p class="note-sign">{C.note.signoff} <b>{C.note.signature}</b></p>
-          </aside>
+          <div class="hero-stickers" aria-hidden="true">
+            <span class="hs hs-1"><Badge shape="lemon" tone="lemon" {...C.stickers.fresh} /></span>
+            <span class="hs hs-2"><Badge shape="round" tone="tomato" wheel {...C.stickers.club} /></span>
+            <span class="hs hs-3"><Badge shape="arch" tone="pink" {...C.stickers.beta} /></span>
+            <span class="hs hs-4"><Badge shape="diamond" tone="green" script {...C.stickers.brasil} /></span>
+          </div>
         </div>
 
         <div class="picker">
           <div class="picker-head">
-            <h2>{C.pickerTitle}{C.pickerHint && <span class="scribble picker-hint" aria-hidden="true">{C.pickerHint}<svg viewBox="0 0 40 30" width="34" height="26"><path d="M4 4c10 2 22 8 28 20M32 24l-9-2M32 24l1-10" /></svg></span>}</h2>
+            <h2>{C.pickerTitle}{C.pickerHint && <span class="picker-hint" aria-hidden="true">{C.pickerHint}<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5" /></svg></span>}</h2>
             <div>
               <a href={href("/start/ipod-users/#which")}>{C.pickerHelp}</a>
               <button type="button" class="seg" data-device="all" aria-pressed="true">{C.pickerAll}</button>
@@ -121,12 +124,12 @@ const searchable = [
         <p><a class="more-link" href={href("/compatibility/")}>See the full compatibility table →</a></p>
       </section>
 
-      <section class="board" aria-label={C.boardSubtitle}>
-        <p class="board-head"><strong>{C.boardTitle}</strong><span>{C.boardSubtitle} · {fmtDate(freshDate)}</span></p>
-        <ul>
-          {freshItems.map((f) => <li><a href={href(f.path)}>{f.text}</a></li>)}
-          <li><a href={href("/themes/")}>{C.boardThemes}</a></li>
-        </ul>
+      <section class="fresh" aria-label={C.freshTitle}>
+        <div>
+          <strong>{C.freshTitle} · {fmtDate(freshDate)}</strong>
+          {freshItems.map((f) => <a href={href(f.path)}>{f.text}</a>)}
+          <a href={href("/themes/")}>{C.freshThemes}</a>
+        </div>
       </section>
 
       <section class="shelves">
