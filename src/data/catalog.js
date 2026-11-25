@@ -471,7 +471,7 @@ export default {
       suggestedBy: "u/No_Shock_2308",
       blurb: "Apple\u2019s own iPod Classic firmware with new features patched in: a custom equalizer, Play Next and Play Last, album artists and no EU volume cap. It isn\u2019t a Rockbox fork or skin.",
       more: [
-        "RepriseOS starts from Apple\u2019s 2.0.5 firmware and adds to it, so the menus, the database and syncing with Finder or iTunes stay as they were. A modified Rockbox bootloader starts it, and you can still pick Apple\u2019s firmware or Rockbox at power-on.",
+        "RepriseOS starts from Apple\u2019s 2.0.5 firmware and adds to it, so the menus, the database and syncing with Finder or iTunes stay as they were. A modified Rockbox bootloader starts it, and you can still pick Apple\u2019s firmware or Rockbox at power-on. Its makers say the same 2.0.5 file is used on every supported Classic, even one running older Apple firmware, so a 6th or 6.5th gen doesn\u2019t need the SysCFG guide first.",
         "It\u2019s experimental, and only works on iPods formatted for Windows (FAT32) for now. Dark mode is in progress, and a game SDK is planned."
       ],
       features: [
@@ -521,7 +521,8 @@ export default {
       blurb: "A guide to running Apple\u2019s newer 7th gen firmware (2.0.2 to 2.0.5) on a 6th or 6.5th gen Classic board. The point is to lift the 128 GB limit, so bigger flash mods work on Apple\u2019s firmware.",
       more: [
         "The 6th gen Classic is stuck on firmware 1.1.2 and the 6.5th gen on 2.0.1, and both only see 128 GB. The guide edits the iPod\u2019s SysCFG (its serial, hardware version and firmware ID) so iTunes accepts a newer firmware. 2.0.2 is the main target and feels like 2.0.1; 2.0.4 is the one to pick for Rockbox dual boot.",
-        "It erases the iPod, and a wrong SysCFG edit can leave it half bricked. Back up the original SysCFG first: that backup is the way back. On a 6th gen, the remote and headset microphone don\u2019t work on the newer firmware. If you sell a modded iPod, say so."
+        "It erases the iPod, and a wrong SysCFG edit can leave it half bricked. Back up the original SysCFG first: that backup is the way back. On a 6th gen, the remote and headset microphone don\u2019t work on the newer firmware. If you sell a modded iPod, say so.",
+        "You don\u2019t need this guide to run RepriseOS: its makers say the installer handles 6th and 6.5th gen boards without it."
       ],
       features: [
         "Removes the 128 GB limit on Apple\u2019s firmware",
