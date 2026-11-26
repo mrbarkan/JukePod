@@ -16,8 +16,8 @@ import { SITE, STATUS, href } from "../lib/catalog.js";
       <p>Listings are compiled from each project’s own public pages: its repository, release notes and website. Quitanda links to the project’s downloads and doesn’t host firmware files. Versions, dates and GitHub stars are refreshed automatically every night.</p>
       <p>Status follows the fruit, with the plain word beside it:</p>
       <ul>
-        <li><span class="pill pill-stable">{STATUS.stable.ripeness} · {STATUS.stable.plain}</span> Its maker calls it stable and publishes releases.</li>
-        <li><span class="pill pill-beta">{STATUS.beta.ripeness} · {STATUS.beta.plain}</span> Usable, still changing, or not yet released as stable.</li>
+        <li><span class="pill pill-stable">{STATUS.stable.ripeness} · {STATUS.stable.plain}</span> There is a stable release you can install. A beta channel next to it doesn’t change that.</li>
+        <li><span class="pill pill-beta">{STATUS.beta.ripeness} · {STATUS.beta.plain}</span> Usable, and its only builds so far are betas or pre-releases.</li>
         <li><span class="pill pill-experimental">{STATUS.experimental.ripeness} · {STATUS.experimental.plain}</span> For the curious. Expect rough edges, and sometimes real risk to the iPod.</li>
         <li><span class="pill pill-archived">{STATUS.archived.ripeness} · {STATUS.archived.plain}</span> No longer developed. Kept for the record.</li>
       </ul>

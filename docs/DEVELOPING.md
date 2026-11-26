@@ -44,7 +44,7 @@ Everything lives in `src/data/catalog.js`. The comments in that file describe ev
 
 Projects with no release yet go in `watchlist`. Move one into `firmwares` once it ships. Set `draft: true` to keep an entry off the site while you fill it in.
 
-Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it.
+Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it. Go by the best release people can get: a project with a stable release is `stable` even when it also has a beta channel, and `beta` is for projects whose only builds so far are betas or pre-releases.
 
 ## Change the shop's wording
 

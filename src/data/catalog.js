@@ -12,6 +12,10 @@
  *   categories   ids from `categories` below
  *   pinned       true to show it in the strip above the grid
  *   status       "stable" | "beta" | "experimental" | "archived"
+ *                Go by the best release people can get. If there is a stable
+ *                release, it is "stable", even when a beta channel runs next
+ *                to it. "beta" is for projects whose only builds so far are
+ *                betas or pre-releases.
  *   version      latest version label, or null
  *   updated      ISO date (YYYY-MM-DD or YYYY-MM) of the latest release, or null
  *   github       "owner/repo" if the code is on GitHub. The nightly job then
@@ -926,7 +930,7 @@ export default {
       maker: "mrbarkan",
       platforms: ["macOS"],
       price: "Free, open source",
-      status: "beta",
+      status: "stable",
       version: "2.3.4",
       updated: null,
       github: "mrbarkan/cratedigger",
