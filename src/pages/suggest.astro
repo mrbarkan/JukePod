@@ -249,8 +249,12 @@ const RELEASES = ["stable", "beta", "experimental", "archived"].map((v) => [v, `
     $("sg-repo-status").classList.toggle("signin-error", isError);
   }
 
+  let sameRepo = () => false; // true while the Link is still the project looked up
+
   async function lookUp(link, { quiet = false } = {}) {
     const { parseRepoUrl, lookupRepo } = await repoLib();
+    // Compares projects, not text, so a deep link like /releases/latest still counts.
+    sameRepo = (url) => !!found && parseRepoUrl(url)?.url.toLowerCase() === found.url.toLowerCase();
     const ref = parseRepoUrl(link);
     if (!ref) {
       if (!quiet) repoStatus("That doesn't look like a GitHub, GitLab or Codeberg project link. Fill the form in by hand instead.", true);
@@ -404,8 +408,8 @@ const RELEASES = ["stable", "beta", "experimental", "archived"].map((v) => [v, `
           license: $("sg-license").value,
           homepage: $("sg-homepage").value,
           // Kept only while the Link is still the project that was looked up.
-          updated: $("sg-url").value.trim() === found.url ? found.updated : "",
-          github: $("sg-url").value.trim() === found.url ? found.github : "",
+          updated: sameRepo($("sg-url").value) ? found.updated : "",
+          github: sameRepo($("sg-url").value) ? found.github : "",
         } : null,
       });
       $("sg-done-text").textContent = published
