@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { firmwares, apps, mods, devices, platforms, SITE, href } from "../lib/catalog.js";
+import { firmwares, apps, mods, devices, platforms, SITE, href, STATUS } from "../lib/catalog.js";
 
 // Every listing, so "fix a listing" can name the one it means.
 const listings = [
@@ -9,12 +9,13 @@ const listings = [
   ...mods.map((x) => ({ ...x, kind: "mod" })),
 ].map((x) => ({ id: x.id, name: x.name, kind: x.kind, devices: [...x.devices, ...(x.partial || [])].join(" "), url: x.links?.[0]?.url || "" }));
 const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Library app"], ["other", "Something else"]];
+const RELEASES = ["stable", "beta", "experimental", "archived"].map((v) => [v, `${STATUS[v].ripeness} (${STATUS[v].plain})`]);
 ---
 <Base title="Suggest a listing" description="Suggest firmware, an app or a hardware mod for the catalog, or a fix to one that's already listed. You can be credited when it goes in." section="about">
   <main class="wrap page narrow">
     <header class="intro">
       <h1>Suggest a listing</h1>
-      <p>Know a mod, firmware or app that's missing, or spotted something wrong? Send it here. A person reads each suggestion before it goes up, unless you're a trusted contributor, and you can be credited by name.</p>
+      <p>Know a mod, firmware or app that's missing, or spotted something wrong? Send it here. If it's on GitHub, GitLab or Codeberg, pasting its link fills most of the form in for you. A person reads each suggestion before it goes up, unless you're a trusted contributor, and you can be credited by name.</p>
     </header>
 
     <p id="sg-loading" class="aside-note">Checking whether you're signed in…</p>
@@ -52,6 +53,18 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         </div>
       </fieldset>
 
+      <div id="sg-repo-box" class="repo-paste">
+        <label>
+          <span>Got a link to its code? <em>(optional)</em></span>
+          <span class="repo-paste-row">
+            <input class="field" id="sg-repo" type="url" inputmode="url" maxlength="300" placeholder="https://github.com/owner/project" autocomplete="off" />
+            <button type="button" class="btn btn-quiet" id="sg-repo-go">Fill it in</button>
+          </span>
+          <small id="sg-repo-help">Paste a GitHub, GitLab or Codeberg link and the rest of the form fills itself in from the project's page. Check it over before you send.</small>
+        </label>
+        <p id="sg-repo-status" class="aside-note" role="status" hidden></p>
+      </div>
+
       <label id="sg-kind-box">
         <span>What is it?</span>
         <span class="select">
@@ -78,6 +91,35 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         <span>Who makes it <em>(optional)</em></span>
         <input class="field" id="sg-maker" maxlength="60" placeholder="a person, a group or a shop" />
       </label>
+
+      <fieldset class="theme-devices repo-facts" id="sg-facts-box" hidden>
+        <legend>From its repository</legend>
+        <small>Filled in from <span id="sg-facts-host">the project's page</span>. Change anything that's off.</small>
+        <label>
+          <span>How finished is it?</span>
+          <span class="select">
+            <select class="field" id="sg-release">
+              <option value="">Not sure</option>
+              {RELEASES.map(([v, label]) => <option value={v}>{label}</option>)}
+            </select>
+            <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+          </span>
+          <small>Ripe if it has a stable release, even when betas come out beside it. Ripening if every release so far is a beta.</small>
+        </label>
+        <label>
+          <span>Latest version</span>
+          <input class="field" id="sg-version" maxlength="40" />
+        </label>
+        <label>
+          <span>License</span>
+          <input class="field" id="sg-license" maxlength="60" />
+        </label>
+        <label>
+          <span>Website <em>(if it has one besides the repository)</em></span>
+          <input class="field" id="sg-homepage" type="url" inputmode="url" maxlength="300" />
+        </label>
+        <p class="aside-note" id="sg-facts-more"></p>
+      </fieldset>
 
       <fieldset class="theme-devices" id="sg-platforms-box" hidden>
         <legend>What does it run on?</legend>
@@ -136,6 +178,9 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   const ADD_HELP = "What it does and anything worth knowing. This becomes the description on its listing, so write it for other iPod owners. Say if you make or sell it yourself.";
   const FIX_HELP = "What's wrong, and what it should say. A link to where you found it helps.";
   let busy = false;
+  let found = null; // what the last repository lookup returned
+  const filled = {}; // field id -> the value a lookup put there
+  let kindTouched = false;
   let level = "";
   let trusted = false;
 
@@ -160,6 +205,8 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
     $("sg-url-help").textContent = fix ? "Where it lives now, or where you found the right details." : "Its website, repository, shop page or video.";
     $("sg-devices-box").hidden = fix ? !f.includes("ipods") : other;
     $("sg-platforms-box").hidden = fix || $("sg-kind").value !== "app";
+    $("sg-repo-box").hidden = fix;
+    $("sg-facts-box").hidden = fix || !found || !["firmware", "app"].includes($("sg-kind").value);
     $("sg-devices-legend").textContent = fix ? "Which iPods does it really work on?" : "Which iPods does it work on?";
     $("sg-devices-help").textContent = fix ? "Tick every one it works on, including the ones already listed." : "Tick the ones you know about. Leave it empty if you're not sure.";
     $("sg-details-label").textContent = fix ? "What needs changing" : "Description";
@@ -177,7 +224,97 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   }
 
   document.querySelectorAll("input[name=sg-action], input[name=sg-fix]").forEach((r) => r.addEventListener("change", refresh));
-  $("sg-kind").addEventListener("change", refresh);
+  $("sg-kind").addEventListener("change", () => {
+    kindTouched = true;
+    refresh();
+  });
+
+  // ---- Paste a git link, get the form filled in ----
+
+  // Sets a field unless the sender has typed their own value into it.
+  function fill(id, value) {
+    const el = $(id);
+    if (!value) return;
+    if (el.value.trim() && el.value !== filled[id]) return;
+    el.value = value;
+    filled[id] = value;
+  }
+
+  const repoLib = () => import("../lib/repo-lookup.js");
+  let lookingUp = "";
+
+  function repoStatus(text, isError = false) {
+    $("sg-repo-status").textContent = text || "";
+    $("sg-repo-status").hidden = !text;
+    $("sg-repo-status").classList.toggle("signin-error", isError);
+  }
+
+  async function lookUp(link, { quiet = false } = {}) {
+    const { parseRepoUrl, lookupRepo } = await repoLib();
+    const ref = parseRepoUrl(link);
+    if (!ref) {
+      if (!quiet) repoStatus("That doesn't look like a GitHub, GitLab or Codeberg project link. Fill the form in by hand instead.", true);
+      return;
+    }
+    if (lookingUp === ref.url) return;
+    lookingUp = ref.url;
+    repoStatus(`Reading ${ref.path} on ${ref.name}…`);
+    $("sg-repo-go").disabled = true;
+    try {
+      const r = await lookupRepo(link);
+      found = r;
+      $("sg-repo").value = r.url;
+      if (!kindTouched && !params.get("kind")) {
+        // A guess: anything that talks about firmware or Rockbox is firmware,
+        // the rest is an app on the computer. The sender can change it.
+        $("sg-kind").value = /rockbox|firmware|bootloader|ipodlinux/i.test(`${r.name} ${r.description}`) ? "firmware" : "app";
+      }
+      fill("sg-title", r.name);
+      fill("sg-url", r.url);
+      fill("sg-maker", r.maker);
+      fill("sg-details", r.description);
+      $("sg-release").value = r.release || "";
+      $("sg-version").value = r.version;
+      $("sg-license").value = r.license;
+      $("sg-homepage").value = r.homepage;
+      $("sg-facts-host").textContent = `${r.path || r.url.replace(/^https:\/\//, "")} on ${r.host}`;
+      $("sg-facts-more").textContent = [
+        r.updated ? `Last release or change ${fmtDate(r.updated)}` : "",
+        r.stars != null ? `${r.stars} ${r.stars === 1 ? "star" : "stars"}` : "",
+        r.archived ? "The project is archived, so it won't get updates" : "",
+      ].filter(Boolean).join(" · ");
+      const kindName = $("sg-kind").selectedOptions[0].textContent.toLowerCase();
+      repoStatus(`Filled in from ${r.host}. It's down as ${/^[aeiou]/.test(kindName) ? "an" : "a"} ${kindName}: change that below if it's wrong, and add which iPods it works on.`);
+      refresh();
+    } catch (err) {
+      found = null;
+      repoStatus(err.message || "Couldn't read that project. Fill the form in by hand instead.", true);
+      refresh();
+    } finally {
+      lookingUp = "";
+      $("sg-repo-go").disabled = false;
+    }
+  }
+
+  $("sg-repo-go").addEventListener("click", () => lookUp($("sg-repo").value));
+  $("sg-repo").addEventListener("paste", () => setTimeout(() => lookUp($("sg-repo").value), 0));
+  $("sg-repo").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      lookUp($("sg-repo").value);
+    }
+  });
+  // A repository pasted straight into the Link field works too.
+  $("sg-url").addEventListener("change", () => {
+    if (action() === "add" && !found && !$("sg-repo").value.trim()) {
+      repoLib().then(({ parseRepoUrl }) => {
+        if (parseRepoUrl($("sg-url").value)) {
+          $("sg-repo").value = $("sg-url").value;
+          lookUp($("sg-url").value, { quiet: true });
+        }
+      });
+    }
+  });
   $("sg-item").addEventListener("change", onItemChange);
 
   // Links from listing pages fill in what they're about: ?fix=<id>, ?kind=mod, ?ipod=<device>.
@@ -190,6 +327,11 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
   } else {
     if ([...$("sg-kind").options].some((o) => o.value === params.get("kind"))) $("sg-kind").value = params.get("kind");
     if (params.get("ipod")) setDevices([params.get("ipod")]);
+    // ?repo=<link> fills the form in from that project.
+    if (params.get("repo")) {
+      $("sg-repo").value = params.get("repo");
+      lookUp(params.get("repo"));
+    }
   }
   refresh();
 
@@ -256,11 +398,24 @@ const KINDS = [["mod", "Hardware mod"], ["firmware", "Firmware"], ["app", "Libra
         fixes: fix ? fixes() : [],
         details: $("sg-details").value,
         credit: $("sg-credit").checked,
+        repo: found && !$("sg-facts-box").hidden ? {
+          release: $("sg-release").value,
+          version: $("sg-version").value,
+          license: $("sg-license").value,
+          homepage: $("sg-homepage").value,
+          // Kept only while the Link is still the project that was looked up.
+          updated: $("sg-url").value.trim() === found.url ? found.updated : "",
+          github: $("sg-url").value.trim() === found.url ? found.github : "",
+        } : null,
       });
       $("sg-done-text").textContent = published
         ? "It's published, and it goes up on the site with the next nightly update."
         : "It will be read soon. You can see what happens to it below.";
       $("sg-form").reset();
+      found = null;
+      kindTouched = false;
+      for (const k of Object.keys(filled)) delete filled[k];
+      repoStatus("");
       refresh();
       $("sg-form").hidden = true;
       $("sg-done").hidden = false;

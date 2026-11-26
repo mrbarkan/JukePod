@@ -53,6 +53,18 @@ service cloud.firestore {
     function slugAtTop(list, index) {
       return list.size() <= index || isSlug(list[index]);
     }
+    // What a lookup of the project's git repository filled in: its release
+    // status, latest version and date, license, homepage, and on GitHub the
+    // "owner/repo" the nightly job reads stars and versions from.
+    function repoFacts(data) {
+      return (!('release' in data) || data.release in ['stable', 'beta', 'experimental', 'archived'])
+        && optionalText(data, 'version', 40)
+        && (!('updated' in data) || (data.updated is string && data.updated.matches('^[0-9]{4}-[0-9]{2}(-[0-9]{2})?$')))
+        && optionalText(data, 'license', 60)
+        && (!('homepage' in data) || isLink(data.homepage))
+        && (!('github' in data) || (data.github is string && data.github.size() <= 161
+          && data.github.matches('^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$')));
+    }
     function optionalText(data, field, max) {
       return !(field in data) || (data[field] is string && data[field].size() <= max);
     }
@@ -230,7 +242,8 @@ service cloud.firestore {
         // claim someone else's published record by recreating its suggestion.
         && !exists(/databases/$(database)/documents/community/$(suggestionId))
         && request.resource.data.keys().hasOnly(['uid', 'name', 'kind', 'action', 'itemId', 'title', 'url', 'details',
-            'devices', 'platforms', 'maker', 'fixes', 'credit', 'status', 'createdAt'])
+            'devices', 'platforms', 'maker', 'fixes', 'credit', 'status', 'createdAt',
+            'release', 'version', 'updated', 'license', 'homepage', 'github'])
         && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
         && request.resource.data.kind in ['firmware', 'app', 'mod', 'other']
         && request.resource.data.action in ['add', 'fix']
@@ -244,7 +257,8 @@ service cloud.firestore {
         && optionalText(request.resource.data, 'maker', 60)
         && (!('fixes' in request.resource.data) || (request.resource.data.fixes is list && request.resource.data.fixes.size() <= 3
           && request.resource.data.fixes.hasOnly(['link', 'ipods', 'text'])))
-        && request.resource.data.credit is bool;
+        && request.resource.data.credit is bool
+        && repoFacts(request.resource.data);
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewNote', 'reviewedAt'])
         && request.resource.data.status in ['new', 'added', 'declined']
@@ -282,7 +296,7 @@ service cloud.firestore {
 
       function validCommunity(data) {
         return data.keys().hasOnly(['credit', 'kind', 'action', 'itemId', 'name', 'url', 'devices', 'platforms', 'maker',
-            'blurb', 'category', 'publishedAt'])
+            'blurb', 'category', 'publishedAt', 'release', 'version', 'updated', 'license', 'homepage', 'github'])
           && optionalText(data, 'credit', 40)
           && data.kind in ['firmware', 'app', 'mod', 'other']
           && data.action in ['add', 'fix']
@@ -294,7 +308,8 @@ service cloud.firestore {
           && optionalText(data, 'maker', 60)
           && optionalText(data, 'blurb', 600)
           && optionalText(data, 'category', 40)
-          && (!('publishedAt' in data) || data.publishedAt == request.time);
+          && (!('publishedAt' in data) || data.publishedAt == request.time)
+          && repoFacts(data);
       }
     }
 

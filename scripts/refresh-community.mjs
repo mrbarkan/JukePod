@@ -14,7 +14,8 @@ import { firebaseConfig } from "../src/lib/firebase-config.js";
 
 const root = new URL("..", import.meta.url);
 const outPath = fileURLToPath(new URL("src/data/community.json", root));
-const FIELDS = ["kind", "action", "itemId", "name", "url", "devices", "maker", "blurb", "category", "credit", "publishedAt"];
+const FIELDS = ["kind", "action", "itemId", "name", "url", "devices", "platforms", "maker", "blurb", "category", "credit", "publishedAt",
+  "release", "version", "updated", "license", "homepage", "github"];
 
 /** Turns one Firestore REST value into plain JSON. */
 export function decode(value) {
