@@ -34,6 +34,7 @@ export const COPY = {
     // The little screen that lists what came in lately.
     freshTitle: "Fresh in",
     freshThemes: "The themes shelf is open",
+    freshAll: "All releases →",
 
     apps: { title: "Library apps", text: "Put music on it without iTunes. Recently updated:" },
     themes: { title: "Themes", text: "Looks people made, with screenshots.", firstTitle: "Share the first one", firstText: "For Rockbox, its forks or CrateDigger." },

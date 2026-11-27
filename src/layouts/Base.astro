@@ -30,6 +30,7 @@ const nav = [
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href={href("/favicon.svg")} />
     <link rel="alternate" type="application/rss+xml" title={`${SITE.name} blog`} href={href("/rss.xml")} />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} new releases`} href={href("/releases.xml")} />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:type" content={type} />
     <meta property="og:title" content={title || `${SITE.name}: ${SITE.tagline}`} />
@@ -115,8 +116,9 @@ const nav = [
             <div>
               <h2>Read</h2>
               <a href={href("/start/")}>Start here</a>
+              <a href={href("/releases/")}>What's new</a>
               <a href={href("/blog/")}>Blog</a>
-              <a href={href("/rss.xml")}>RSS</a>
+              <a href={href("/rss.xml")}>Blog feed</a>
               <a href={href("/about/")}>About</a>
             </div>
             <div>

@@ -323,6 +323,15 @@ test("trusted contributors publish their own suggestions without review", async 
   assert.equal(await put(bo, "suggestions/t1", sugg(bo.uid, { status: "new" })), 403, "can't reuse the ID of a published record");
   assert.equal(await put(bo, "suggestions/t10", sugg(bo.uid, { kind: "app", status: "new", platforms: ["Windows", "macOS"] })), 200);
   assert.equal(await put(bo, "suggestions/t11", sugg(bo.uid, { kind: "app", status: "new", platforms: ["Amiga"] })), 403, "platforms come from the catalog's list");
+  // What a repository link filled in rides along, checked field by field.
+  const facts = { release: "stable", version: "1.5.0", updated: "2026-10-01", license: "MIT", homepage: "https://os.example.org", github: "o/test-os" };
+  assert.equal(await commit(bo, [["suggestions/t12", sugg(bo.uid, facts)], ["community/t12", { ...pub, itemId: "test-os-2", ...facts }]]), 200);
+  assert.equal(await put(bo, "suggestions/t13", sugg(bo.uid, { status: "new", release: "ripe" })), 403, "only the known release words");
+  assert.equal(await put(bo, "suggestions/t14", sugg(bo.uid, { status: "new", updated: "last week" })), 403);
+  assert.equal(await put(bo, "suggestions/t15", sugg(bo.uid, { status: "new", homepage: "javascript:alert(1)" })), 403);
+  assert.equal(await put(bo, "suggestions/t16", sugg(bo.uid, { status: "new", github: "../../evil" })), 403);
+  assert.equal(await put(bo, "suggestions/t17", sugg(bo.uid, { status: "new", license: "x".repeat(61) })), 403);
+  assert.equal(await put(admin, "community/t18", { ...pub, itemId: "test-os-3", release: "ripe" }), 403);
   assert.equal(await del(bo, `trusted/${bo.uid}`), 403);
   assert.equal(await del(admin, `trusted/${bo.uid}`), 200);
   assert.equal(await commit(bo, [["suggestions/t6", sugg(bo.uid)], ["community/t6", pub]]), 403, "no longer trusted");

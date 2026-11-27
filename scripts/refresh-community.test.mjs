@@ -89,3 +89,31 @@ test("a fix can say a listing works on no iPods at all", () => {
   const out = applyCommunity(raw, { entries: [{ id: "f1", kind: "mod", action: "fix", itemId: "flash-storage", name: "Flash storage", devices: [] }] });
   assert.deepEqual(out.mods[0].devices, []);
 });
+
+test("a listing filled in from its repository keeps its release, version, license and website", () => {
+  const out = applyCommunity(raw, { entries: [
+    { id: "s9", kind: "app", action: "add", itemId: "pod-sync", name: "PodSync", url: "https://github.com/o/pod-sync", platforms: ["macOS", "BeOS"],
+      release: "stable", version: "1.5.0", updated: "2026-10-01", license: "MIT", github: "o/pod-sync", homepage: "https://podsync.example.org" },
+    { id: "s10", kind: "firmware", action: "add", itemId: "odd-fw", name: "Odd", url: "https://codeberg.org/c/odd", release: "ripe-ish", updated: "soon", github: "not a repo" },
+  ] });
+  const app = out.apps.find((a) => a.id === "pod-sync");
+  assert.equal(app.status, "stable");
+  assert.equal(app.version, "1.5.0");
+  assert.equal(app.updated, "2026-10-01");
+  assert.equal(app.license, "MIT");
+  assert.equal(app.github, "o/pod-sync");
+  assert.deepEqual(app.platforms, ["macOS"]);
+  assert.deepEqual(app.links.map((l) => l.label), ["Project page", "Website"]);
+  const fw = out.firmwares.find((f) => f.id === "odd-fw");
+  assert.equal(fw.status, "community", "an unknown status stays a Fresh pick");
+  assert.equal(fw.updated, null);
+  assert.equal(fw.github, undefined);
+});
+
+test("keeps platforms and repository facts when reading the collection", () => {
+  const entry = toEntry({ name: "x/community/abc", fields: {
+    platforms: { arrayValue: { values: [{ stringValue: "macOS" }] } },
+    release: { stringValue: "beta" }, github: { stringValue: "o/r" }, homepage: { stringValue: "https://x.org" },
+  } });
+  assert.deepEqual(entry, { id: "abc", platforms: ["macOS"], release: "beta", github: "o/r", homepage: "https://x.org" });
+});

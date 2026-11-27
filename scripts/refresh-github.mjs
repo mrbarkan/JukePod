@@ -76,7 +76,11 @@ export async function collect(listings, { fetchImpl = fetch, token = process.env
 }
 
 async function main() {
-  const { default: catalog } = await import(new URL("src/data/catalog.js", root));
+  const { default: written } = await import(new URL("src/data/catalog.js", root));
+  const { applyCommunity } = await import(new URL("src/lib/community.js", root));
+  // Community listings filled in from a GitHub link are tracked too.
+  const community = JSON.parse(readFileSync(fileURLToPath(new URL("src/data/community.json", root)), "utf8"));
+  const catalog = applyCommunity(written, community);
   const listings = [...catalog.firmwares, ...(catalog.apps || [])].filter((x) => !x.draft);
   const previous = JSON.parse(readFileSync(statsPath, "utf8"));
   const fresh = await collect(listings);

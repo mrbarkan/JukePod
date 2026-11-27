@@ -51,6 +51,7 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
   const suggestions = () => import("../../lib/suggestions.js");
   const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
   const FIXES = { link: "link", ipods: "iPods", text: "wording" };
+  const RELEASES = [["", "Not sure (Fresh pick)"], ["stable", "Ripe (Stable)"], ["beta", "Ripening (Beta)"], ["experimental", "Unripe (Experimental)"], ["archived", "Preserved (Archived)"]];
   const RV = JSON.parse($("rv-data").textContent);
   const deviceName = Object.fromEntries(RV.devices);
   const listingHref = (kind, id) => link(kind === "mod" ? `/mods/#${id}` : kind === "app" ? `/apps/${id}/` : `/firmware/${id}/`);
@@ -60,6 +61,20 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
     const el = h("select", { class: "field" }, ...options.map(([v, label]) => h("option", { value: v }, label)));
     el.value = value;
     return el;
+  }
+
+  // What the sender's repository link filled in, as one line to check.
+  function repoLine(s) {
+    const safe = (u) => (/^https?:\/\/[^ ]+$/.test(u || "") ? u : null);
+    const bits = [
+      s.version ? `Version ${s.version}` : "",
+      s.updated ? `released ${s.updated}` : "",
+      s.license ? `License ${s.license}` : "",
+      s.github ? `Stars tracked from github.com/${s.github}` : "",
+    ].filter(Boolean);
+    if (!bits.length && !safe(s.homepage)) return null;
+    return h("p", { class: "aside-note" }, "From its repository: ", bits.join(" · "),
+      safe(s.homepage) ? h("span", {}, bits.length ? " · Website " : "Website ", h("a", { href: s.homepage, target: "_blank", rel: "noopener noreferrer nofollow ugc" }, s.homepage)) : null);
   }
 
   // A suggestion, with what will go on the site laid out to touch up before approving.
@@ -84,10 +99,13 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
       edits.devices = ticks;
       const hostTicks = s.kind === "app" ? RV.platforms.map((p) => h("label", { class: "theme-check" }, h("input", { type: "checkbox", value: p, checked: (s.platforms || []).includes(p) }), h("span", {}, p))) : [];
       edits.platforms = hostTicks;
+      if (s.kind !== "mod") edits.release = select(RELEASES, s.release || "");
       form = h("div", { class: "acct-form" },
         field("Name", edits.title), field("Link", edits.url), field("Who makes it", edits.maker),
         field(s.kind === "mod" ? "Shelf" : "Kind", h("span", { class: "select" }, edits.category)),
         field("Description on the listing", edits.blurb),
+        edits.release ? field("How finished", h("span", { class: "select" }, edits.release)) : null,
+        repoLine(s),
         h("fieldset", { class: "theme-devices" }, h("legend", {}, "Works on"), h("div", {}, ...ticks)),
         hostTicks.length ? h("fieldset", { class: "theme-devices" }, h("legend", {}, "Runs on"), h("div", {}, ...hostTicks)) : null
       );
@@ -104,6 +122,7 @@ const modKinds = [...new Set(mods.filter((m) => !m.community).map((m) => m.kind)
         title: edits.title.value, url: edits.url.value, maker: edits.maker.value, blurb: edits.blurb.value,
         category: edits.category.value, devices: edits.devices.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
         platforms: edits.platforms.map((l) => l.querySelector("input")).filter((i) => i.checked).map((i) => i.value),
+        ...(edits.release ? { release: edits.release.value } : {}),
       }, note.value);
     });
     const fixList = (s.fixes || []).map((f) => FIXES[f]).filter(Boolean);

@@ -1,5 +1,6 @@
 // The shop floor: pick an iPod and everything rearranges around it. Cards
 // are already on the page; this only shows, hides, sorts and relabels them.
+import { showCardReports } from "./card-reports.js";
 const KEY = "cwf-device";
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -69,6 +70,11 @@ function apply() {
       ? "These are developer tools, not players. No player firmware runs on this model yet."
       : "Everything on this page now shows what fits. Your choice is remembered next time.";
   $("empty").hidden = shown > 0;
+  // "See what's new" follows the chosen iPod to its own list and feed.
+  const follow = $("follow-link");
+  follow.href = tile ? `${follow.dataset.base}?ipod=${state.device}` : follow.dataset.base;
+  follow.textContent = tile ? `New releases for your ${tile.dataset.short} →` : "See what's new →";
+  reports(tile);
   // The empty shelf's "Suggest it" link opens the form with this iPod ticked.
   const suggest = $("empty-suggest");
   if (suggest) {
@@ -77,6 +83,20 @@ function apply() {
     else url.searchParams.delete("ipod");
     suggest.href = url.toString();
   }
+}
+
+// Owners' reports on each card, and a nudge when most of the shelf has none.
+async function reports(tile) {
+  const nudge = $("report-nudge");
+  nudge.hidden = true;
+  const device = tile ? state.device : null;
+  const result = await showCardReports({ device, short: tile?.dataset.short, fitOf: (card) => fitOf(card, device) !== "none" });
+  if (!result || device !== (state.device === "all" ? null : state.device)) return; // failed, or the choice changed meanwhile
+  if (!device || tile.hasAttribute("data-tools") || !result.shown || !result.silent) return;
+  nudge.textContent = result.silent === result.shown
+    ? `Nobody has said yet how any of these run on the ${tile.dataset.short}. Installed one? Open it and tell the next person how it went.`
+    : `${result.silent} of these ${result.shown} have no reports for the ${tile.dataset.short} yet. Installed one? Open it and tell the next person how it went.`;
+  nudge.hidden = false;
 }
 
 function sort() {

@@ -120,6 +120,16 @@ GITHUB_TOKEN=your_token npm run refresh
 
 The tests for it run with `npm test`.
 
+## What's new and the release feeds
+
+`/releases/` lists the latest version of every firmware and app that has a numbered version and a release date, newest first, with a filter per iPod. It needs no upkeep: it reads the same catalog and nightly stats as the rest of the site.
+
+Each list is also an RSS feed, so people can follow new versions in a feed reader without an account: `/releases.xml` for everything and `/releases/<device id>.xml` per iPod (for example `/releases/ipod-classic.xml`). A new version is a new feed item. `src/lib/releases.js` builds both.
+
+## Reports on the shelves
+
+Each listing's card shows what owners reported: for the chosen iPod ("2 of 3 owners say it works on the Classic"), or in total when none is chosen. Cards with no reports for the chosen iPod ask for the first one, and the home page says how many are still waiting. The counts come from one public request for all reports (`loadAllReports` in `src/lib/reports.js`, shown by `src/scripts/card-reports.js`). It reads up to 3,000 reports; past that, count them in the nightly build instead.
+
 ## Sign-in and the database
 
 Sign-in and shared data run on Firebase (project `quitanda-95fa7`).
