@@ -1,0 +1,35 @@
+---
+import Base from "../../layouts/Base.astro";
+import { href } from "../../lib/catalog.js";
+---
+<Base title="Stop release alerts" description="Stop the release alert emails from Quitanda.">
+  <meta slot="head" name="robots" content="noindex" />
+  <main class="wrap page narrow">
+    <header class="intro">
+      <h1 id="off-title">Stopping your alerts…</h1>
+      <p id="off-text" role="status">One moment.</p>
+    </header>
+    <p id="off-more" hidden>
+      <a class="btn btn-quiet" href={href("/releases/")}>See what's new</a>
+    </p>
+  </main>
+</Base>
+
+<script>
+  import { switchOff } from "../../lib/alerts-off.js";
+  const params = new URLSearchParams(location.search);
+  const title = document.getElementById("off-title");
+  const text = document.getElementById("off-text");
+  const say = (heading, body) => {
+    title.textContent = heading;
+    text.textContent = body;
+    document.getElementById("off-more").hidden = false;
+  };
+  switchOff(params.get("u"), params.get("k"))
+    .then((done) =>
+      done
+        ? say("You won't get release alerts any more.", "They're switched off from now on. To get them again, or to choose different iPods, sign in and open your account page.")
+        : say("This link didn't work.", "It may be incomplete, or your alerts were already removed. You can check and stop them on your account page after signing in.")
+    )
+    .catch(() => say("That didn't go through.", "Check your connection and open the link again."));
+</script>

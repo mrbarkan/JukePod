@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import Contact from "../components/Contact.astro";
 import { SITE, href } from "../lib/catalog.js";
+import { ALERTS_ON } from "../lib/alerts-config.js";
 const UPDATED = "25 November 2026";
 ---
 <Base title="Privacy policy" description="What Quitanda collects, why, who handles it and how to remove it, including the small Google ads that help pay for the site.">
@@ -20,6 +21,7 @@ const UPDATED = "25 November 2026";
         <li>Your account data is never sold, rented or shared with advertisers.</li>
         <li>If you sign in, we keep your name, email address and profile picture so your account works.</li>
         <li>The newsletter is opt-in. It uses your name and email address to send you news and for nothing else.</li>
+        {ALERTS_ON && <li>Release alerts are opt-in too. They use your email address to tell you about new versions for your iPod, and every one has a link that stops them.</li>}
         <li>You can download everything we hold about you, unsubscribe, or delete your account yourself, at any time, from <a href={href("/account/")}>your account page</a>.</li>
       </ul>
 
@@ -58,6 +60,13 @@ const UPDATED = "25 November 2026";
       </div>
       <p>Your email address is never shown on the site. The legal basis is that we need this information to provide the account you asked for.</p>
 
+      {ALERTS_ON && (
+        <Fragment>
+          <h3>When you ask for release alerts</h3>
+          <p>Only if you ask for them: the email address you signed in with, the iPods you chose, and the date. They are used to email you when new firmware or a new app version comes out for those iPods, and for nothing else. The legal basis is your consent. You can withdraw it at any time with the link in every alert, which works without signing in, or on your account page, where stopping the alerts deletes the record.</p>
+        </Fragment>
+      )}
+
       <h3>When you subscribe to the newsletter</h3>
       <p>Only if you tick the box: your name, the email address you signed in with, and the date you agreed. They are used to send you occasional Quitanda news and updates, and for nothing else. The legal basis is your consent, which you can withdraw at any time by unsubscribing on your account page or from any email. Unsubscribing deletes the record.</p>
 
@@ -82,6 +91,9 @@ const UPDATED = "25 November 2026";
         <li><strong>Google (AdSense)</strong> serves the ads, as described under <a href="#ads">ads and cookies</a>. For personalized ads, Google acts on its own account rather than on Quitanda’s behalf, under <a href="https://policies.google.com/privacy">Google’s privacy policy</a>.</li>
       </ul>
       <p>Both are based in the United States, so your data is stored and processed there. Both commit to the safeguards European law requires for such transfers.</p>
+      {ALERTS_ON && (
+        <p><strong>Brevo</strong> (Sendinblue SAS, France) delivers the release alerts. When an alert is sent to you, Brevo receives your email address and the content of that email, and keeps a record that it was delivered. It gets nothing else about you, and we don’t add your address to any mailing list there.</p>
+      )}
       <p>The newsletter hasn’t started yet. When it does, it will be sent through an email delivery service, which will receive subscribers’ names and addresses for that purpose only. This page will name the service before the first email goes out.</p>
       <p>We’ll disclose data if the law requires it, and not otherwise.</p>
 
@@ -89,6 +101,7 @@ const UPDATED = "25 November 2026";
       <ul>
         <li><strong>Account and profile:</strong> until you delete your account.</li>
         <li><strong>Newsletter record:</strong> until you unsubscribe.</li>
+        {ALERTS_ON && <li><strong>Release alerts:</strong> until you stop them on your account page or delete your account. If you stop them with the link in an email, they are switched off at once and the record is removed the next time you open your account page.</li>}
         <li><strong>Shared themes:</strong> until you delete them or your account, or the admin removes them.</li>
         <li><strong>Suggested listings:</strong> until you delete your account, or the admin removes them.</li>
         <li><strong>Advertising cookies:</strong> they’re set and kept by Google on its own schedule. You can delete them from your browser at any time.</li>

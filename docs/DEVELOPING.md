@@ -112,6 +112,22 @@ Each list is also an RSS feed, so people can follow new versions in a feed reade
 
 Each listing's card shows what owners reported: for the chosen iPod ("2 of 3 owners say it works on the Classic"), or in total when none is chosen. Cards with no reports for the chosen iPod ask for the first one, and the home page says how many are still waiting. The counts come from one public request for all reports (`loadAllReports` in `src/lib/reports.js`, shown by `src/scripts/card-reports.js`). It reads up to 3,000 reports; past that, count them in the nightly build instead.
 
+## Release alerts by email
+
+Signed-in people can ask for an email when something for their iPod has a new version: on `/releases/` ("Email me about the Classic") or on their account page. Their choice is a record in `alerts` holding the address they signed in with, the iPods, and a secret key for the unsubscribe link (`src/lib/alerts.js`).
+
+Every night, after the versions are refreshed, `scripts/send-alerts.mjs` compares the stats file from before and after, and sends one email per person through [Brevo](https://www.brevo.com) covering every new release that fits their iPods. The link in each email (`/alerts/off/`) switches the alerts off without signing in. Addresses never appear in the job's log.
+
+**The whole feature is off until `ALERTS_ON` is true** in `src/lib/alerts-config.js`. While it is false, the site shows no email sign-up and the privacy pages don't mention Brevo. To switch it on:
+
+1. In Brevo: create an account, add and authenticate the sending domain (Brevo gives you DNS records to add), and add the sender address. Switch off open and click tracking for transactional email, so alerts carry no tracking. Create an API key.
+2. In the Google Cloud console for the Firebase project: create a service account with the single role **Cloud Datastore Viewer**, and download a JSON key for it. It can read the database and nothing else.
+3. In the GitHub repository, under Settings › Secrets and variables › Actions, add two secrets: `BREVO_API_KEY` and `FIREBASE_SERVICE_ACCOUNT` (the whole JSON file's contents).
+4. Set `ALERTS_ON` to true, update the date at the top of `/privacy/` and `/gdpr/`, and deploy. Sign up for alerts yourself.
+5. Run the "Deploy site" workflow by hand with `test_alert` set to a listing id, for example `rockpod`. It emails only admins who signed up for an iPod that listing runs on. Check the email arrives, isn't in spam, and that its "Stop these emails" link works.
+
+The sender address defaults to the site's contact address; set `ALERTS_FROM_EMAIL` and `ALERTS_FROM_NAME` in the workflow to change it. Brevo's free plan sends 300 emails a day, so the script stops at 280 and says how many people it couldn't reach. To see what a night would send without sending it: `npm run alerts -- --dry-run <stats-before.json>`.
+
 ## Sign-in and the database
 
 Sign-in and shared data run on Firebase (project `quitanda-95fa7`).

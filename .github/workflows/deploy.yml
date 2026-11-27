@@ -2,6 +2,8 @@
 #   - on every push to main
 #   - every night, after refreshing versions, dates and stars from GitHub
 #   - by hand from the Actions tab
+# The nightly run also emails release alerts to people who asked for them,
+# if the BREVO_API_KEY and FIREBASE_SERVICE_ACCOUNT secrets are set.
 #
 # Needs one setting: Settings > Pages > Source = "GitHub Actions".
 name: Deploy site
@@ -12,6 +14,11 @@ on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+    inputs:
+      test_alert:
+        description: "Send a test release alert for this listing id (e.g. rockpod) to admins who signed up"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -39,6 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cp src/data/github-stats.json "$RUNNER_TEMP/stats-before.json"
           npm run refresh
           if ! git diff --quiet -- src/data/github-stats.json; then
             git config user.name "github-actions[bot]"
@@ -58,6 +66,22 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit -m "Publish community listings" -- src/data/community.json
             git push
+          fi
+
+      # Tells people who asked about new versions for their iPod. A failure
+      # here is shown on the run but never stops the site from publishing.
+      - name: Email release alerts
+        if: github.event_name != 'push'
+        continue-on-error: true
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TEST_ALERT: ${{ inputs.test_alert }}
+        run: |
+          if [ -n "$TEST_ALERT" ]; then
+            node scripts/send-alerts.mjs --test "$TEST_ALERT"
+          else
+            node scripts/send-alerts.mjs "$RUNNER_TEMP/stats-before.json"
           fi
 
       - id: pages

@@ -6,6 +6,9 @@ rules_version = '2';
 //     /ipods     the iPods they own, one document each (a model and a nickname),
 //                so reports can say which of their iPods they were for
 //   subscribers  newsletter opt-ins: a name and the email the person signed in with
+//   alerts   release alerts by email: the address the person signed in with and the
+//            iPods they want to hear about. Seen only by them and admins. The
+//            unsubscribe link in each email switches one off without signing in
 //   admins   one document per admin, named by user ID; created in the console only
 //   themes   shared themes; hidden until an admin approves them. worksOn lists the
 //            firmware they run on; remixOf links the themes they remix
@@ -98,6 +101,23 @@ service cloud.firestore {
     }
 
     // Private settings chosen on the welcome page.
+    // Release alerts. `key` is a secret only the owner can read; it goes in the
+    // unsubscribe link of each email. Whoever holds it may switch the alerts
+    // off (by writing it to `off`) and nothing else, with no sign-in.
+    match /alerts/{uid} {
+      allow get: if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['email', 'devices', 'key', 'consent', 'createdAt', 'updatedAt'])
+        && request.auth.token.email_verified == true
+        && request.resource.data.email == request.auth.token.email
+        && slugList(request.resource.data.devices, 15) && request.resource.data.devices.size() >= 1
+        && request.resource.data.key is string && request.resource.data.key.matches('^[a-f0-9]{32}$')
+        && request.resource.data.consent is string && request.resource.data.consent.size() <= 40;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['off'])
+        && request.resource.data.off == resource.data.key;
+      allow delete: if isOwner(uid) || isAdmin();
+    }
     match /members/{uid} {
       allow get: if isOwner(uid);
       allow list: if false;

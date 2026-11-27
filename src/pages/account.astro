@@ -2,6 +2,8 @@
 import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
 import { href, devices } from "../lib/catalog.js";
+import { followable } from "../lib/releases.js";
+import { ALERTS_ON, EVERY_IPOD } from "../lib/alerts-config.js";
 ---
 <Base title="Your account" description="Your Quitanda profile.">
   <main class="wrap page">
@@ -100,6 +102,31 @@ import { href, devices } from "../lib/catalog.js";
             </fieldset>
             <p><a class="more-link" id="acct-guide" href={href("/start/ipod-users/")}>Open your guide →</a> <span id="acct-role-status" role="status"></span></p>
           </section>
+
+          {ALERTS_ON && (
+            <section class="acct-card" id="alerts">
+              <h2>Release alerts</h2>
+              <p id="alert-state" class="aside-note">Loading…</p>
+              <div id="alert-form" class="acct-form" hidden>
+                <p>An email when new firmware or a new app version comes out for the iPods you tick. Nothing else is sent, and every email has a link that stops them. <a href={href("/privacy/")}>Privacy policy</a></p>
+                <p id="alert-pill" hidden><span class="pill pill-stable">On</span></p>
+                <fieldset class="theme-devices">
+                  <legend>Tell me about</legend>
+                  <div id="alert-picks" class="tag-picks">
+                    <label class="tag-pick"><input type="checkbox" value={EVERY_IPOD} /><span>Every release</span></label>
+                    {followable.map((d) => <label class="tag-pick"><input type="checkbox" value={d.id} /><span>{d.short}</span></label>)}
+                  </div>
+                </fieldset>
+                <p class="news-address">Emails go to <strong id="alert-email"></strong>, the address you signed in with.</p>
+                <div class="acct-actions">
+                  <button type="button" class="btn" id="alert-save">Save</button>
+                  <button type="button" class="btn btn-quiet" id="alert-stop" hidden>Stop all alerts</button>
+                  <span id="alert-status" role="status"></span>
+                </div>
+              </div>
+              <p id="alert-error" class="signin-error" role="alert" hidden></p>
+            </section>
+          )}
 
           <section class="acct-card" id="newsletter">
             <h2>Newsletter</h2>
@@ -248,6 +275,7 @@ import { href, devices } from "../lib/catalog.js";
     $("acct-guide").href = link(GUIDES[settings?.role] || "/welcome/");
     $("news-name").value = user.displayName || "";
     showNewsletter(subscription, m);
+    showAlerts();
 
     if (admin) {
       const list = await m.listSubscribers().catch(() => []);
@@ -353,6 +381,52 @@ import { href, devices } from "../lib/catalog.js";
       error.hidden = false;
     }
   }
+  /* ---------- release alerts by email ---------- */
+  const alerts = () => import("../lib/alerts.js");
+  const alertBoxes = () => [...document.querySelectorAll("#alert-picks input")];
+  async function showAlerts() {
+    if (!$("alerts")) return; // alerts aren't switched on for the site
+    const a = await alerts();
+    const mine = await a.loadAlerts().catch(() => null);
+    $("alert-state").hidden = true;
+    if (!a.canGetAlerts()) {
+      $("alert-state").hidden = false;
+      $("alert-state").textContent = "Your sign-in has no verified email address, so alerts aren’t available for this account.";
+      return;
+    }
+    let stored = null;
+    try { stored = localStorage.getItem("cwf-device"); } catch { /* private window */ }
+    // Tick what they chose; with nothing chosen yet, suggest the iPod they picked in the shop.
+    const ticked = new Set(mine ? mine.devices : stored ? [stored] : []);
+    alertBoxes().forEach((box) => (box.checked = ticked.has(box.value)));
+    $("alert-email").textContent = mine?.email || a.alertsEmail();
+    $("alert-pill").hidden = !mine;
+    $("alert-stop").hidden = !mine;
+    $("alert-save").textContent = mine ? "Save changes" : "Email me";
+    $("alert-form").hidden = false;
+  }
+  async function changeAlerts(stop) {
+    const error = $("alert-error");
+    error.hidden = true;
+    $("alert-status").textContent = "";
+    try {
+      const a = await alerts();
+      const chosen = alertBoxes().filter((box) => box.checked).map((box) => box.value);
+      if (!stop && !chosen.length) throw new Error("Tick at least one, or choose Stop all alerts.");
+      await (stop ? a.stopAlerts() : a.saveAlerts(chosen));
+      await showAlerts();
+      if (stop) alertBoxes().forEach((box) => (box.checked = false));
+      $("alert-status").textContent = stop ? "Stopped. Your alert settings are deleted." : "Saved.";
+    } catch (err) {
+      error.textContent = err.code ? "That didn’t go through. Try again in a moment." : err.message;
+      error.hidden = false;
+    }
+  }
+  if ($("alerts")) {
+    $("alert-save").addEventListener("click", () => changeAlerts(false));
+    $("alert-stop").addEventListener("click", () => changeAlerts(true));
+  }
+
   $("news-subscribe").addEventListener("click", () => newsletter("subscribe"));
   $("news-unsubscribe").addEventListener("click", () => newsletter("unsubscribe"));
 
