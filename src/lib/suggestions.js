@@ -15,6 +15,27 @@ const db = getFirestore(app);
 
 const clean = (text, max) => String(text || "").trim().slice(0, max);
 const isSlug = (v) => /^[a-z0-9-]{1,60}$/.test(v || "");
+const isLink = (v) => /^https?:\/\/[^ ]+$/.test(v || "");
+const isRepoPath = (v) => /^[A-Za-z0-9_.-]{1,60}\/[A-Za-z0-9_.-]{1,100}$/.test(v || "");
+const isDay = (v) => /^\d{4}-\d{2}(-\d{2})?$/.test(v || "");
+
+/**
+ * What a repository lookup found (see repo-lookup.js): its release status,
+ * latest version and date, license, homepage and, on GitHub, "owner/repo"
+ * so the nightly job keeps stars and versions fresh. Firmware and apps only.
+ */
+function repoFacts(src, kind) {
+  const out = {};
+  if (kind !== "firmware" && kind !== "app") return out;
+  if (RELEASES[src.release]) out.release = src.release;
+  if (clean(src.version, 40)) out.version = clean(src.version, 40);
+  if (isDay(src.updated)) out.updated = src.updated;
+  if (clean(src.license, 60)) out.license = clean(src.license, 60);
+  const home = clean(src.homepage, 300);
+  if (isLink(home)) out.homepage = home;
+  if (isRepoPath(src.github)) out.github = src.github;
+  return out;
+}
 const slug = (text) => clean(text, 120).toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60).replace(/-$/, "") || "listing";
 const plainDoc = (snap) => {
   const data = snap.data();
@@ -25,6 +46,7 @@ const newestFirst = (list) => list.sort((a, b) => String(b.createdAt || "").loca
 
 export const KINDS = { firmware: "Firmware", app: "Library app", mod: "Hardware mod", other: "Something else" };
 export const PLATFORMS = ["macOS", "Windows", "Linux", "iPhone", "Web"];
+export const RELEASES = { stable: "Stable", beta: "Beta", experimental: "Experimental", archived: "Archived" };
 export const FIXES = { link: "The link is broken or wrong", ipods: "The iPods it works on are wrong", text: "Something else in the text" };
 
 /**
@@ -77,6 +99,7 @@ export function communityRecord(s, edits = {}) {
     const blurb = clean(edits.blurb ?? s.details, 600);
     if (blurb) record.blurb = blurb;
     if (clean(edits.category, 40)) record.category = clean(edits.category, 40);
+    Object.assign(record, repoFacts({ ...s, ...(edits.release !== undefined ? { release: edits.release } : {}) }, record.kind));
   }
   return record;
 }
@@ -85,7 +108,7 @@ export function communityRecord(s, edits = {}) {
  * Saves a suggestion from the signed-in person. A trusted person's goes
  * straight to the site. Returns { id, published }. Throws with a message to show.
  */
-export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, platforms, maker, fixes, credit }) {
+export async function sendSuggestion({ kind, action, itemId, title, url, details, devices, platforms, maker, fixes, credit, repo }) {
   const user = auth.currentUser;
   if (!user) throw new Error("Sign in first.");
   if (!clean(title, 80)) throw new Error("Give it a name.");
@@ -112,6 +135,7 @@ export async function sendSuggestion({ kind, action, itemId, title, url, details
   const hosts = [...new Set((platforms || []).filter((p) => PLATFORMS.includes(p)))];
   if (record.kind === "app" && record.action === "add" && hosts.length) record.platforms = hosts;
   if (record.action === "add" && clean(maker, 60)) record.maker = clean(maker, 60);
+  if (record.action === "add" && repo) Object.assign(record, repoFacts(repo, record.kind));
   const fixList = (fixes || []).filter((f) => FIXES[f]).slice(0, 3);
   if (record.action === "fix" && fixList.length) record.fixes = fixList;
 

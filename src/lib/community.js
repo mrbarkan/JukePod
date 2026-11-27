@@ -17,6 +17,9 @@ const text = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 // can't borrow a real person's card and profile link on /contributors/.
 const creditName = (v) => text(v, 40).replace(/^(\/?u\/|@)+/i, "").trim();
 const isLink = (v) => typeof v === "string" && /^https?:\/\/[^ ]+$/.test(v) && v.length <= 300;
+const RELEASES = ["stable", "beta", "experimental", "archived"];
+const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}(-\d{2})?$/.test(v);
+const isRepoPath = (v) => typeof v === "string" && /^[A-Za-z0-9_.-]{1,60}\/[A-Za-z0-9_.-]{1,100}$/.test(v);
 
 /** The words shown on a community listing's status chip. */
 export const COMMUNITY_STATUS = { ripeness: "Fresh pick", plain: "From the community", dots: 0 };
@@ -47,11 +50,22 @@ function newEntry(c, deviceIds, categoryIds, raw) {
   if (creditName(c.credit)) base.suggestedBy = [creditName(c.credit)];
   if (c.kind === "mod") return { ...base, kind: text(c.category, 40) || "From the community", skill: "Not stated" };
   const category = categoryIds.has(c.category) ? [c.category] : [];
+  // Filled in from the project's repository when the sender pasted one: a
+  // known release status replaces the "Fresh pick" chip (the page still says
+  // it came from the community), and a GitHub repo gets nightly stats.
+  const facts = {
+    status: RELEASES.includes(c.release) ? c.release : "community",
+    version: text(c.version, 40) || null,
+    updated: isDay(c.updated) ? c.updated : null,
+  };
+  if (text(c.license, 60)) facts.license = text(c.license, 60);
+  if (isRepoPath(c.github)) facts.github = c.github;
+  if (isLink(c.homepage) && c.homepage !== c.url) base.links = [...base.links, { label: "Website", url: c.homepage, icon: "info" }];
   if (c.kind === "app") {
     const platforms = (c.platforms || []).filter((p) => (raw.platforms || []).includes(p));
-    return { ...base, categories: category, status: "community", platforms };
+    return { ...base, categories: category, ...facts, platforms };
   }
-  return { ...base, categories: category, status: "community", version: null, updated: null };
+  return { ...base, categories: category, ...facts };
 }
 
 /**
