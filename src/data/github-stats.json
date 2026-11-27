@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-26",
+  "date": "2026-11-27",
   "repos": {
     "rockpod": {
-      "stars": 273,
+      "stars": 276,
       "updated": "2026-08-01",
       "version": "5.5"
     },
@@ -15,7 +15,7 @@
       "updated": "2026-10-28"
     },
     "podbox": {
-      "stars": 77,
+      "stars": 79,
       "updated": "2026-11-22"
     },
     "rodbox": {
@@ -27,7 +27,7 @@
       "updated": "2026-05-19"
     },
     "iopenpod": {
-      "stars": 544,
+      "stars": 545,
       "updated": "2026-11-16",
       "version": "2.1.4"
     },
@@ -47,15 +47,15 @@
       "version": "2.1.0"
     },
     "prokbox5g": {
-      "stars": 8,
+      "stars": 9,
       "updated": "2026-11-19"
     },
     "clickwheel-games": {
-      "stars": 1080,
+      "stars": 1082,
       "updated": "2025-10-03"
     },
     "repriseos": {
-      "stars": 109,
+      "stars": 114,
       "updated": "2026-11-24",
       "version": "0.4.0"
     }
