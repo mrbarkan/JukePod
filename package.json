@@ -8,6 +8,7 @@
     "preview": "astro preview",
     "refresh": "node scripts/refresh-github.mjs",
     "refresh:community": "node scripts/refresh-community.mjs",
+    "alerts": "node scripts/send-alerts.mjs",
     "test": "node --test scripts/*.test.mjs",
     "emulators": "npx -y firebase-tools emulators:start --only auth,firestore,storage --project quitanda-95fa7",
     "dev:local": "PUBLIC_EMULATORS=1 astro dev",

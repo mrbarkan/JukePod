@@ -69,8 +69,10 @@ export async function exportMyData() {
   const { myThemes } = await import("./themes-write.js");
   const { loadMyIpods } = await import("./my-ipods.js");
   const { mySuggestions } = await import("./suggestions.js");
-  const [profile, member, newsletter, ipods, themes, flags, reports, suggestions] = await Promise.all([
+  const { exportAlerts } = await import("./alerts.js");
+  const [profile, member, newsletter, ipods, themes, flags, reports, suggestions, releaseAlerts] = await Promise.all([
     read("users", user.uid), loadMember(), loadSubscription(), loadMyIpods(user.uid), myThemes(), myFlags(user.uid), myReports(user.uid), mySuggestions(user.uid),
+    exportAlerts().catch(() => null),
   ]);
   return {
     exportedAt: new Date().toISOString(),
@@ -87,6 +89,7 @@ export async function exportMyData() {
     settings: member,
     yourIpods: ipods,
     newsletter,
+    releaseAlerts,
     themes,
     problemsYouReported: flags,
     worksOnMyIpodReports: reports,
@@ -96,7 +99,7 @@ export async function exportMyData() {
 
 /**
  * Deletes the account and everything attached to it: shared themes and
- * their files, reports and suggestions sent, the iPods listed, the newsletter record,
+ * their files, reports and suggestions sent, the iPods listed, the newsletter record, release alerts,
  * settings, the public profile, and finally the sign-in itself.
  */
 export async function deleteEverything() {
@@ -117,7 +120,7 @@ export async function deleteEverything() {
   }
   const { loadMyIpods, removeIpod } = await import("./my-ipods.js");
   for (const ipod of await loadMyIpods(user.uid)) await removeIpod(ipod.id);
-  await Promise.all(["subscribers", "members", "users"].map((path) => deleteDoc(doc(db, path, user.uid))));
+  await Promise.all(["subscribers", "alerts", "members", "users"].map((path) => deleteDoc(doc(db, path, user.uid))));
   await deleteUser(user);
 }
 

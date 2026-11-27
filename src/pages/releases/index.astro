@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import Ripeness from "../../components/Ripeness.astro";
 import { href, fmtDate, deviceById } from "../../lib/catalog.js";
 import { releases, followable, feedPath } from "../../lib/releases.js";
+import { ALERTS_ON } from "../../lib/alerts-config.js";
 
 const fits = (x) => [...(x.devices || []), ...(x.partial || [])];
 const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
@@ -47,6 +48,17 @@ const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
 
       <aside class="side-card rel-follow" aria-labelledby="follow-title">
         <h2 id="follow-title">Get told when these update</h2>
+        {ALERTS_ON && (
+          <div class="rel-email" id="rel-email">
+            <p id="email-text">We can email you when something on this list updates. Nothing else is sent, and every email has a link that stops them. <a href={href("/privacy/")}>Privacy</a></p>
+            <div class="item-actions">
+              <button type="button" class="btn" id="email-on">Email me</button>
+              <a class="btn btn-quiet" id="email-manage" href={href("/account/#alerts")} hidden>Change or stop</a>
+            </div>
+            <p id="email-status" class="aside-note" role="status" hidden></p>
+            <p class="rel-or">Or follow without an account:</p>
+          </div>
+        )}
         <p id="follow-text">This list has a feed. Add its link to a feed reader and new versions show up there on their own.</p>
         <input class="share-url" id="feed-url" type="text" readonly aria-label="Feed link" value={href(feedPath())} />
         <div class="item-actions">
@@ -72,7 +84,7 @@ const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
   const asked = new URLSearchParams(location.search).get("ipod");
   let current = names[asked] ? asked : names[stored] ? stored : "";
 
-  function show() {
+  let show = function () {
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ipod === current)));
     // On a phone the filter is one row you swipe, so bring the chosen iPod into view.
     buttons.find((b) => b.dataset.ipod === current)?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -92,7 +104,7 @@ const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
     $("follow-text").textContent = current
       ? `This list has its own feed, just for the ${names[current]}. Add its link to a feed reader and new versions show up there on their own.`
       : "This list has a feed. Add its link to a feed reader and new versions show up there on their own.";
-  }
+  };
 
   buttons.forEach((b) =>
     b.addEventListener("click", () => {
@@ -113,5 +125,61 @@ const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
     }
   });
   $("feed-url").addEventListener("focus", (e) => e.target.select());
+
+  /* ---------- email alerts, when the site has them switched on ---------- */
+  let showEmail = () => {};
+  if ($("rel-email")) {
+    const alerts = () => import("../../lib/alerts.js");
+    let user = null;
+    let mine = null; // the signed-in person's alerts, once loaded
+    let wanted = null; // a sign-up waiting for sign-in: the iPod it was for ("" for all)
+    const say = (text) => {
+      $("email-status").textContent = text || "";
+      $("email-status").hidden = !text;
+    };
+    const what = () => (current ? `the ${names[current]}` : "anything on the shelves");
+    showEmail = () => {
+      const covered = mine && (mine.devices.includes("all") || (current && mine.devices.includes(current)));
+      $("email-on").hidden = !!covered;
+      $("email-on").textContent = current ? `Email me about the ${document.querySelector(`#rel-filter [data-ipod="${current}"]`).textContent}` : "Email me about every release";
+      $("email-manage").hidden = !mine;
+      $("email-text").firstChild.textContent = covered
+        ? `You get an email at ${mine.email} when something for ${what()} updates. `
+        : `We can email you when something for ${what()} updates. Nothing else is sent, and every email has a link that stops them. `;
+    };
+    async function signUp(device) {
+      say("Saving…");
+      try {
+        const a = await alerts();
+        await a.addAlert(device || "all");
+        mine = await a.loadAlerts();
+        say("");
+      } catch (err) {
+        say(err.code ? "That didn't go through. Try again in a moment." : err.message);
+      }
+      showEmail();
+    }
+    $("email-on").addEventListener("click", () => {
+      if (user) return signUp(current);
+      wanted = current;
+      say("Sign in first, so we know where to send it. It takes one click with Google.");
+      document.querySelector("#account [data-open]")?.click();
+    });
+    import("../../scripts/account.js").then(({ onUser }) =>
+      onUser(async (u) => {
+        user = u;
+        mine = u ? await (await alerts()).loadAlerts().catch(() => null) : null;
+        showEmail();
+        if (u && wanted !== null) {
+          const device = wanted;
+          wanted = null;
+          signUp(device);
+        }
+      }, { lazy: true })
+    );
+  }
+
+  const showList = show;
+  show = () => { showList(); showEmail(); };
   show();
 </script>

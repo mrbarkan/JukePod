@@ -365,6 +365,36 @@ test("newsletter: only your own verified sign-in address, readable by you and ad
   assert.equal(await del(ana, `subscribers/${ana.uid}`), 200, "unsubscribing deletes the record");
 });
 
+test("release alerts: your own verified address, and a key that can only switch them off", async () => {
+  const KEY = "0123456789abcdef0123456789abcdef";
+  const mine = { email: ana.email, devices: ["ipod-classic", "ipod-video"], key: KEY, consent: "alerts-v1" };
+  const path = `alerts/${ana.uid}`;
+  assert.equal(await put(ana, path, { ...mine, email: "someone-else@example.test" }), 403, "can't sign another address up");
+  assert.equal(await put(ana, path, { ...mine, devices: [] }), 403, "needs at least one iPod");
+  assert.equal(await put(ana, path, { ...mine, devices: ["Not A Slug!"] }), 403);
+  assert.equal(await put(ana, path, { ...mine, key: "short" }), 403);
+  assert.equal(await put(ana, path, { ...mine, name: "Ana" }), 403, "no extra fields");
+  assert.equal(await put(bo, `alerts/${bo.uid}`, { ...mine, email: "bo@example.test" }), 403, "an unverified address can't sign up");
+  assert.equal(await put(bo, path, mine), 403);
+  assert.equal(await put(ana, path, mine), 200);
+  assert.equal(await get(bo, path), 403, "nobody else can read the address or the key");
+  assert.equal(await get(null, path), 403);
+  assert.equal((await fetch(`${DOCS}/alerts`, { headers: bearer(bo) })).status, 403, "members can't list alert sign-ups");
+  assert.equal((await fetch(`${DOCS}/alerts`, { headers: bearer(admin) })).status, 200);
+
+  // The unsubscribe link: no sign-in, only the key.
+  assert.equal(await put(null, path, { off: "ffffffffffffffffffffffffffffffff" }, { update: ["off"] }), 403, "a wrong key does nothing");
+  assert.equal(await put(null, path, { off: KEY, email: "evil@example.test" }, { update: ["off", "email"] }), 403, "the key can't change anything else");
+  assert.equal(await put(null, path, { devices: ["all"] }, { update: ["devices"] }), 403);
+  assert.equal(await put(null, `alerts/nobody`, { off: KEY }, { update: ["off"] }), 403, "it can't create a record");
+  assert.equal(await put(null, path, { off: KEY }, { update: ["off"] }), 200, "the right key switches alerts off");
+  assert.equal(await put(null, path, { off: KEY }, { update: ["off"] }), 200, "clicking the link twice is harmless");
+
+  assert.equal(await put(ana, path, { ...mine, devices: ["all"] }), 200, "the owner can switch them back on");
+  assert.equal(await del(bo, path), 403);
+  assert.equal(await del(ana, path), 200, "stopping alerts deletes the record");
+});
+
 test("files: only the owner uploads, into their own folder, and only theme files", async () => {
   const mine = `themes/${ana.uid}/${RUN}/file/theme.zip`;
   assert.equal(await upload(ana, mine), 200);

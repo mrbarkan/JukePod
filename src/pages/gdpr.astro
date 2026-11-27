@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import Contact from "../components/Contact.astro";
 import { href } from "../lib/catalog.js";
+import { ALERTS_ON } from "../lib/alerts-config.js";
 const UPDATED = "23 November 2026";
 ---
 <Base title="Your data rights (GDPR)" description="Your rights over your personal data on Quitanda under the GDPR, and how to use each one: access, download, correct, delete and unsubscribe.">
@@ -41,7 +42,7 @@ const UPDATED = "23 November 2026";
             <tr>
               <th scope="row">Withdraw consent</th>
               <td>Stop a use you agreed to.</td>
-              <td>Newsletter: Account page › <strong>Unsubscribe</strong>, or the link in any newsletter. It takes effect at once and deletes the record. Personalized ads: the “Privacy and cookie settings” link on the page.</td>
+              <td>Newsletter: Account page › <strong>Unsubscribe</strong>, or the link in any newsletter. It takes effect at once and deletes the record. {ALERTS_ON && "Release alerts: the link in any alert, with no sign-in needed, or Account page › Stop all alerts. "}Personalized ads: the “Privacy and cookie settings” link on the page.</td>
             </tr>
             <tr>
               <th scope="row">Objection and restriction</th>
@@ -61,12 +62,12 @@ const UPDATED = "23 November 2026";
       <p>The GDPR asks organizations to say on what grounds they use personal data. Ours are:</p>
       <ul>
         <li><strong>Providing your account</strong> (Article 6(1)(b)): your sign-in details, profile and settings.</li>
-        <li><strong>Your consent</strong> (Article 6(1)(a)): the newsletter, and personalized ads and advertising cookies from Google. Neither is switched on for you, and you can withdraw consent as easily as you gave it.</li>
+        <li><strong>Your consent</strong> (Article 6(1)(a)): the newsletter, {ALERTS_ON && "release alerts by email, "}and personalized ads and advertising cookies from Google. Neither is switched on for you, and you can withdraw consent as easily as you gave it.</li>
         <li><strong>Our legitimate interest in keeping the site safe</strong> (Article 6(1)(f)): reviewing shared themes and acting on reports.</li>
       </ul>
 
       <h2>Where your data is kept</h2>
-      <p>With Google (Firebase) and GitHub, in the United States, under the transfer safeguards European law requires. The <a href={href("/privacy/#who")}>privacy policy</a> has the details. Your account data isn’t passed to anyone else. Google’s ad service handles visitor data on its own terms, described in the <a href={href("/privacy/#ads")}>ads section</a>.</p>
+      <p>With Google (Firebase) and GitHub, in the United States, under the transfer safeguards European law requires. The <a href={href("/privacy/#who")}>privacy policy</a> has the details. {ALERTS_ON ? "If you ask for release alerts, your email address also goes to Brevo, in France, which delivers them. Your account data isn’t passed to anyone else." : "Your account data isn’t passed to anyone else."} Google’s ad service handles visitor data on its own terms, described in the <a href={href("/privacy/#ads")}>ads section</a>.</p>
 
       <h2>If you’re not satisfied</h2>
       <p>Please get in touch first; most problems can be fixed quickly. You also have the right to complain to your data protection authority. In the EU, you’ll find yours on the <a href="https://www.edpb.europa.eu/about-edpb/about-edpb/members_en">European Data Protection Board’s list</a>. In the UK it’s the Information Commissioner’s Office.</p>
