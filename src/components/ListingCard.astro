@@ -31,9 +31,9 @@ const fit = isApp
   data-updated={item.updated || ""}
   data-search={words}
 >
-  <div class="fw-art">
+  <div class={`fw-art tone-${item.status}`}>
     <ScreenArt item={item} />
-    <Sticker version={item.version} />
+    <Sticker version={item.version} status={item.status} seed={item.id} />
   </div>
   <div class="fw-body">
     <div class="fw-top">

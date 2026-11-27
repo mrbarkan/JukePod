@@ -15,7 +15,7 @@ Quitanda is a catalog of everything that gives a click-wheel iPod a second life:
 In Portuguese, a quitanda is the small neighborhood shop that sells fruit. The iPod came with one flavor. Here you pick your own.
 
 <p align="center">
-  <a href="https://quitanda.mrbarkan.com"><img src=".github/assets/shop.png" alt="The Quitanda home page: a big 'Pick your flavor.' headline over a grid of iPod drawings, one per model, each saying how many firmware options it has." width="820"></a>
+  <a href="https://quitanda.mrbarkan.com"><img src=".github/assets/shop.png" alt="The Quitanda home page: a 'Pick your flavor.' headline over a grid of iPod drawings, one per model, each saying how many firmware options it has, with the first firmware listings and their ripeness stickers below." width="820"></a>
 </p>
 
 ## What you'll find

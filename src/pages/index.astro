@@ -1,20 +1,26 @@
 ---
 import Base from "../layouts/Base.astro";
 import IpodShape from "../components/IpodShape.astro";
+import Badge from "../components/Badge.astro";
 import ListingCard from "../components/ListingCard.astro";
 import { posts } from "../lib/blog.js";
+import { COPY } from "../data/copy.js";
+import { releaseName } from "../lib/releases.js";
 import {
   firmwares, apps, mods, devices, categories, families, watchlist, latest, recentChanges, updatedOn,
-  byId, flavorLabel, fmtDate, isNumbered, plain, href,
+  byId, flavorLabel, fmtDate, isNumbered, plain, href, STATUS,
 } from "../lib/catalog.js";
 
+const C = COPY.home;
+// The key above the shelves: the same sticker shapes the listings wear.
+const KEY = [["stable", "round", "green"], ["beta", "lemon", "lemon"], ["experimental", "burst", "tomato"], ["archived", "arch", "kraft"]];
 const shelf = [...firmwares].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || a.name.localeCompare(b.name));
 const freshDate = updatedOn > latest.date ? updatedOn : latest.date;
 const freshItems = [
-  ...recentChanges.map((c) => ({ text: `${byId[c.id].name} ${c.version}`, path: byId[c.id].path })),
+  ...recentChanges.map((c) => ({ text: releaseName({ name: byId[c.id].name, version: c.version }), path: byId[c.id].path })),
   ...latest.lines.flatMap((line) => line.ids.map((id) => byId[id]).filter(Boolean))
     .filter((it) => isNumbered(it.version))
-    .map((it) => ({ text: `${it.name} ${it.version}`, path: it.path })),
+    .map((it) => ({ text: releaseName(it), path: it.path })),
 ].filter((x, i, all) => all.findIndex((y) => y.path === x.path) === i).slice(0, 5);
 const recentApps = [...apps].sort((a, b) => (b.updated || "").localeCompare(a.updated || "") || a.name.localeCompare(b.name)).slice(0, 4);
 const searchable = [
@@ -48,19 +54,19 @@ const searchable = [
     <div id="shop-all" class="page" style="padding-block: 0">
       <section class="hero">
         <div class="hero-top">
-          <div>
-            <p class="lcd-kicker">A quitanda is a fruit shop. This one is for iPods.</p>
-            <h1>Pick your flavor.</h1>
+          <div class="hero-say">
+            {C.kicker && <p class="lcd-kicker">{C.kicker}</p>}
+            <h1>{C.headline} <em>{C.headlineScript}</em></h1>
           </div>
-          <p>Your iPod doesn’t have to run what it shipped with. Tell us which one you have and the whole shop rearranges around it.</p>
+          <p class="hero-intro">{C.intro}</p>
         </div>
 
         <div class="picker">
           <div class="picker-head">
-            <h2>Which iPod is yours?</h2>
+            <h2>{C.pickerTitle}{C.pickerHint && <span class="picker-hint" aria-hidden="true">{C.pickerHint}<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4v15M5.5 12.5 12 19l6.5-6.5" /></svg></span>}</h2>
             <div>
-              <a href={href("/start/ipod-users/#which")}>Not sure? Check the number on the back</a>
-              <button type="button" class="seg" data-device="all" aria-pressed="true">Show every iPod</button>
+              <a href={href("/start/ipod-users/#which")}>{C.pickerHelp}</a>
+              <button type="button" class="seg" data-device="all" aria-pressed="true">{C.pickerAll}</button>
             </div>
           </div>
           <div class="picker-row" id="picker">
@@ -83,11 +89,10 @@ const searchable = [
             <p><span id="result-note">Every firmware in the shop. Pick your iPod above to see only what runs on it.</span> <a class="follow-link" id="follow-link" href={href("/releases/")} data-base={href("/releases/")}>See what's new →</a></p>
             <p class="report-nudge" id="report-nudge" hidden></p>
           </div>
-          <ul class="legend" aria-label="What the ripeness labels mean">
-            <li class="pill pill-stable">Ripe · Stable</li>
-            <li class="pill pill-beta">Ripening · Beta</li>
-            <li class="pill pill-experimental">Unripe · Experimental</li>
-            <li class="pill pill-archived">Preserved · Archived</li>
+          <ul class="legend" aria-label="What the stickers and colors mean">
+            {KEY.map(([status, shape, tone]) => (
+              <li class={`pill pill-${status}`}><span class="key-badge"><Badge shape={shape} tone={tone} /></span>{STATUS[status].ripeness} · {STATUS[status].plain}</li>
+            ))}
           </ul>
         </div>
         <div class="toolbar">
@@ -121,19 +126,19 @@ const searchable = [
         <p><a class="more-link" href={href("/compatibility/")}>See the full compatibility table →</a></p>
       </section>
 
-      <section class="fresh" aria-label="Fresh in">
+      <section class="fresh" aria-label={C.freshTitle}>
         <div>
-          <strong>Fresh in · {fmtDate(freshDate)}</strong>
+          <strong>{C.freshTitle} · {fmtDate(freshDate)}</strong>
           {freshItems.map((f) => <a href={href(f.path)}>{f.text}</a>)}
-          <a href={href("/themes/")}>The themes shelf is open</a>
-          <a class="fresh-all" href={href("/releases/")}>All releases →</a>
+          <a href={href("/themes/")}>{C.freshThemes}</a>
+          <a class="fresh-all" href={href("/releases/")}>{C.freshAll}</a>
         </div>
       </section>
 
       <section class="shelves">
         <div class="shelf" id="apps">
-          <h2>Library apps</h2>
-          <p>Put music on it without iTunes. Recently updated:</p>
+          <h2>{C.apps.title}</h2>
+          <p>{C.apps.text}</p>
           <ul class="shelf-list">
             {recentApps.map((a) => (
               <li><a href={href(a.path)}><span class="txt"><strong>{a.name}</strong><span>{[(a.platforms || []).join(" · "), a.price].filter(Boolean).join(" · ")}</span></span></a></li>
@@ -142,16 +147,16 @@ const searchable = [
           <a class="more-link" href={href("/apps/")}>All {apps.length} apps →</a>
         </div>
         <div class="shelf">
-          <h2>Themes</h2>
-          <p>Looks people made, with screenshots.</p>
+          <h2>{C.themes.title}</h2>
+          <p>{C.themes.text}</p>
           <ul class="shelf-list" id="theme-shelf">
-            <li><a href={href("/themes/submit/")}><span class="txt"><strong>Share the first one</strong><span>For Rockbox, its forks or CrateDigger.</span></span></a></li>
+            <li><a href={href("/themes/submit/")}><span class="txt"><strong>{C.themes.firstTitle}</strong><span>{C.themes.firstText}</span></span></a></li>
           </ul>
           <a class="more-link" href={href("/themes/")}>The themes shelf →</a>
         </div>
         <div class="shelf" id="mods">
-          <h2>Hardware mods</h2>
-          <p>Parts that keep it going.</p>
+          <h2>{C.mods.title}</h2>
+          <p>{C.mods.text}</p>
           <ul class="shelf-list">
             {mods.slice(0, 4).map((m) => (
               <li><a href={href(m.path)}><span class="txt"><strong>{m.name}</strong><span>{m.skill}</span></span></a></li>
@@ -164,8 +169,8 @@ const searchable = [
       {watchlist.length > 0 && (
         <section class="section" id="watch-list">
           <div class="section-head">
-            <h2>Still on the tree</h2>
-            <p>Projects that can’t be installed yet. Each moves onto the shelves once it ships.</p>
+            <h2>{C.watchTitle}</h2>
+            <p>{C.watchText}</p>
           </div>
           <ul class="watch-list">
             {watchlist.map((w) => (
@@ -179,7 +184,7 @@ const searchable = [
       )}
 
       <section class="section" id="guides">
-        <div class="section-head"><h2>New here? Start with a guide.</h2></div>
+        <div class="section-head"><h2>{C.guidesTitle}</h2></div>
         <ul class="guide-links">
           <li><a href={href("/start/ipod-users/")}><em>Seven steps · about an hour</em><strong>I use an iPod</strong><span>Find your model, back up, install your first firmware, load music, and get it back if something goes wrong.</span></a></li>
           <li><a href={href("/start/makers/")}><em>For firmware, themes, apps and mods</em><strong>I make things for iPods</strong><span>Get listed, keep your version current automatically, and share themes with screenshots.</span></a></li>
@@ -188,10 +193,10 @@ const searchable = [
 
       <section class="band">
         <div>
-          <h2>Fresh arrivals, by email.</h2>
-          <p>Occasional news about new firmware, themes and guides. We use your name and email address for this and nothing else, and you can unsubscribe at any time.</p>
+          <h2>{C.newsletterTitle}</h2>
+          <p>{C.newsletterText}</p>
         </div>
-        <a class="btn btn-accent btn-lg" href={href("/account/#newsletter")}>Subscribe by email</a>
+        <a class="btn btn-accent btn-lg" href={href("/account/#newsletter")}>{C.newsletterButton}</a>
       </section>
     </div>
   </main>

@@ -32,7 +32,7 @@ The whole catalog lives in one file, [`src/data/catalog.js`](src/data/catalog.js
 1. **Find the right list.** `firmwares`, `apps` or `mods`. A project with no release yet goes in `watchlist`.
 2. **Copy a similar entry** and give it a unique `id` in lowercase letters, digits and hyphens. The id becomes its address, so `rockpod` lives at `/firmware/rockpod/`.
 3. **Fill in which iPods it fits.** `devices` lists the iPods it fully supports and `partial` the ones with gaps, using the ids from the `devices` list near the top of the file (`ipod-video`, `ipod-classic`, `ipod-nano-2g` and so on).
-4. **Set the status.** One of `stable`, `beta`, `experimental` or `archived`. The site shows them as Ripe, Ripening, Unripe and Preserved.
+4. **Set the status.** One of `stable`, `beta`, `experimental` or `archived`. The site shows them as Ripe, Ripening, Unripe and Preserved. If the project has a stable release, use `stable` even when it also has a beta channel. `beta` is for projects whose only builds so far are betas or pre-releases.
 5. **Add links.** The first one in `links` becomes the main button, so make it the download or install page.
 6. **If it's on GitHub,** set `github: "owner/repo"`. The nightly job then keeps the version, release date and stars up to date on its own.
 7. **Credit whoever suggested it** with `suggestedBy` (see below).

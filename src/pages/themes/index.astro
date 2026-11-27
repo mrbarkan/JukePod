@@ -79,6 +79,8 @@ import { href } from "../../lib/catalog.js";
     try {
       const themes = await listApproved({ target: id || undefined });
       if (id !== current) return; // a newer choice is already loading
+      // With nothing on the shelf yet, a row of filters only leads to empty pages.
+      if (!id) filter.hidden = themes.length === 0;
       const yours = h("a", { class: "theme-yours", href: link("/themes/submit/") },
         h("i", { "aria-hidden": "true" }, "+"), h("strong", {}, "Yours goes here"),
         h("span", {}, "Made a look for your iPod or for CrateDigger? Put it on the shelf."));

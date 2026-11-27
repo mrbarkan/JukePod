@@ -44,7 +44,25 @@ Everything lives in `src/data/catalog.js`. The comments in that file describe ev
 
 Projects with no release yet go in `watchlist`. Move one into `firmwares` once it ships. Set `draft: true` to keep an entry off the site while you fill it in.
 
-Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it.
+Status is one of `stable`, `beta`, `experimental` or `archived`. The site shows it as Ripe, Ripening, Unripe or Preserved, with the plain word beside it. Go by the best release people can get: a project with a stable release is `stable` even when it also has a beta channel, and `beta` is for projects whose only builds so far are betas or pre-releases.
+
+## Change the shop's wording
+
+The words the shop says in its own voice (the home page headline, the footer line, the sign-in box, the "page not found" page) live in one file, `src/data/copy.js`. Open it on GitHub, press the pencil, change the text between the quotes and commit. The site rebuilds itself. Listings are separate and live in `src/data/catalog.js`.
+
+## What the stickers and colors mean
+
+Every listing wears one sticker. Its shape and color show the listing's status, and the number in the middle is its version. The color behind the screenshot follows the same rule.
+
+| Status in `catalog.js` | Sticker | Says |
+| --- | --- | --- |
+| `stable` | green, round | Ripe |
+| `beta` | yellow, lemon | Ripening |
+| `experimental` | red, scalloped | Unripe |
+| `archived` | beige, arched label | Preserved |
+| `community` | blue, diamond | Fresh pick |
+
+Yellow buttons and the yellow tab are things to press. Stickers are drawn by `src/components/Badge.astro`, and `src/components/Sticker.astro` picks the look for each status.
 
 ## How the shop works
 

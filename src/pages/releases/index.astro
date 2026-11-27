@@ -86,6 +86,8 @@ const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
 
   let show = function () {
     buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ipod === current)));
+    // On a phone the filter is one row you swipe, so bring the chosen iPod into view.
+    buttons.find((b) => b.dataset.ipod === current)?.scrollIntoView({ block: "nearest", inline: "nearest" });
     let n = 0;
     rows.forEach((row) => {
       const on = !current || row.dataset.devices.split(" ").includes(current);

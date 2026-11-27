@@ -1,12 +1,35 @@
 ---
-// The version, on a fruit sticker. Only short labels fit on one.
-const { version, large = false } = Astro.props;
-const label = String(version || "").replace(/^v/i, "");
-const fits = label && label.length <= 5 && !/\s/.test(label);
+// The ripeness sticker. Its shape and color say how ripe a listing is, and the
+// number in the middle is its version. A listing with no short version number
+// gets the fruit word instead, so every listing wears exactly one sticker.
+//
+//   stable        round, green     "Ripe"
+//   beta          lemon, yellow    "Ripening"
+//   experimental  burst, red       "Unripe"
+//   archived      arch, kraft      "Preserved"
+//   community     diamond, blue    "Fresh pick"
+import Badge from "./Badge.astro";
+import { STATUS, isNumbered } from "../lib/catalog.js";
+const { version, status, large = false, seed = "" } = Astro.props;
+const LOOKS = {
+  stable: ["round", "green"],
+  beta: ["lemon", "lemon"],
+  experimental: ["burst", "tomato"],
+  archived: ["arch", "kraft"],
+  community: ["diamond", "cobalt"],
+};
+const [shape, tone] = LOOKS[status] || LOOKS.archived;
+const s = STATUS[status] || { ripeness: String(status || ""), plain: String(status || "") };
+const number = String(version || "").replace(/^v/i, "");
+const numbered = isNumbered(version) && number.length <= 5 && !/\s/.test(number);
+
+// The tilt is the only thing left to chance: stickers are put on by hand.
+const TILTS = [-9, 7, -4, 10, -11, 5];
+let n = 0;
+for (const ch of String(seed)) n = (n * 31 + ch.charCodeAt(0)) >>> 0;
+const tilt = TILTS[n % TILTS.length];
+const label = numbered ? `${s.ripeness} (${s.plain}), version ${number}` : `${s.ripeness} (${s.plain})`;
 ---
-{fits && (
-  <span class:list={["sticker", { "sticker-lg": large }]} role="img" aria-label={`Version ${label}`}>
-    <small aria-hidden="true">Version</small>
-    <b aria-hidden="true">{label}</b>
-  </span>
-)}
+<span class:list={["sticker", `sticker-${status}`, { "sticker-lg": large }]} role="img" aria-label={label} title={label} style={`rotate: ${tilt}deg`}>
+  {numbered ? <Badge shape={shape} tone={tone} top={s.ripeness} main={number} /> : <Badge shape={shape} tone={tone} main={s.ripeness} />}
+</span>

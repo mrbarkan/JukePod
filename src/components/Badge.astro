@@ -1,0 +1,87 @@
+---
+// A die-cut fruit sticker, drawn as SVG: a thick ink outline, a rim, a colored
+// field and chunky type, the way produce stickers are printed.
+//
+//   shape   round | burst | lemon | oval | diamond | arch
+//   tone    tomato | lemon | cobalt | pink | green | cream | orange | kraft
+//   top     small capitals (curved over the top on round and burst)
+//   main    the big word or number
+//   sub     a second small line (curved under the bottom on round and burst)
+//   script  set the main word in the script face, like "Orange Juice"
+//   wheel   round and burst only: draw a click wheel in the middle instead of text
+const { shape = "round", tone = "tomato", top = "", main = "", sub = "", script = false, wheel = false } = Astro.props;
+
+const TONES = {
+  tomato: { rim: "#fff6e3", field: "#ee3a24", line: "#ffd23a", text: "#fff6e3", sub: "#ffd23a", disc: "#fff6e3", discText: "#ee3a24" },
+  lemon: { rim: "#1f9d57", field: "#ffd23a", line: "", text: "#e2301b", sub: "#14713d", disc: "#fff6e3", discText: "#e2301b" },
+  cobalt: { rim: "#9cc6ff", field: "#2447d8", line: "#9cc6ff", text: "#fff6e3", sub: "#ffd23a", disc: "#ffd23a", discText: "#17120f" },
+  pink: { rim: "#fff6e3", field: "#ff7ab8", line: "", text: "#1d1a4b", sub: "#1d1a4b", disc: "#fff6e3", discText: "#e2301b" },
+  green: { rim: "#ffd23a", field: "#1f9d57", line: "", text: "#fff6e3", sub: "#ffd23a", disc: "#fff6e3", discText: "#14713d" },
+  cream: { rim: "#ee3a24", field: "#fff6e3", line: "#ee3a24", text: "#e2301b", sub: "#2447d8", disc: "#ee3a24", discText: "#fff6e3" },
+  kraft: { rim: "#fff6e3", field: "#cdbd98", line: "", text: "#17120f", sub: "#17120f", disc: "#fff6e3", discText: "#17120f" },
+  orange: { rim: "#fff6e3", field: "#ff8a1f", line: "", text: "#17120f", sub: "#17120f", disc: "#fff6e3", discText: "#17120f" },
+};
+const INK = "#17120f";
+const c = TONES[tone] || TONES.tomato;
+
+// A circle with scalloped edges, like a "hand picked" seal.
+function burst(cx, cy, r, bumps) {
+  const pts = Array.from({ length: bumps }, (_, i) => {
+    const a = (i / bumps) * Math.PI * 2 - Math.PI / 2;
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  });
+  const chord = 2 * r * Math.sin(Math.PI / bumps);
+  const rb = (chord * 0.62).toFixed(2);
+  return `M${pts[0].map((n) => n.toFixed(2)).join(" ")}` + pts.slice(1).concat([pts[0]]).map((p) => `A${rb} ${rb} 0 0 1 ${p.map((n) => n.toFixed(2)).join(" ")}`).join("") + "Z";
+}
+
+// Each shape: its box, its outline, and where the three lines of type sit.
+const SHAPES = {
+  round: { w: 200, h: 200, d: "M100 6a94 94 0 1 0 0 188a94 94 0 1 0 0-188Z", ring: true },
+  burst: { w: 200, h: 200, d: burst(100, 100, 86, 14), ring: true },
+  lemon: { w: 200, h: 150, d: "M6 75Q16 71 24 60C40 28 72 12 100 12C128 12 160 28 176 60Q184 71 194 75Q184 79 176 90C160 122 128 138 100 138C72 138 40 122 24 90Q16 79 6 75Z", width: 112, ys: [50, 88, 112], max: 38 },
+  oval: { w: 220, h: 150, d: "M110 7a103 68 0 1 0 0 136a103 68 0 1 0 0-136Z", width: 140, ys: [50, 88, 112], max: 40 },
+  diamond: { w: 220, h: 150, d: "M16 66L96 14Q110 6 124 14L204 66Q216 75 204 84L124 136Q110 144 96 136L16 84Q4 75 16 66Z", width: 104, ys: [54, 87, 108], max: 32 },
+  arch: { w: 160, h: 200, d: "M16 192Q6 192 6 182L6 80A74 74 0 0 1 154 80L154 182Q154 192 144 192Z", width: 104, ys: [76, 122, 152], max: 38 },
+};
+const s = SHAPES[shape] || SHAPES.round;
+const cx = s.w / 2;
+const cy = s.h / 2;
+const inset = (k) => `translate(${cx} ${cy}) scale(${k}) translate(${-cx} ${-cy})`;
+
+// Chunky letters are wide, script letters are narrow: fit the word to the space.
+const fit = (text, width, max, wide = 0.74) => Math.max(11, Math.min(max, width / (Math.max(String(text).length, 1) * wide)));
+const mainSize = s.ring ? fit(main, 66, 38, script ? 0.5 : 0.7) : fit(main, s.width, s.max * (script ? 1.25 : 1), script ? 0.47 : 0.74);
+const uid = `b${Math.random().toString(36).slice(2, 8)}`;
+---
+<svg class="badge" viewBox={`0 0 ${s.w} ${s.h}`} style={`aspect-ratio: ${s.w} / ${s.h}`} aria-hidden="true" focusable="false">
+  <path d={s.d} fill={c.rim} stroke={INK} stroke-width="5" stroke-linejoin="round" />
+  <path d={s.d} fill={c.field} transform={inset(s.ring ? 0.87 : 0.86)} />
+  {c.line && !s.ring && <path d={s.d} fill="none" stroke={c.line} stroke-width="2.6" transform={inset(0.76)} />}
+  {s.ring ? (
+    <>
+      <defs>
+        <path id={`${uid}t`} d="M41 100A59 59 0 0 1 159 100" />
+        <path id={`${uid}b`} d="M29 100A71 71 0 0 0 171 100" />
+      </defs>
+      <circle cx="100" cy="100" r="43" fill={c.disc} />
+      {top && <text class="badge-caps" fill={c.text} font-size={fit(top, 150, 19, 0.82)}><textPath href={`#${uid}t`} startOffset="50%" text-anchor="middle">{top}</textPath></text>}
+      {sub && <text class="badge-caps" fill={c.sub} font-size={fit(sub, 170, 15, 0.82)}><textPath href={`#${uid}b`} startOffset="50%" text-anchor="middle">{sub}</textPath></text>}
+      {wheel ? (
+        <>
+          <circle cx="100" cy="100" r="31" fill="#fff" stroke={INK} stroke-width="3.5" />
+          <circle cx="100" cy="100" r="11" fill={c.disc} stroke={INK} stroke-width="3.5" />
+          <text class="badge-caps" x="100" y="83" text-anchor="middle" font-size="8" fill={INK}>MENU</text>
+        </>
+      ) : (
+        <text class={script ? "badge-script" : "badge-main"} x="100" y={100 + mainSize * 0.36} text-anchor="middle" font-size={mainSize} fill={c.discText}>{main}</text>
+      )}
+    </>
+  ) : (
+    <>
+      {top && <text class="badge-caps" x={cx} y={s.ys[0]} text-anchor="middle" font-size={fit(top, s.width, 15, 0.84)} fill={c.text}>{top}</text>}
+      <text class={script ? "badge-script" : "badge-main"} x={cx} y={sub || top ? s.ys[1] : cy + mainSize * 0.36} text-anchor="middle" font-size={mainSize} fill={script ? c.sub : c.text} stroke={script ? INK : "none"} stroke-width={script ? 0.8 : 0}>{main}</text>
+      {sub && <text class="badge-caps" x={cx} y={s.ys[2]} text-anchor="middle" font-size={fit(sub, s.width, 13, 0.84)} fill={script ? c.text : c.sub}>{sub}</text>}
+    </>
+  )}
+</svg>
