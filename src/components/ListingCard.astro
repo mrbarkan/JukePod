@@ -44,6 +44,7 @@ const fit = isApp
     {item.familyTag && <p class="fw-family">{item.familyTag}</p>}
     <p class="blurb">{plain(item.blurb)}</p>
     <p class="fw-fit" data-fit data-default={fit}>{fit}</p>
+    {all.length > 0 && <p class="fw-reports" data-reports={item.id} hidden><a href={href(`${item.path}#reports`)}></a></p>}
     <a class="btn" href={href(item.path)}>See {item.name}<span aria-hidden="true">→</span></a>
   </div>
 </article>

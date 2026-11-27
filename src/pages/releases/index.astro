@@ -1,0 +1,115 @@
+---
+import Base from "../../layouts/Base.astro";
+import Ripeness from "../../components/Ripeness.astro";
+import { href, fmtDate, deviceById } from "../../lib/catalog.js";
+import { releases, followable, feedPath } from "../../lib/releases.js";
+
+const fits = (x) => [...(x.devices || []), ...(x.partial || [])];
+const names = Object.fromEntries(followable.map((d) => [d.id, d.name]));
+---
+<Base
+  title="What's new: firmware and app releases for iPod"
+  description="The latest versions of custom iPod firmware and library apps, newest first. Filter by your iPod and follow new releases with a feed."
+  section="firmware"
+>
+  <main class="wrap page" id="releases-page" data-names={JSON.stringify(names)} data-feed-all={href(feedPath())} data-feed-one={href(feedPath("DEVICE"))}>
+    <header class="intro intro-row">
+      <div>
+        <p class="lcd-kicker">What's new</p>
+        <h1>Fresh in.</h1>
+        <p>The latest version of everything on the shelves, newest first. Versions and dates are checked against each project every night.</p>
+      </div>
+    </header>
+
+    <div class="segs" id="rel-filter" role="group" aria-label="Show releases for">
+      <button type="button" class="seg" data-ipod="" aria-pressed="true">Every iPod</button>
+      {followable.map((d) => <button type="button" class="seg" data-ipod={d.id} aria-pressed="false">{d.short}</button>)}
+    </div>
+
+    <div class="rel-layout">
+      <section class="rel-main" aria-labelledby="rel-title">
+        <h2 class="h-section" id="rel-title">{releases.length} releases</h2>
+        <ol class="rel-list" id="rel-list">
+          {releases.map((x) => (
+            <li data-devices={fits(x).join(" ")}>
+              <time datetime={x.updated}>{fmtDate(x.updated)}</time>
+              <div class="rel-what">
+                <a href={href(x.path)}><strong>{x.name}</strong>{x.name.includes(x.version) ? "" : ` ${x.version}`}</a>
+                <span>{x.type === "app" ? "Library app" : "Firmware"} · {x.maker}</span>
+              </div>
+              <Ripeness status={x.status} />
+              <span class="chips">{fits(x).map((d) => <span class="chip">{deviceById[d]?.short}</span>)}</span>
+            </li>
+          ))}
+        </ol>
+        <p class="aside-note" id="rel-empty" hidden>Nothing with a numbered release runs on this iPod yet.</p>
+      </section>
+
+      <aside class="side-card rel-follow" aria-labelledby="follow-title">
+        <h2 id="follow-title">Get told when these update</h2>
+        <p id="follow-text">This list has a feed. Add its link to a feed reader and new versions show up there on their own.</p>
+        <input class="share-url" id="feed-url" type="text" readonly aria-label="Feed link" value={href(feedPath())} />
+        <div class="item-actions">
+          <button type="button" class="btn" id="feed-copy">Copy feed link</button>
+          <a class="btn btn-quiet" id="feed-open" href={href(feedPath())}>Open the feed</a>
+        </div>
+        <p class="rel-how"><strong>New to feeds?</strong> A feed reader is an app that checks sites for you. Feedly and Inoreader work in a browser, and NetNewsWire is free on Mac and iPhone. Paste the link in once. There's no account here and no email.</p>
+        <p class="rel-how">The <a href={href("/blog/")}>blog</a> has its own feed: <a href={href("/rss.xml")}>rss.xml</a>.</p>
+      </aside>
+    </div>
+  </main>
+</Base>
+
+<script>
+  const page = document.getElementById("releases-page");
+  const names = JSON.parse(page.dataset.names);
+  const rows = [...document.querySelectorAll("#rel-list li")];
+  const buttons = [...document.querySelectorAll("#rel-filter [data-ipod]")];
+  const $ = (id) => document.getElementById(id);
+
+  let stored = null;
+  try { stored = localStorage.getItem("cwf-device"); } catch { /* private window */ }
+  const asked = new URLSearchParams(location.search).get("ipod");
+  let current = names[asked] ? asked : names[stored] ? stored : "";
+
+  function show() {
+    buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ipod === current)));
+    let n = 0;
+    rows.forEach((row) => {
+      const on = !current || row.dataset.devices.split(" ").includes(current);
+      row.hidden = !on;
+      if (on) n++;
+    });
+    const count = `${n} ${n === 1 ? "release" : "releases"}`;
+    $("rel-title").textContent = current ? `${count} for the ${names[current]}` : count;
+    $("rel-empty").hidden = n > 0;
+    const path = current ? page.dataset.feedOne.replace("DEVICE", current) : page.dataset.feedAll;
+    const url = new URL(path, location.href).href;
+    $("feed-url").value = url;
+    $("feed-open").href = url;
+    $("follow-text").textContent = current
+      ? `This list has its own feed, just for the ${names[current]}. Add its link to a feed reader and new versions show up there on their own.`
+      : "This list has a feed. Add its link to a feed reader and new versions show up there on their own.";
+  }
+
+  buttons.forEach((b) =>
+    b.addEventListener("click", () => {
+      current = b.dataset.ipod;
+      history.replaceState(null, "", current ? `?ipod=${current}` : location.pathname);
+      show();
+    })
+  );
+  $("feed-copy").addEventListener("click", async () => {
+    const box = $("feed-url");
+    try {
+      await navigator.clipboard.writeText(box.value);
+      $("feed-copy").textContent = "Copied";
+      setTimeout(() => ($("feed-copy").textContent = "Copy feed link"), 1800);
+    } catch {
+      box.focus();
+      box.select();
+    }
+  });
+  $("feed-url").addEventListener("focus", (e) => e.target.select());
+  show();
+</script>

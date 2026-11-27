@@ -80,7 +80,8 @@ const searchable = [
         <div class="result-head">
           <div>
             <h2 id="result-title">{firmwares.length} flavors on the shelves</h2>
-            <p id="result-note">Every firmware in the shop. Pick your iPod above to see only what runs on it.</p>
+            <p><span id="result-note">Every firmware in the shop. Pick your iPod above to see only what runs on it.</span> <a class="follow-link" id="follow-link" href={href("/releases/")} data-base={href("/releases/")}>See what's new →</a></p>
+            <p class="report-nudge" id="report-nudge" hidden></p>
           </div>
           <ul class="legend" aria-label="What the ripeness labels mean">
             <li class="pill pill-stable">Ripe · Stable</li>
@@ -125,6 +126,7 @@ const searchable = [
           <strong>Fresh in · {fmtDate(freshDate)}</strong>
           {freshItems.map((f) => <a href={href(f.path)}>{f.text}</a>)}
           <a href={href("/themes/")}>The themes shelf is open</a>
+          <a class="fresh-all" href={href("/releases/")}>All releases →</a>
         </div>
       </section>
 

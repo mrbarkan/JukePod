@@ -27,6 +27,7 @@ const names = Object.fromEntries(devices.map((d) => [d.id, d.short]));
 </Base>
 
 <script>
+  import { showCardReports } from "../../scripts/card-reports.js";
   const cards = [...document.querySelectorAll("#grid [data-card]")];
   const names = JSON.parse(document.getElementById("apps-page").dataset.deviceNames);
   let mine = null;
@@ -37,6 +38,12 @@ const names = Object.fromEntries(devices.map((d) => [d.id, d.short]));
       if (fits) card.querySelector("[data-fit]").textContent = `Syncs your ${names[mine]} · ${card.querySelector("[data-fit]").dataset.default}`;
     });
   }
+  // What owners report, for the chosen iPod or in total.
+  showCardReports({
+    device: names[mine] ? mine : null,
+    short: names[mine],
+    fitOf: (card) => (card.dataset.devices || "").split(" ").includes(mine),
+  });
   document.getElementById("platforms").addEventListener("click", (e) => {
     const button = e.target.closest("[data-platform]");
     if (!button) return;

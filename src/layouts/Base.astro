@@ -29,6 +29,7 @@ const nav = [
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href={href("/favicon.svg")} />
     <link rel="alternate" type="application/rss+xml" title={`${SITE.name} blog`} href={href("/rss.xml")} />
+    <link rel="alternate" type="application/rss+xml" title={`${SITE.name} new releases`} href={href("/releases.xml")} />
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:type" content={type} />
     <meta property="og:title" content={title || `${SITE.name}: ${SITE.tagline}`} />
@@ -103,10 +104,11 @@ const nav = [
           <a href={href("/about/")}>About</a>
           <a href={href("/start/")}>Start here</a>
           <a href={href("/compatibility/")}>Compatibility</a>
+          <a href={href("/releases/")}>What's new</a>
           <a href={href("/blog/")}>Blog</a>
           <a href={href("/suggest/")}>Suggest a listing</a>
           <a href={href("/contributors/")}>Contributors</a>
-          <a href={href("/rss.xml")}>RSS</a>
+          <a href={href("/rss.xml")}>Blog feed</a>
           <a href={href("/privacy/")}>Privacy</a>
           <a href={href("/gdpr/")}>Your data rights</a>
           <a href={SITE.repo}>Source on GitHub</a>

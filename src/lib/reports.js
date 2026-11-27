@@ -31,6 +31,47 @@ export async function loadReports(itemId) {
   return counts;
 }
 
+/**
+ * Counts for every listing at once, for the shelves:
+ * { rockpod: { "ipod-classic": { works: 3, total: 4 } }, … }
+ * One small public request, remembered for a few minutes.
+ */
+export async function loadAllReports() {
+  const KEY = "q-report-counts";
+  try {
+    const kept = JSON.parse(sessionStorage.getItem(KEY) || "null");
+    if (kept && Date.now() - kept.at < 5 * 60 * 1000) return kept.counts;
+  } catch { /* no storage: just ask */ }
+  const field = (fieldPath) => ({ fieldPath });
+  const res = await fetch(`${DOCS}:runQuery?key=${firebaseConfig.apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: "reports" }],
+        select: { fields: [field("itemId"), field("deviceId"), field("works")] },
+        limit: 3000,
+      },
+    }),
+  });
+  if (!res.ok) throw new Error("Reports couldn't be loaded.");
+  const counts = {};
+  for (const row of await res.json()) {
+    const f = row.document?.fields;
+    if (!f?.itemId || !f?.deviceId) continue;
+    const c = ((counts[f.itemId.stringValue] ||= {})[f.deviceId.stringValue] ||= { works: 0, total: 0 });
+    c.total++;
+    if (f.works?.booleanValue) c.works++;
+  }
+  try { sessionStorage.setItem(KEY, JSON.stringify({ at: Date.now(), counts })); } catch { /* fine */ }
+  return counts;
+}
+
+/** Forget the remembered counts, after the person sends a report of their own. */
+export function forgetReportCounts() {
+  try { sessionStorage.removeItem("q-report-counts"); } catch { /* fine */ }
+}
+
 const firebase = async () => {
   await import("./auth.js");
   const [{ getAuth }, store, { app }] = await Promise.all([
@@ -68,4 +109,5 @@ export async function sendReport({ itemId, ipod, works, version, replacesOld = f
   // A report from before iPods were listed in profiles names only the model.
   // This one replaces it, so the same iPod isn't counted twice.
   if (replacesOld) await deleteDoc(doc(db, "reports", `${user.uid}_${itemId}_${ipod.model}`)).catch(() => {});
+  forgetReportCounts();
 }
